@@ -8,6 +8,7 @@ interface AppShellProps {
   vehiculoIdActual?: string;
   /** Reserva espacio en el pie para la barra fija de pagar / aprobar. */
   barraFija?: boolean | 'alta';
+  ancho?: 'normal' | 'amplio';
 }
 
 const MENSAJES_USTED: Record<ErrorCode, string> = {
@@ -27,8 +28,9 @@ export function mensajeErrorPasajero(code: ErrorCode, fallback?: string): string
 export const AppShell: React.FC<AppShellProps> = ({
   children,
   subtitle: _subtitle,
-  vehiculoIdActual = 'bus-101',
+  vehiculoIdActual = 'bus-01',
   barraFija = false,
+  ancho = 'normal',
 }) => {
   const location = useLocation();
   const [previewMode, setPreviewMode] = useState<boolean>(() => isUiPreviewMode());
@@ -49,6 +51,8 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   void _subtitle;
 
+  const contenedorAncho = ancho === 'amplio' ? 'max-w-[1100px]' : 'max-w-lg';
+
   return (
     <div
       className={`min-h-dvh flex flex-col bg-black text-white relative overflow-x-hidden ${
@@ -58,7 +62,7 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div className="subase-estela-bg" aria-hidden="true" />
 
       <header className="sticky top-0 z-30 bg-black border-b border-[rgba(195,197,198,0.2)]">
-        <div className="max-w-lg mx-auto px-5 h-14 flex items-center justify-between gap-3">
+        <div className={`${contenedorAncho} mx-auto px-5 h-14 flex items-center justify-between gap-3`}>
           <Link
             to="/"
             className="inline-flex items-center min-h-11 font-light text-[22px] leading-none text-white uppercase tracking-[0.06em]"
@@ -69,7 +73,7 @@ export const AppShell: React.FC<AppShellProps> = ({
         </div>
 
         {isDev && previewMode && (
-          <div className="bg-[#113462] border-t border-white/20 px-5 text-[15px] text-white flex items-center justify-between gap-3 max-w-lg mx-auto min-h-11">
+          <div className={`bg-[#113462] border-t border-white/20 px-5 text-[15px] text-white flex items-center justify-between gap-3 ${contenedorAncho} mx-auto min-h-11`}>
             <span className="font-normal text-white">Vista Previa UI</span>
             <button
               type="button"
@@ -82,23 +86,31 @@ export const AppShell: React.FC<AppShellProps> = ({
         )}
       </header>
 
-      <main className="relative z-10 flex-1 w-full max-w-lg mx-auto px-5 pt-6 pb-8 flex flex-col">
+      <main className={`relative z-10 flex-1 w-full ${contenedorAncho} mx-auto px-5 pt-6 pb-8 flex flex-col`}>
         {children}
       </main>
 
-      <footer className="relative z-10 w-full max-w-lg mx-auto px-5 pt-2 pb-4">
+      <footer className={`relative z-10 w-full ${contenedorAncho} mx-auto px-5 pt-2 pb-4`}>
         <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
           Su plata va directo de su billetera a la del bus.
         </p>
         <p className="text-[15px] font-normal text-[#C3C5C6]/80 mt-1">
           Construido sobre Interledger Open Payments
         </p>
-        <Link
-          to={`/conductor/${encodeURIComponent(vehiculoIdActual)}`}
-          className="inline-flex items-center min-h-11 mt-1 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
-        >
-          Vista del conductor
-        </Link>
+        <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1">
+          <Link
+            to={`/conductor/${encodeURIComponent(vehiculoIdActual)}`}
+            className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
+          >
+            Vista del conductor
+          </Link>
+          <Link
+            to="/flota"
+            className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
+          >
+            Vista de la empresa
+          </Link>
+        </div>
       </footer>
     </div>
   );

@@ -6,6 +6,7 @@ import { ActivarPasePage } from './pages/ActivarPasePage';
 import { PaseListoPage } from './pages/PaseListoPage';
 import { ReciboPage } from './pages/ReciboPage';
 import { ConductorPage } from './pages/ConductorPage';
+import { FlotaPage } from './pages/FlotaPage';
 import { leerUltimoVehiculo } from './lib/ultimoVehiculo';
 import { formatCOP } from './lib/format';
 
@@ -75,6 +76,7 @@ export const App: React.FC = () => {
         <Route path="/pase/listo" element={<PaseListoPage />} />
         <Route path="/recibo/:viajeId" element={<ReciboPage />} />
         <Route path="/conductor/:vehiculoId" element={<ConductorPage />} />
+        <Route path="/flota" element={<FlotaPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

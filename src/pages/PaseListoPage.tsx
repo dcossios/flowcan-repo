@@ -31,7 +31,7 @@ export const PaseListoPage: React.FC = () => {
   const interactRef =
     searchParams.get('interact_ref') || searchParams.get('interactRef') || '';
   const hash = searchParams.get('hash') || '';
-  const destinoVolver = searchParams.get('volver') || pendingCtx?.volver || '/v/bus-101';
+  const destinoVolver = searchParams.get('volver') || pendingCtx?.volver || '/v/bus-01';
 
   useEffect(() => {
     if (confirmedOnceRef.current) return;

@@ -78,7 +78,7 @@ export const ReciboPage: React.FC = () => {
       ? recibo.vehiculo.id
       : typeof recibo?.vehiculo === 'string'
         ? recibo.vehiculo
-        : 'bus-101';
+        : 'bus-01';
 
   const vehiculoNombre =
     recibo && typeof recibo.vehiculo === 'object'

@@ -15,7 +15,7 @@ import { formatCOP, formatHora } from '../lib/format';
 import { anunciarPago, desbloquearVoz, playPaymentChime, unlockAudio } from '../lib/sound';
 
 export const ConductorPage: React.FC = () => {
-  const { vehiculoId = 'bus-101' } = useParams<{ vehiculoId: string }>();
+  const { vehiculoId = 'bus-01' } = useParams<{ vehiculoId: string }>();
 
   const [vehiculo, setVehiculo] = useState<VehiculoInfo | null>(null);
   const [feed, setFeed] = useState<FeedItem[]>([]);

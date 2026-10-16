@@ -1,8 +1,8 @@
 # AI Usage Disclosure
 
 ## Tools Used
-- Claude (Claude Code)
-- Google Antigravity (Gemini)
+- Claude (Claude Code, modelo Claude Opus 5.5)
+- Google Antigravity (CLI `agy`): Gemini 4 Argon (Medium) hasta `prompts/prompt30.md` (el alias configurado «Gemini 3.5 Flash (High)» resolvía a ese modelo); Gemini 4 Argon (High) desde `prompts/prompt34.md`
 - Grok (xAI)
 - Diffusion Studio (`dapi media listen`), solo para transcribir una nota de voz del equipo (`prompts/prompt27.md`; en `prompts/prompt28.md` se pidió usar Google Speech-to-Text, que no se usó)
 
@@ -29,6 +29,12 @@
 - Se usó Grok para aplicar el rediseño de las vistas del pasajero, con el encargo completo en `prompts/prompt21.md`: estructura del deck (una idea por pantalla, estela detrás del título, flujo de tres pasos de la diapositiva 5 en `/src/components/PasoLinea.tsx`), botón principal fijo, `ScrollToTop` y pantalla «Pagar otra vez» (`/src/App.tsx`, `/src/lib/ultimoVehiculo.ts`), recibo para mostrar al conductor con reloj en vivo (`/src/pages/ReciboPage.tsx`), textos con trato de usted y estados de error (`/src/pages/VehiculoCobroPage.tsx`, `/src/pages/ActivarPasePage.tsx`, `/src/pages/PaseListoPage.tsx`, `/src/components/AppShell.tsx`, `/src/index.css`, `/index.html`).
 - Se usó Google Antigravity para la terminal del conductor, con el encargo completo en `prompts/prompt22.md`: capa «Empezar turno», confirmación a pantalla completa con voz (`speechSynthesis`) solo para pagos en estado `pagado` (`/src/pages/ConductorPage.tsx`, `/src/lib/sound.ts`), y el mapeo de errores 5xx a `BACKEND_OFFLINE` (`/src/lib/api.ts`).
 - Claude Code revisó el diff de ambos, probó el flujo completo en Vista Previa y corrigió a mano los mensajes de error al trato de usted (`/src/lib/api.ts`), el respaldo de voz cuando el navegador aún no carga las voces (`/src/lib/sound.ts`), el signo del cashback, un texto repetido y el marcador del plegable, y para hacer el commit (`prompts/prompt24.md`, `prompts/prompt25.md`, `prompts/prompt26.md`, `prompts/prompt27.md`).
+
+### 5. Frontend - Panel de la empresa (`/src/pages/FlotaPage.tsx`)
+- Idea del equipo (nota de voz de Santiago): tres interfaces, pasajero, conductor y empresa.
+- Se usó Claude Code para definir el contenido del panel y proponer el contrato `GET /api/flota` alineado con el esquema de Supabase del equipo (`ESTADO.md` §2.1), con criterio de visualización (cifras protagonistas y barras de una sola serie validadas contra el fondo) (`prompts/prompt29.md`).
+- Se usó Google Antigravity (Gemini 4 Argon, Medium) para implementarlo, con el encargo completo en `prompts/prompt30.md`: `fetchFlota` con respaldo en el cliente si la ruta no existe (`/src/lib/api.ts`), la página `/flota` (`/src/pages/FlotaPage.tsx`, `/src/App.tsx`), el ancho amplio en `/src/components/AppShell.tsx` y la alineación de los ids de vehículo con el seed (`bus-01`, `bus-02`, `taxi-01`).
+- Claude Code revisó el diff, lo probó a 375 y 1280 px y ajustó a mano el tamaño mínimo de dos notas y el formato de «último pago hace N h» (`prompts/prompt31.md` a `prompts/prompt36.md`, que también cubren la configuración local de la llave privada y del modelo de Antigravity).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.

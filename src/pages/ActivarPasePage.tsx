@@ -32,7 +32,7 @@ const WALLETS_DEMO = [
 export const ActivarPasePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const volver = searchParams.get('volver') || '/v/bus-101';
+  const volver = searchParams.get('volver') || '/v/bus-01';
   const isDev = import.meta.env.DEV;
 
   const [walletInput, setWalletInput] = useState<string>(

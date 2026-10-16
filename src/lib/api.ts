@@ -77,6 +77,50 @@ export interface FeedItem {
   fecha: string;
 }
 
+export interface FlotaRuta {
+  ruta: string;
+  recaudo: number;
+  pasajes: number;
+  vehiculos: number;
+}
+
+export interface FlotaVehiculo {
+  id: string;
+  nombre: string;
+  ruta: string;
+  tipo: 'bus' | 'taxi';
+  conductor: string | null;
+  tarifa: number;
+  recaudo: number;
+  pasajes: number;
+  fallidos: number;
+  ultimoPagoEn: string | null;
+}
+
+export interface FlotaPago {
+  viajeId: string;
+  vehiculoId: string;
+  monto: number;
+  estado: string;
+  fecha: string;
+}
+
+export interface FlotaResumen {
+  fecha: string;
+  actualizadoEn: string;
+  totales: {
+    recaudo: number;
+    pasajes: number;
+    pendientes: number;
+    fallidos: number;
+    vehiculosConPagos: number;
+    vehiculos: number;
+  };
+  porRuta: FlotaRuta[];
+  porVehiculo: FlotaVehiculo[];
+  ultimosPagos: FlotaPago[];
+}
+
 const TOKEN_STORAGE_KEY = 'subase_pase_token';
 const PENDING_PASE_KEY = 'subase_pending_pase';
 const UI_PREVIEW_KEY = 'subase_ui_preview_mode';
@@ -86,12 +130,14 @@ const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 export class SubaseApiError extends Error {
   code: ErrorCode;
   details?: unknown;
+  status?: number;
 
-  constructor(code: ErrorCode, message: string, details?: unknown) {
+  constructor(code: ErrorCode, message: string, details?: unknown, status?: number) {
     super(message);
     this.name = 'SubaseApiError';
     this.code = code;
     this.details = details;
+    this.status = status;
   }
 }
 
@@ -194,28 +240,36 @@ export function setUiPreviewMode(enabled: boolean): void {
   }
 }
 
+export const VEHICULOS_FLOTA = ['bus-01', 'bus-02', 'taxi-01'] as const;
+
 const PREVIEW_VEHICULOS: Record<string, Omit<VehiculoInfo, 'paseActivo' | 'disponibleHoy' | 'topeDiario'>> = {
-  'bus-101': {
-    id: 'bus-101',
-    nombre: 'Cootransvi · Buseta 101',
-    ruta: 'Santa Cruz · Estación Acevedo',
+  'bus-01': {
+    id: 'bus-01',
+    nombre: 'Bus 01 — Circular Coonatra',
+    ruta: 'Poblado – Centro – Laureles',
     tarifa: 3200,
     moneda: 'COP',
   },
-  'bus-204': {
-    id: 'bus-204',
-    nombre: 'Rápido San Javier · 204',
-    ruta: 'La Loma · Estación San Javier',
+  'bus-02': {
+    id: 'bus-02',
+    nombre: 'Bus 02 — Buses Unidos',
+    ruta: 'Robledo – Centro',
     tarifa: 3200,
     moneda: 'COP',
   },
-  'taxi-88': {
-    id: 'taxi-88',
-    nombre: 'Coopebombas · Taxi T-88',
-    ruta: 'Carrera Mínima · Valle de Aburrá',
-    tarifa: 7000,
+  'taxi-01': {
+    id: 'taxi-01',
+    nombre: 'Taxi 01 — Poblado',
+    ruta: 'Poblado – Aeropuerto JMC',
+    tarifa: 3200,
     moneda: 'COP',
   },
+};
+
+const FLOTA_META: Record<string, { tipo: 'bus' | 'taxi'; conductor: string | null }> = {
+  'bus-01': { tipo: 'bus', conductor: 'Carlos Muñoz' },
+  'bus-02': { tipo: 'bus', conductor: 'Luz Marina Gil' },
+  'taxi-01': { tipo: 'taxi', conductor: 'Jhon Fredy Ríos' },
 };
 
 // --- Helper HTTP ---
@@ -253,12 +307,12 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
 
   if (!response.ok) {
     if (response.status >= 500 && payload === null) {
-      throw new SubaseApiError('BACKEND_OFFLINE', ERROR_MESSAGES.BACKEND_OFFLINE);
+      throw new SubaseApiError('BACKEND_OFFLINE', ERROR_MESSAGES.BACKEND_OFFLINE, null, response.status);
     }
     const errObj = (payload as { error?: { code?: ErrorCode; message?: string } })?.error;
     const code: ErrorCode = errObj?.code && errObj.code in ERROR_MESSAGES ? errObj.code : 'OP_ERROR';
     const message = errObj?.message || ERROR_MESSAGES[code] || `Error HTTP ${response.status}`;
-    throw new SubaseApiError(code, message, payload);
+    throw new SubaseApiError(code, message, payload, response.status);
   }
 
   return payload as T;
@@ -270,8 +324,8 @@ export async function fetchVehiculo(vehiculoId: string): Promise<VehiculoInfo> {
   if (isUiPreviewMode()) {
     const base = PREVIEW_VEHICULOS[vehiculoId] || {
       id: vehiculoId,
-      nombre: `Cootransvi · Vehículo ${vehiculoId.toUpperCase()}`,
-      ruta: 'Ruta Barrial Medellín',
+      nombre: `Vehículo ${vehiculoId.toUpperCase()}`,
+      ruta: 'Poblado – Centro – Laureles',
       tarifa: 3200,
       moneda: 'COP',
     };
@@ -391,9 +445,9 @@ export async function fetchViaje(viajeId: string): Promise<ReciboViaje> {
       monto: 3200,
       cashback: 64,
       vehiculo: {
-        id: 'bus-101',
-        nombre: 'Cootransvi · Buseta 101',
-        ruta: 'Santa Cruz · Estación Acevedo',
+        id: 'bus-01',
+        nombre: 'Bus 01 — Circular Coonatra',
+        ruta: 'Poblado – Centro – Laureles',
       },
       fecha: new Date().toISOString(),
       disponibleHoy: Number(localStorage.getItem('subase_preview_disp') ?? 16800),
@@ -422,3 +476,216 @@ export async function fetchVehiculoFeed(vehiculoId: string, desde?: string): Pro
   const query = desde ? `?desde=${encodeURIComponent(desde)}` : '';
   return apiRequest<FeedItem[]>(`/api/vehiculos/${encodeURIComponent(vehiculoId)}/feed${query}`);
 }
+
+function fechaBogotaYYYYMMDD(date: Date = new Date()): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Bogota',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(date);
+    const y = parts.find((p) => p.type === 'year')?.value;
+    const m = parts.find((p) => p.type === 'month')?.value;
+    const d = parts.find((p) => p.type === 'day')?.value;
+    if (y && m && d) return `${y}-${m}-${d}`;
+  } catch {
+    // fallback
+  }
+  return date.toISOString().slice(0, 10);
+}
+
+function generarViajesDemoDeterministas(fechaStr: string): FlotaPago[] {
+  const ahoraMs = Date.now();
+  // 06:00:00 en Colombia (UTC-5)
+  const seisAmMs = new Date(`${fechaStr}T06:00:00-05:00`).getTime();
+  // Anclar al bloque de 5 minutos actual para que sea determinista entre pollings
+  const topeSuperiorMs = Math.floor((ahoraMs - 90 * 1000) / (5 * 60 * 1000)) * (5 * 60 * 1000);
+  const inicioMs =
+    Number.isFinite(seisAmMs) && seisAmMs < topeSuperiorMs - 30 * 60 * 1000
+      ? seisAmMs
+      : topeSuperiorMs - 4 * 60 * 60 * 1000;
+  const rangoMs = Math.max(15 * 60 * 1000, topeSuperiorMs - inicioMs);
+
+  const plantilla: Array<{ idSuffix: string; vehiculoId: string; estado: 'pagado' | 'fallido'; frac: number }> = [
+    { idSuffix: '1001', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.06 },
+    { idSuffix: '1002', vehiculoId: 'bus-02', estado: 'pagado', frac: 0.13 },
+    { idSuffix: '1003', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.21 },
+    { idSuffix: '1004', vehiculoId: 'taxi-01', estado: 'pagado', frac: 0.28 },
+    { idSuffix: '1005', vehiculoId: 'bus-02', estado: 'pagado', frac: 0.35 },
+    { idSuffix: '1006', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.42 },
+    { idSuffix: '1007', vehiculoId: 'bus-02', estado: 'pagado', frac: 0.50 },
+    { idSuffix: '1008', vehiculoId: 'bus-01', estado: 'fallido', frac: 0.57 },
+    { idSuffix: '1009', vehiculoId: 'taxi-01', estado: 'pagado', frac: 0.64 },
+    { idSuffix: '1010', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.72 },
+    { idSuffix: '1011', vehiculoId: 'bus-02', estado: 'pagado', frac: 0.79 },
+    { idSuffix: '1012', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.86 },
+    { idSuffix: '1013', vehiculoId: 'bus-02', estado: 'pagado', frac: 0.93 },
+    { idSuffix: '1014', vehiculoId: 'bus-01', estado: 'pagado', frac: 0.98 },
+  ];
+
+  return plantilla.map((item) => {
+    const tMs = Math.round((inicioMs + rangoMs * item.frac) / 60000) * 60000;
+    const tarifa = PREVIEW_VEHICULOS[item.vehiculoId]?.tarifa ?? 3200;
+    return {
+      viajeId: `viaje-demo-${item.idSuffix}`,
+      vehiculoId: item.vehiculoId,
+      monto: tarifa,
+      estado: item.estado,
+      fecha: new Date(tMs).toISOString(),
+    };
+  });
+}
+
+function armarResumenFlota(
+  fechaStr: string,
+  vehiculosDef: Array<{ id: string; nombre: string; ruta: string; tarifa: number }>,
+  pagosDia: FlotaPago[]
+): FlotaResumen {
+  const pagosOrdenados = [...pagosDia].sort(
+    (a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
+  );
+
+  let totalRecaudo = 0;
+  let totalPasajes = 0;
+  let totalPendientes = 0;
+  let totalFallidos = 0;
+
+  for (const p of pagosOrdenados) {
+    if (p.estado === 'pagado') {
+      totalRecaudo += Number(p.monto) || 0;
+      totalPasajes += 1;
+    } else if (p.estado === 'pendiente') {
+      totalPendientes += 1;
+    } else if (p.estado === 'fallido') {
+      totalFallidos += 1;
+    }
+  }
+
+  const porVehiculo: FlotaVehiculo[] = vehiculosDef.map((v) => {
+    const meta = FLOTA_META[v.id] || {
+      tipo: v.id.startsWith('taxi') ? 'taxi' : 'bus',
+      conductor: null,
+    };
+    const pagosV = pagosOrdenados.filter((p) => p.vehiculoId === v.id);
+    const pagadosV = pagosV.filter((p) => p.estado === 'pagado');
+    const fallidosV = pagosV.filter((p) => p.estado === 'fallido').length;
+    const recaudoV = pagadosV.reduce((acc, p) => acc + (Number(p.monto) || 0), 0);
+    const ultimoPagoEn = pagadosV.length > 0 ? pagadosV[0].fecha : null;
+
+    return {
+      id: v.id,
+      nombre: v.nombre,
+      ruta: v.ruta,
+      tipo: meta.tipo,
+      conductor: meta.conductor,
+      tarifa: v.tarifa,
+      recaudo: recaudoV,
+      pasajes: pagadosV.length,
+      fallidos: fallidosV,
+      ultimoPagoEn,
+    };
+  });
+
+  porVehiculo.sort((a, b) => b.recaudo - a.recaudo);
+
+  const vehiculosConPagos = porVehiculo.filter((v) => v.pasajes > 0).length;
+
+  const rutasMap = new Map<string, FlotaRuta>();
+  for (const v of porVehiculo) {
+    const actual = rutasMap.get(v.ruta) || {
+      ruta: v.ruta,
+      recaudo: 0,
+      pasajes: 0,
+      vehiculos: 0,
+    };
+    actual.recaudo += v.recaudo;
+    actual.pasajes += v.pasajes;
+    actual.vehiculos += 1;
+    rutasMap.set(v.ruta, actual);
+  }
+
+  const porRuta = Array.from(rutasMap.values()).sort((a, b) => b.recaudo - a.recaudo);
+
+  return {
+    fecha: fechaStr,
+    actualizadoEn: new Date().toISOString(),
+    totales: {
+      recaudo: totalRecaudo,
+      pasajes: totalPasajes,
+      pendientes: totalPendientes,
+      fallidos: totalFallidos,
+      vehiculosConPagos,
+      vehiculos: vehiculosDef.length,
+    },
+    porRuta,
+    porVehiculo,
+    ultimosPagos: pagosOrdenados.slice(0, 20),
+  };
+}
+
+export async function fetchFlota(fecha?: string): Promise<FlotaResumen> {
+  const fechaStr = fecha || fechaBogotaYYYYMMDD();
+
+  if (isUiPreviewMode()) {
+    const vehiculosDef = VEHICULOS_FLOTA.map((id) => PREVIEW_VEHICULOS[id]);
+    const demoPagos = generarViajesDemoDeterministas(fechaStr);
+    const guardados = JSON.parse(localStorage.getItem('subase_preview_viajes') || '[]') as ReciboViaje[];
+    const pagosRealesPreview: FlotaPago[] = guardados.map((v) => ({
+      viajeId: v.viajeId,
+      vehiculoId: typeof v.vehiculo === 'string' ? v.vehiculo : v.vehiculo.id,
+      monto: v.monto,
+      estado: 'pagado',
+      fecha: v.fecha,
+    }));
+
+    const porId = new Map<string, FlotaPago>();
+    for (const p of [...pagosRealesPreview, ...demoPagos]) {
+      porId.set(p.viajeId, p);
+    }
+
+    return armarResumenFlota(fechaStr, vehiculosDef, Array.from(porId.values()));
+  }
+
+  const query = fecha ? `?fecha=${encodeURIComponent(fecha)}` : '';
+  try {
+    return await apiRequest<FlotaResumen>(`/api/flota${query}`);
+  } catch (err) {
+    if (err instanceof SubaseApiError && err.status === 404) {
+      const resultados = await Promise.all(
+        VEHICULOS_FLOTA.map(async (id) => {
+          const [veh, feed] = await Promise.all([fetchVehiculo(id), fetchVehiculoFeed(id)]);
+          return { veh, feed };
+        })
+      );
+
+      const vehiculosDef = resultados.map((r) => ({
+        id: r.veh.id,
+        nombre: r.veh.nombre,
+        ruta: r.veh.ruta,
+        tarifa: r.veh.tarifa,
+      }));
+
+      const pagosDia: FlotaPago[] = [];
+      for (const r of resultados) {
+        if (!Array.isArray(r.feed)) continue;
+        for (const item of r.feed) {
+          const diaItem = fechaBogotaYYYYMMDD(new Date(item.fecha));
+          if (diaItem === fechaStr) {
+            pagosDia.push({
+              viajeId: item.viajeId,
+              vehiculoId: r.veh.id,
+              monto: item.monto,
+              estado: item.estado,
+              fecha: item.fecha,
+            });
+          }
+        }
+      }
+
+      return armarResumenFlota(fechaStr, vehiculosDef, pagosDia);
+    }
+    throw err;
+  }
+}
+

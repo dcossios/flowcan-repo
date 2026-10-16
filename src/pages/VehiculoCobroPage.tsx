@@ -45,7 +45,7 @@ function extraerReciboDuplicado(details: unknown): ReciboViaje | null {
 }
 
 export const VehiculoCobroPage: React.FC = () => {
-  const { vehiculoId = 'bus-101' } = useParams<{ vehiculoId: string }>();
+  const { vehiculoId = 'bus-01' } = useParams<{ vehiculoId: string }>();
   const navigate = useNavigate();
   const isDev = import.meta.env.DEV;
 
@@ -272,7 +272,7 @@ export const VehiculoCobroPage: React.FC = () => {
             <div className="mt-8 flex items-center justify-between gap-3">
               <span className="text-[13px] font-normal text-[#C3C5C6]">Rutas piloto</span>
               <div className="flex items-center gap-1">
-                {['bus-101', 'bus-204', 'taxi-88'].map((id) => (
+                {['bus-01', 'bus-02', 'taxi-01'].map((id) => (
                   <Link
                     key={id}
                     to={`/v/${id}`}
