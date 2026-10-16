@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertCircle, ArrowRight, CheckCircle2, Loader2, ShieldCheck } from 'lucide-react';
-import { AppShell } from '../components/AppShell';
+import { Loader2 } from 'lucide-react';
+import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
+import { PasoLinea } from '../components/PasoLinea';
 import {
   clearPendingPaseContext,
   confirmarPase,
@@ -21,7 +22,9 @@ export const PaseListoPage: React.FC = () => {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [confirmado, setConfirmado] = useState<ConfirmarPaseResponse | null>(null);
-  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(null);
+  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(
+    null
+  );
 
   const pendingCtx = getPendingPaseContext();
   const paseId = searchParams.get('paseId') || pendingCtx?.paseId || '';
@@ -39,7 +42,7 @@ export const PaseListoPage: React.FC = () => {
         setErrorInfo({
           code: 'PASE_INVALIDO',
           message:
-            'Faltan parámetros del redirect de la wallet (paseId o interact_ref). Intenta activar el pase nuevamente.',
+            'Faltan datos de su billetera para confirmar el pase. Intente activarlo de nuevo.',
         });
         setLoading(false);
         return;
@@ -54,7 +57,11 @@ export const PaseListoPage: React.FC = () => {
         setConfirmado(res);
         playPaymentChime();
       } catch (err) {
-        setErrorInfo(getFriendlyErrorMessage(err));
+        const friendly = getFriendlyErrorMessage(err);
+        setErrorInfo({
+          code: friendly.code,
+          message: mensajeErrorPasajero(friendly.code, friendly.message),
+        });
       } finally {
         setLoading(false);
       }
@@ -71,107 +78,86 @@ export const PaseListoPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [confirmado, destinoVolver, navigate]);
 
+  const paso: 1 | 2 | 3 = confirmado ? 2 : 1;
+
   return (
     <AppShell>
-      <div className="flex-1 flex flex-col justify-center gap-6 my-auto">
+      <div className="flex-1 flex flex-col">
+        <PasoLinea paso={paso} variante="compacta" />
+
         {loading && (
-          <div className="subase-card p-8 text-center flex flex-col items-center">
-            <Loader2 className="w-10 h-10 text-[#D2B99A] animate-spin mb-4" strokeWidth={1.5} />
-            <span className="text-xs font-light uppercase tracking-[0.16em] text-[#D2B99A]">
-              AUTORIZACIÓN · UNA VEZ
-            </span>
-            <h1 className="text-2xl font-light uppercase tracking-wide text-white mt-1">
-              CONFIRMANDO GRANT…
+          <div className="flex-1 flex flex-col justify-center py-16">
+            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin mb-4" strokeWidth={1.5} />
+            <h1 className="text-[32px] font-light text-white leading-tight">
+              Confirmando su pase…
             </h1>
-            <p className="text-xs font-light text-[#C3C5C6] mt-2">
-              Ejecutando <code className="font-mono">grant.continue</code> con Interledger Open
-              Payments
+            <div className="subase-sand-rule mt-2.5" />
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
+              Un momento. Estamos recibiendo la autorización de su billetera.
             </p>
           </div>
         )}
 
         {!loading && errorInfo && (
-          <div role="alert" className="subase-card-sand p-6 space-y-5">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="w-7 h-7 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-              <div>
-                <p className="text-xs font-mono uppercase tracking-wider text-[#D2B99A]">
-                  {errorInfo.code}
-                </p>
-                <h1 className="text-xl font-light uppercase tracking-wide text-white mt-0.5">
-                  NO SE PUDO CONFIRMAR EL PASE
-                </h1>
-              </div>
-            </div>
-            <div className="subase-sand-rule" />
-            <p className="text-sm font-light text-[#C3C5C6]">{errorInfo.message}</p>
-
-            <div className="pt-2 flex flex-col gap-2.5">
+          <div className="mt-8 flex-1 flex flex-col" role="alert">
+            <h1 className="text-[32px] font-light text-white leading-tight">
+              No se pudo confirmar el pase
+            </h1>
+            <div className="subase-sand-rule mt-2.5" />
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
+              {errorInfo.message}
+            </p>
+            <div className="mt-8 flex flex-col gap-3">
               <Link
                 to={`/pase/activar?volver=${encodeURIComponent(destinoVolver)}`}
-                className="w-full py-3.5 px-5 rounded-[12px] bg-[#113462] border border-white/40 text-white font-normal uppercase tracking-wider text-xs flex items-center justify-center gap-2 min-h-12"
+                className="subase-btn-primary"
               >
                 Intentar de nuevo
               </Link>
               <Link
                 to={destinoVolver}
-                className="w-full py-3 px-5 rounded-[12px] border border-white/25 text-[#C3C5C6] hover:text-white font-normal uppercase tracking-wider text-xs flex items-center justify-center min-h-11"
+                className="inline-flex items-center justify-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
               >
-                Volver al vehículo
+                Volver al bus
               </Link>
             </div>
+            <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
           </div>
         )}
 
         {!loading && confirmado && (
-          <div className="subase-card p-6 space-y-5">
-            <div className="flex items-center justify-between">
-              <span className="inline-flex items-center gap-1.5 text-xs font-light uppercase tracking-[0.16em] text-[#D2B99A]">
-                <ShieldCheck className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-                AUTORIZACIÓN COMPLETADA
+          <div className="mt-8 flex-1 flex flex-col">
+            <h1 className="text-[32px] font-light text-white leading-tight">Pase activo</h1>
+            <div className="subase-sand-rule mt-2.5" />
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
+              Su tope diario ya está autorizado. Lo llevamos al bus para pagar.
+            </p>
+
+            <hr className="subase-filete mt-6 mb-6" />
+
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</span>
+              <span className="text-[32px] font-light text-white leading-none">
+                {formatCOP(confirmado.pase.disponibleHoy)}
               </span>
-              <CheckCircle2 className="w-6 h-6 text-[#D2B99A]" strokeWidth={1.5} />
             </div>
-
-            <div>
-              <h1 className="text-3xl font-light uppercase tracking-wide text-white">
-                PASE ACTIVADO
-              </h1>
-              <div className="subase-sand-rule mt-2.5" />
-              <p className="text-sm font-light text-[#C3C5C6] mt-3">
-                Tu límite diario ya está activo. Redirigiendo al vehículo para pagar tu pasaje…
-              </p>
+            <div className="flex items-baseline justify-between gap-4 mt-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">Tope diario</span>
+              <span className="text-[15px] font-normal text-white">
+                {formatCOP(confirmado.pase.topeDiario)}
+              </span>
             </div>
-
-            <div className="border-t border-b subase-divider py-4 space-y-2.5 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-light text-[#C3C5C6]">01 · Disponible hoy</span>
-                <span className="font-light text-white text-lg">
-                  {formatCOP(confirmado.pase.disponibleHoy)}
+            {confirmado.pase.venceEn && (
+              <div className="flex items-baseline justify-between gap-4 mt-4">
+                <span className="text-[15px] font-normal text-[#C3C5C6]">Vigencia</span>
+                <span className="text-[15px] font-normal text-white">
+                  {formatFechaHora(confirmado.pase.venceEn)}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="font-light text-[#C3C5C6]">02 · Límite diario</span>
-                <span className="font-normal text-[#C3C5C6]">
-                  {formatCOP(confirmado.pase.topeDiario)} / día
-                </span>
-              </div>
-              {confirmado.pase.venceEn && (
-                <div className="flex items-center justify-between">
-                  <span className="font-light text-[#C3C5C6]">03 · Vigencia</span>
-                  <span className="font-light text-[#D2B99A]">
-                    {formatFechaHora(confirmado.pase.venceEn)}
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
 
-            <Link
-              to={destinoVolver}
-              className="w-full py-4 px-6 rounded-[12px] bg-[#113462] hover:bg-[#0C4672] border border-white/40 text-white font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-2.5 min-h-14"
-            >
-              <span>CONTINUAR AL VEHÍCULO</span>
-              <ArrowRight className="w-5 h-5 text-[#D2B99A]" strokeWidth={1.5} />
+            <Link to={destinoVolver} className="subase-btn-primary mt-10">
+              Continuar al bus
             </Link>
           </div>
         )}

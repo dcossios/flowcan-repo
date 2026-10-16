@@ -3,6 +3,8 @@
 ## Tools Used
 - Claude (Claude Code)
 - Google Antigravity (Gemini)
+- Grok (xAI)
+- Diffusion Studio (`dapi media listen`), solo para transcribir una nota de voz del equipo (`prompts/prompt27.md`; en `prompts/prompt28.md` se pidió usar Google Speech-to-Text, que no se usó)
 
 ## Where and How We Used AI
 
@@ -21,6 +23,12 @@
   - Cliente de API y manejo de token `Bearer` en `localStorage` (`/src/lib/api.ts`), utilidades de formato COP (`/src/lib/format.ts`) y sonido de confirmación Web Audio API (`/src/lib/sound.ts`).
   - Vistas núcleo: cobro en vehículo (`/src/pages/VehiculoCobroPage.tsx`), activación de pase GNAP (`/src/pages/ActivarPasePage.tsx`), confirmación de grant (`/src/pages/PaseListoPage.tsx`), recibo con cashback (`/src/pages/ReciboPage.tsx`) y terminal del conductor con QR y polling cada 2 s (`/src/pages/ConductorPage.tsx`).
 - Se usó Claude Code para revisar el frontend frente a los criterios de evaluación del hackathon y la Guía de Marca, y para hacer el commit del frontend, sin editar código (`prompts/prompt9.md`, `prompts/prompt10.md`, `prompts/prompt11.md`, `prompts/prompt12.md`).
+
+### 4. Frontend - Auditoría y rediseño de UX (`/src/...`)
+- Se usó Claude Code para auditar el diseño en celular (360×640 y 375×812): legibilidad, botón principal fuera de pantalla, recibo que abría desplazado, jerga técnica, confianza y uso para el conductor; y para fijar el criterio de rediseño sobre el pitch y la Guía de Marca (`prompts/prompt13.md` a `prompts/prompt20.md`, `prompts/prompt23.md`). Dos direcciones visuales prototipadas con IA se descartaron y no están en el repo.
+- Se usó Grok para aplicar el rediseño de las vistas del pasajero, con el encargo completo en `prompts/prompt21.md`: estructura del deck (una idea por pantalla, estela detrás del título, flujo de tres pasos de la diapositiva 5 en `/src/components/PasoLinea.tsx`), botón principal fijo, `ScrollToTop` y pantalla «Pagar otra vez» (`/src/App.tsx`, `/src/lib/ultimoVehiculo.ts`), recibo para mostrar al conductor con reloj en vivo (`/src/pages/ReciboPage.tsx`), textos con trato de usted y estados de error (`/src/pages/VehiculoCobroPage.tsx`, `/src/pages/ActivarPasePage.tsx`, `/src/pages/PaseListoPage.tsx`, `/src/components/AppShell.tsx`, `/src/index.css`, `/index.html`).
+- Se usó Google Antigravity para la terminal del conductor, con el encargo completo en `prompts/prompt22.md`: capa «Empezar turno», confirmación a pantalla completa con voz (`speechSynthesis`) solo para pagos en estado `pagado` (`/src/pages/ConductorPage.tsx`, `/src/lib/sound.ts`), y el mapeo de errores 5xx a `BACKEND_OFFLINE` (`/src/lib/api.ts`).
+- Claude Code revisó el diff de ambos, probó el flujo completo en Vista Previa y corrigió a mano los mensajes de error al trato de usted (`/src/lib/api.ts`), el respaldo de voz cuando el navegador aún no carga las voces (`/src/lib/sound.ts`), el signo del cashback, un texto repetido y el marcador del plegable, y para hacer el commit (`prompts/prompt24.md`, `prompts/prompt25.md`, `prompts/prompt26.md`, `prompts/prompt27.md`).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.

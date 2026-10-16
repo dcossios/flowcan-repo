@@ -1,18 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowLeft,
-  Bus,
-  CheckCircle2,
-  Clock,
-  Loader2,
-  QrCode,
-  Receipt,
-} from 'lucide-react';
-import { AppShell } from '../components/AppShell';
+import { CircleCheck, Loader2 } from 'lucide-react';
+import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
+import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
 import { formatCOP, formatFechaHora } from '../lib/format';
+
+function lineaVehiculo(nombre: string, ruta: string): string {
+  const rutaFlecha = ruta.replace(/\s·\s/g, ' → ');
+  if (!nombre) return rutaFlecha;
+  if (!ruta) return nombre;
+  return `${nombre} · ${rutaFlecha}`;
+}
+
+const RelojVivo: React.FC = () => {
+  const [ahora, setAhora] = useState(() => new Date());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setAhora(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  const texto = ahora.toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  return (
+    <div className="mt-6">
+      <p className="text-[13px] font-normal text-[#C3C5C6]">Hora actual</p>
+      <p className="text-[20px] font-normal text-white tabular-nums mt-1">{texto}</p>
+    </div>
+  );
+};
 
 export const ReciboPage: React.FC = () => {
   const { viajeId = '' } = useParams<{ viajeId: string }>();
@@ -21,7 +43,9 @@ export const ReciboPage: React.FC = () => {
 
   const [recibo, setRecibo] = useState<ReciboViaje | null>(stateRecibo);
   const [loading, setLoading] = useState<boolean>(!stateRecibo);
-  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(null);
+  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(
+    null
+  );
 
   useEffect(() => {
     if (stateRecibo) return;
@@ -32,7 +56,13 @@ export const ReciboPage: React.FC = () => {
         const data = await fetchViaje(viajeId);
         if (active) setRecibo(data);
       } catch (err) {
-        if (active) setErrorInfo(getFriendlyErrorMessage(err));
+        if (active) {
+          const friendly = getFriendlyErrorMessage(err);
+          setErrorInfo({
+            code: friendly.code,
+            message: mensajeErrorPasajero(friendly.code, friendly.message),
+          });
+        }
       } finally {
         if (active) setLoading(false);
       }
@@ -47,8 +77,8 @@ export const ReciboPage: React.FC = () => {
     recibo && typeof recibo.vehiculo === 'object'
       ? recibo.vehiculo.id
       : typeof recibo?.vehiculo === 'string'
-      ? recibo.vehiculo
-      : 'bus-101';
+        ? recibo.vehiculo
+        : 'bus-101';
 
   const vehiculoNombre =
     recibo && typeof recibo.vehiculo === 'object'
@@ -56,150 +86,105 @@ export const ReciboPage: React.FC = () => {
       : `Vehículo ${vehiculoId}`;
 
   const vehiculoRuta =
-    recibo && typeof recibo.vehiculo === 'object' ? recibo.vehiculo.ruta : 'Ruta Barrial Medellín';
+    recibo && typeof recibo.vehiculo === 'object' ? recibo.vehiculo.ruta : '';
 
   return (
     <AppShell vehiculoIdActual={vehiculoId}>
-      <div className="flex-1 flex flex-col justify-between gap-6">
+      <div className="flex-1 flex flex-col">
         {loading && (
-          <div className="subase-card p-8 text-center my-auto flex flex-col items-center">
-            <Loader2 className="w-9 h-9 text-[#D2B99A] animate-spin mb-3" strokeWidth={1.5} />
-            <p className="text-base font-normal uppercase tracking-wider text-white">
-              Consultando comprobante…
+          <div className="flex-1 flex flex-col items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">
+              Consultando el tiquete…
             </p>
           </div>
         )}
 
         {!loading && errorInfo && (
-          <div role="alert" className="subase-card-sand p-5 my-auto">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-              <div>
-                <p className="text-xs font-mono text-[#D2B99A]">{errorInfo.code}</p>
-                <p className="text-sm font-light text-white mt-1">{errorInfo.message}</p>
-                <Link
-                  to="/v/bus-101"
-                  className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-[12px] bg-[#113462] border border-white/40 text-white text-xs font-normal uppercase tracking-wider"
-                >
-                  Volver al inicio
-                </Link>
-              </div>
-            </div>
+          <div role="alert" className="flex-1 flex flex-col">
+            <h1 className="text-[32px] font-light text-white leading-tight">
+              No pudimos cargar el tiquete
+            </h1>
+            <div className="subase-sand-rule mt-2.5" />
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
+              {errorInfo.message}
+            </p>
+            <Link to="/" className="subase-btn-primary mt-8">
+              Volver al inicio
+            </Link>
+            <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
           </div>
         )}
 
         {!loading && recibo && (
           <>
-            {/* Encabezado de sección con subrayado de arena */}
-            <div>
-              <span className="text-xs font-light uppercase tracking-[0.16em] text-[#D2B99A]">
-                FINALIZACIÓN · OUTGOING PAYMENT
+            <PasoLinea paso={3} variante="compacta" />
+
+            <div className="mt-8 flex items-center gap-4">
+              <CircleCheck
+                className="w-16 h-16 text-[#D2B99A] shrink-0"
+                strokeWidth={1.5}
+              />
+              <h1 className="text-[56px] font-light text-white leading-none">Pagado</h1>
+            </div>
+            <div className="subase-sand-rule mt-3" />
+
+            <p className="text-[48px] font-light text-white leading-none tracking-tight mt-8">
+              {formatCOP(recibo.monto)}
+            </p>
+
+            <p className="text-[15px] font-normal text-white mt-4 leading-snug">
+              {lineaVehiculo(vehiculoNombre, vehiculoRuta)}
+            </p>
+
+            <RelojVivo />
+
+            <p className="text-[15px] font-normal text-[#C3C5C6] mt-6 leading-relaxed">
+              Muéstrele esta pantalla al conductor si se la pide.
+            </p>
+
+            <hr className="subase-filete mt-8 mb-0" />
+            <div className="flex items-baseline justify-between gap-4 py-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">Fecha del pago</span>
+              <span className="text-[15px] font-normal text-white text-right">
+                {formatFechaHora(recibo.fecha)}
               </span>
-              <div className="flex items-center justify-between gap-3 mt-1">
-                <h1 className="text-3xl font-light uppercase tracking-wide text-white">
-                  ✅ PASAJE PAGADO
-                </h1>
-                <CheckCircle2 className="w-7 h-7 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-              </div>
-              <div className="subase-sand-rule mt-2.5" />
+            </div>
+            <hr className="subase-filete" />
+            <div className="flex items-baseline justify-between gap-4 py-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">Tiquete N.º</span>
+              <span className="text-[15px] font-normal text-white text-right break-all">
+                {recibo.viajeId}
+              </span>
+            </div>
+            <hr className="subase-filete" />
+            <div className="flex items-baseline justify-between gap-4 py-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</span>
+              <span className="text-[15px] font-normal text-white">
+                {formatCOP(recibo.disponibleHoy)}
+              </span>
+            </div>
+            <hr className="subase-filete" />
+            <div className="flex items-baseline justify-between gap-4 py-4">
+              <span className="text-[15px] font-normal text-[#C3C5C6]">
+                Cashback (simulado)
+              </span>
+              <span className="text-[15px] font-normal text-white">
+                +{formatCOP(recibo.cashback)}
+              </span>
+            </div>
+            <hr className="subase-filete" />
+
+            <div className="mt-6">
+              <ComoUsamosOpenPayments />
             </div>
 
-            {/* Tarjeta principal del recibo (borde 1 px blanco/arena, radio 12 px) */}
-            <div className="subase-card p-6 space-y-5 my-auto">
-              {/* Cifra destacada en Poppins Light */}
-              <div className="border-b subase-divider pb-5">
-                <span className="text-xs font-light uppercase tracking-[0.15em] text-[#C3C5C6]">
-                  MONTO TRANSFERIDO A LA FLOTA
-                </span>
-                <p
-                  className="font-light text-white mt-2 leading-none"
-                  style={{ fontSize: 'clamp(2.5rem, 1.8rem + 3.5vw, 3.5rem)' }}
-                >
-                  {formatCOP(recibo.monto)}
-                </p>
-              </div>
-
-              {/* Bloque de Cashback (Diapositiva 9: CASHBACK · CAC financiado por el ahorro) */}
-              <div className="subase-card-sand p-4 flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[11px] font-light uppercase tracking-[0.16em] text-[#D2B99A]">
-                    CASHBACK SÚBASE (SIMULADO)
-                  </span>
-                  <p className="text-xs font-light text-[#C3C5C6] mt-0.5">
-                    Financiado por el ahorro del recaudo sin efectivo
-                  </p>
-                </div>
-                <span className="text-xl font-light text-white border border-[#D2B99A] rounded-[12px] px-3.5 py-1.5 shrink-0">
-                  +{formatCOP(recibo.cashback)}
-                </span>
-              </div>
-
-              {/* Filas numeradas 01–04 separadas por líneas finas en gris plata (#C3C5C6) */}
-              <div className="divide-y divide-[#C3C5C6]/20 text-sm">
-                <div className="py-2.5 flex items-center justify-between gap-2">
-                  <span className="font-light text-[#C3C5C6] flex items-center gap-2">
-                    <span className="text-[#D2B99A]">01</span>
-                    <Bus className="w-4 h-4 text-white" strokeWidth={1.5} />
-                    <span>Vehículo</span>
-                  </span>
-                  <span className="font-normal text-white text-right">{vehiculoNombre}</span>
-                </div>
-
-                {vehiculoRuta && (
-                  <div className="py-2.5 flex items-center justify-between gap-2">
-                    <span className="font-light text-[#C3C5C6] flex items-center gap-2">
-                      <span className="text-[#D2B99A]">02</span>
-                      <span>Ruta</span>
-                    </span>
-                    <span className="font-light text-[#C3C5C6] text-right">{vehiculoRuta}</span>
-                  </div>
-                )}
-
-                <div className="py-2.5 flex items-center justify-between gap-2">
-                  <span className="font-light text-[#C3C5C6] flex items-center gap-2">
-                    <span className="text-[#D2B99A]">03</span>
-                    <Clock className="w-4 h-4 text-white" strokeWidth={1.5} />
-                    <span>Fecha y hora</span>
-                  </span>
-                  <span className="font-light text-white">{formatFechaHora(recibo.fecha)}</span>
-                </div>
-
-                <div className="py-2.5 flex items-center justify-between gap-2">
-                  <span className="font-light text-[#C3C5C6] flex items-center gap-2">
-                    <span className="text-[#D2B99A]">04</span>
-                    <Receipt className="w-4 h-4 text-white" strokeWidth={1.5} />
-                    <span>ID Transacción</span>
-                  </span>
-                  <span className="font-mono text-xs text-[#D2B99A]">{recibo.viajeId}</span>
-                </div>
-
-                <div className="pt-3 flex items-center justify-between gap-2">
-                  <span className="font-light text-[#C3C5C6]">Disponible restante hoy</span>
-                  <span className="font-normal text-white text-base">
-                    {formatCOP(recibo.disponibleHoy)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Botones de navegación */}
-            <div className="space-y-2.5 pt-1">
-              <Link
-                to={`/v/${encodeURIComponent(vehiculoId)}`}
-                className="w-full py-4 px-5 rounded-[12px] bg-[#113462] hover:bg-[#0C4672] border border-white/40 text-white font-normal uppercase tracking-[0.1em] text-sm flex items-center justify-center gap-2 min-h-14"
-              >
-                <ArrowLeft className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-                <span>VOLVER AL VEHÍCULO ({vehiculoId})</span>
-              </Link>
-
-              <Link
-                to={`/conductor/${encodeURIComponent(vehiculoId)}`}
-                className="w-full py-3.5 px-5 rounded-[12px] border border-white/25 hover:border-[#D2B99A] text-[#C3C5C6] hover:text-white font-normal uppercase tracking-wider text-xs flex items-center justify-center gap-2 min-h-12"
-              >
-                <QrCode className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-                <span>VER TERMINAL DEL CONDUCTOR</span>
-              </Link>
-            </div>
+            <Link
+              to={`/v/${encodeURIComponent(vehiculoId)}`}
+              className="inline-flex items-center justify-center min-h-11 mt-6 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+            >
+              Volver al bus
+            </Link>
           </>
         )}
       </div>

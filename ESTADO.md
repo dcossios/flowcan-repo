@@ -17,6 +17,9 @@
 | **Frontend (`src/`)** | `/pase/listo` — Confirmación del grant GNAP (`interact_ref`, `hash`) | ✅ Listo | Frontend |
 | **Frontend (`src/`)** | `/recibo/:viajeId` — Comprobante con cashback simulado (2%) | ✅ Listo | Frontend |
 | **Frontend (`src/`)** | `/conductor/:vehiculoId` — QR grande + recaudo del turno + feed 2s con sonido | ✅ Listo | Frontend |
+| **Frontend (`src/`)** | Rediseño sobre el pitch y la Guía de Marca: flujo de 3 pasos, botón fijo, trato de usted, recibo para mostrar al conductor, `/` = «Pagar otra vez» | ✅ Listo (probado en Vista Previa) | Andrés |
+| **Frontend (`src/`)** | Conductor: «Empezar turno», capa a pantalla completa y voz solo con `estado === 'pagado'`; `pendiente` = «Confirmando…», `fallido` = «Pago fallido» | ✅ Listo (probado en Vista Previa) | Andrés |
+| **Frontend ↔ Backend** | El front espera `estado` en `pendiente` / `pagado` / `fallido` en el feed, y en `PAGO_DUPLICADO` el recibo en `error.recibo` o `error.details` | ⏳ Confirmar con David | Andrés / David |
 | **Backend (`server/`)** | Inicializar Node 20 + Express + SQLite + `@interledger/open-payments` | ⏳ Pendiente | David |
 | **Backend (`server/`)** | Endpoints `/api/vehiculos/:id`, `/api/pases`, `/api/viajes`, `/feed` | ⏳ Pendiente | David |
 | **Integración** | Prueba end-to-end contra Interledger Test Wallet | ⏳ Pendiente | Santiago / David |

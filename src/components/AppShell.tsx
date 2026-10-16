@@ -1,21 +1,38 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ArrowUpRight, QrCode, ShieldCheck } from 'lucide-react';
-import { isUiPreviewMode, setUiPreviewMode } from '../lib/api';
+import { ErrorCode, isUiPreviewMode, setUiPreviewMode } from '../lib/api';
 
 interface AppShellProps {
   children: React.ReactNode;
   subtitle?: string;
   vehiculoIdActual?: string;
+  /** Reserva espacio en el pie para la barra fija de pagar / aprobar. */
+  barraFija?: boolean | 'alta';
+}
+
+const MENSAJES_USTED: Record<ErrorCode, string> = {
+  SALDO_INSUFICIENTE: 'Saldo insuficiente en su billetera para cubrir este pasaje.',
+  TOPE_ALCANZADO: 'Alcanzó el tope diario de su pase. Active o amplíe el pase para continuar.',
+  PAGO_DUPLICADO: 'Ya pagó este bus hace menos de 2 minutos. No le cobramos dos veces.',
+  PASE_INVALIDO: 'Su pase no es válido o venció la autorización. Actívelo de nuevo.',
+  PASE_VENCIDO: 'Su pase de 30 días venció. Active uno nuevo.',
+  OP_ERROR: 'No pudimos completar el pago. Verifique su billetera e intente de nuevo.',
+  BACKEND_OFFLINE: 'El servidor no responde. Intente de nuevo en un momento.',
+};
+
+export function mensajeErrorPasajero(code: ErrorCode, fallback?: string): string {
+  return MENSAJES_USTED[code] || fallback || MENSAJES_USTED.OP_ERROR;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
   children,
-  subtitle = 'Pague el bus sin efectivo, desde cualquier wallet.',
+  subtitle: _subtitle,
   vehiculoIdActual = 'bus-101',
+  barraFija = false,
 }) => {
   const location = useLocation();
   const [previewMode, setPreviewMode] = useState<boolean>(() => isUiPreviewMode());
+  const isDev = import.meta.env.DEV;
 
   useEffect(() => {
     const sync = () => setPreviewMode(isUiPreviewMode());
@@ -30,45 +47,34 @@ export const AppShell: React.FC<AppShellProps> = ({
     window.location.reload();
   };
 
-  const isConductor = location.pathname.startsWith('/conductor');
+  void _subtitle;
 
   return (
-    <div className="min-h-dvh flex flex-col subase-estela-bg text-white relative">
-      {/* Encabezado minimalista nocturno acorde a Guia_de_Marca_SUBASE.pdf */}
-      <header className="sticky top-0 z-30 bg-black/80 backdrop-blur-md border-b border-[#C3C5C6]/20">
-        <div className="max-w-lg mx-auto px-5 py-3.5 flex items-center justify-between gap-3">
-          <Link to={`/v/${vehiculoIdActual}`} className="group flex flex-col">
-            <span className="text-[10px] font-normal uppercase tracking-[0.18em] text-[#C3C5C6]">
-              OPEN PAYMENTS · MEDELLÍN
-            </span>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-light tracking-[0.06em] text-2xl leading-none text-white uppercase">
-                SÚBASE
-              </span>
-              <ArrowUpRight className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-            </div>
-          </Link>
+    <div
+      className={`min-h-dvh flex flex-col bg-black text-white relative overflow-x-hidden ${
+        barraFija === 'alta' ? 'subase-shell-bar-alta' : barraFija ? 'subase-shell-bar' : ''
+      }`}
+    >
+      <div className="subase-estela-bg" aria-hidden="true" />
 
+      <header className="sticky top-0 z-30 bg-black border-b border-[rgba(195,197,198,0.2)]">
+        <div className="max-w-lg mx-auto px-5 h-14 flex items-center justify-between gap-3">
           <Link
-            to={isConductor ? `/v/${vehiculoIdActual}` : `/conductor/${vehiculoIdActual}`}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-[12px] text-xs font-normal uppercase tracking-wider border border-white/30 bg-black/60 hover:border-[#D2B99A] text-white transition-colors min-h-10"
-            title="Cambiar entre vista de Pasajero y Terminal del Conductor"
+            to="/"
+            className="inline-flex items-center min-h-11 font-light text-[22px] leading-none text-white uppercase tracking-[0.06em]"
           >
-            <QrCode className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-            <span>{isConductor ? 'Pasajero' : 'Conductor'}</span>
+            SÚBASE
           </Link>
+          <span className="text-[15px] font-normal text-[#C3C5C6]">Medellín</span>
         </div>
 
-        {/* Cinta discreta si está activo el modo Vista Previa UI (sin backend) */}
-        {previewMode && (
-          <div className="bg-[#113462] border-t border-white/20 px-5 py-1.5 text-xs text-white flex items-center justify-between max-w-lg mx-auto">
-            <span className="font-light text-[#C3C5C6]">
-              Vista Previa UI activa · <strong className="font-normal text-white">Mock local</strong>
-            </span>
+        {isDev && previewMode && (
+          <div className="bg-[#113462] border-t border-white/20 px-5 text-[15px] text-white flex items-center justify-between gap-3 max-w-lg mx-auto min-h-11">
+            <span className="font-normal text-white">Vista Previa UI</span>
             <button
               type="button"
               onClick={togglePreview}
-              className="underline font-normal text-[#D2B99A] hover:text-white min-h-0 py-0.5 px-1 cursor-pointer"
+              className="underline font-normal text-white min-h-11 px-2 cursor-pointer"
             >
               Usar API real
             </button>
@@ -76,20 +82,23 @@ export const AppShell: React.FC<AppShellProps> = ({
         )}
       </header>
 
-      {/* Contenedor central con amplio espacio negativo según Sección 04 */}
-      <main className="relative z-10 flex-1 w-full max-w-lg mx-auto px-5 py-6 flex flex-col">
+      <main className="relative z-10 flex-1 w-full max-w-lg mx-auto px-5 pt-6 pb-8 flex flex-col">
         {children}
       </main>
 
-      {/* Pie de página sobrio con gris plata #C3C5C6 y acento arena #D2B99A */}
-      <footer className="relative z-10 w-full max-w-lg mx-auto px-5 py-4 border-t border-[#C3C5C6]/20">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-left">
-          <p className="text-xs font-light text-[#C3C5C6] flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-            <span>No custodiamos fondos: el dinero vive en wallets reguladas.</span>
-          </p>
-          <p className="text-[11px] font-light text-[#D2B99A]">{subtitle}</p>
-        </div>
+      <footer className="relative z-10 w-full max-w-lg mx-auto px-5 pt-2 pb-4">
+        <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
+          Su plata va directo de su billetera a la del bus.
+        </p>
+        <p className="text-[15px] font-normal text-[#C3C5C6]/80 mt-1">
+          Construido sobre Interledger Open Payments
+        </p>
+        <Link
+          to={`/conductor/${encodeURIComponent(vehiculoIdActual)}`}
+          className="inline-flex items-center min-h-11 mt-1 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
+        >
+          Vista del conductor
+        </Link>
       </footer>
     </div>
   );

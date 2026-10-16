@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import {
-  AlertCircle,
-  ArrowLeft,
-  Check,
-  ExternalLink,
-  Loader2,
-  ShieldCheck,
-  Wallet,
-} from 'lucide-react';
-import { AppShell } from '../components/AppShell';
+import { Loader2 } from 'lucide-react';
+import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
+import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
 import {
   crearPase,
   ErrorCode,
@@ -17,30 +10,12 @@ import {
   savePendingPaseContext,
   setUiPreviewMode,
 } from '../lib/api';
-import { formatCOP, normalizeWalletAddress } from '../lib/format';
+import { normalizeWalletAddress } from '../lib/format';
 
 const TOPES_DISPONIBLES = [
-  {
-    numero: '01',
-    valor: 10000,
-    etiqueta: '$10.000',
-    detalle: '~3 pasajes diarios',
-    recomendado: false,
-  },
-  {
-    numero: '02',
-    valor: 20000,
-    etiqueta: '$20.000',
-    detalle: '~6 pasajes diarios',
-    recomendado: true,
-  },
-  {
-    numero: '03',
-    valor: 30000,
-    etiqueta: '$30.000',
-    detalle: 'Buses + taxi al día',
-    recomendado: false,
-  },
+  { valor: 10000, etiqueta: '$10.000', sugerido: false },
+  { valor: 20000, etiqueta: '$20.000', sugerido: true },
+  { valor: 30000, etiqueta: '$30.000', sugerido: false },
 ];
 
 const WALLETS_DEMO = [
@@ -58,13 +33,16 @@ export const ActivarPasePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const volver = searchParams.get('volver') || '/v/bus-101';
+  const isDev = import.meta.env.DEV;
 
   const [walletInput, setWalletInput] = useState<string>(
     () => localStorage.getItem('subase_last_wallet') || 'https://ilp.interledger-test.dev/'
   );
   const [topeDiario, setTopeDiario] = useState<number>(20000);
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(null);
+  const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(
+    null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +52,7 @@ export const ActivarPasePage: React.FC = () => {
     if (!normalized || normalized === 'https://') {
       setErrorInfo({
         code: 'OP_ERROR',
-        message: 'Ingresa una dirección de wallet válida de Interledger Test Wallet.',
+        message: 'Ingrese una dirección de billetera válida. Empieza por $ o https://.',
       });
       return;
     }
@@ -102,188 +80,158 @@ export const ActivarPasePage: React.FC = () => {
         window.location.href = res.redirectUrl;
       }
     } catch (err) {
-      setErrorInfo(getFriendlyErrorMessage(err));
+      const friendly = getFriendlyErrorMessage(err);
+      setErrorInfo({
+        code: friendly.code,
+        message: mensajeErrorPasajero(friendly.code, friendly.message),
+      });
       setSubmitting(false);
     }
   };
 
   return (
-    <AppShell>
-      <div className="flex-1 flex flex-col justify-between gap-6">
-        <div>
-          <Link
-            to={volver}
-            className="inline-flex items-center gap-1.5 text-xs font-normal uppercase tracking-wider text-[#C3C5C6] hover:text-white mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-            Volver al vehículo
-          </Link>
+    <AppShell barraFija="alta">
+      <form id="activar-pase-form" onSubmit={handleSubmit} className="flex-1 flex flex-col">
+        <h1 className="text-[32px] min-[400px]:text-[36px] font-light text-white leading-tight">
+          Active su pase
+        </h1>
+        <div className="subase-sand-rule mt-2.5" />
+        <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
+          Así funciona Súbase, en tres pasos:
+        </p>
 
-          <span className="block text-xs font-light uppercase tracking-[0.16em] text-[#D2B99A]">
-            AUTORIZACIÓN · UNA VEZ (GNAP)
-          </span>
-          <h1 className="text-3xl font-light uppercase tracking-wide text-white mt-1">
-            ACTIVA TU PASE
-          </h1>
-          <div className="subase-sand-rule mt-2.5" />
-          <p className="text-sm font-light text-[#C3C5C6] mt-3 leading-relaxed">
-            Una sola vez: autorizas un límite diario por 30 días. Válido en cualquier bus barrial o
-            taxi afiliado.
-          </p>
+        <div className="mt-6">
+          <PasoLinea paso={1} variante="vertical" />
         </div>
 
         {errorInfo && (
-          <div role="alert" className="subase-card-sand p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-[#D2B99A] shrink-0 mt-0.5" strokeWidth={1.5} />
-              <div className="flex-1">
-                <p className="text-xs font-mono text-[#D2B99A]">{errorInfo.code}</p>
-                <p className="text-sm font-light text-white mt-0.5">{errorInfo.message}</p>
-                {errorInfo.code === 'BACKEND_OFFLINE' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUiPreviewMode(true);
-                      setErrorInfo(null);
-                    }}
-                    className="mt-3 inline-flex items-center gap-2 px-3.5 py-2 rounded-[12px] bg-[#113462] border border-[#D2B99A] text-white text-xs font-normal uppercase tracking-wider cursor-pointer min-h-9"
-                  >
-                    Activar Vista Previa UI para probar
-                  </button>
-                )}
-              </div>
-            </div>
+          <div role="alert" className="mt-6">
+            <p className="text-[15px] font-normal text-white leading-relaxed">
+              {errorInfo.message}
+            </p>
+            {isDev && errorInfo.code === 'BACKEND_OFFLINE' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUiPreviewMode(true);
+                  setErrorInfo(null);
+                }}
+                className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[15px] font-normal text-white cursor-pointer"
+              >
+                Activar Vista Previa UI
+              </button>
+            )}
+            <p className="text-[13px] font-normal text-[#C3C5C6] mt-2">{errorInfo.code}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5 my-auto">
-          {/* 01 · Wallet Address */}
-          <div className="subase-card p-5">
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-lg font-light text-[#D2B99A]">01</span>
-              <label
-                htmlFor="wallet-address-input"
-                className="block text-sm font-normal uppercase tracking-wider text-white"
+        <hr className="subase-filete mt-6 mb-6" />
+
+        <label
+          htmlFor="wallet-address-input"
+          className="block text-[15px] font-normal text-white"
+        >
+          Dirección de su billetera
+        </label>
+        <p id="wallet-address-help" className="text-[15px] font-normal text-[#C3C5C6] mt-1">
+          Empieza por $ o https://.
+        </p>
+        <input
+          id="wallet-address-input"
+          name="walletAddress"
+          type="text"
+          inputMode="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          required
+          enterKeyHint="next"
+          autoComplete="url"
+          aria-describedby="wallet-address-help"
+          value={walletInput}
+          onChange={(e) => setWalletInput(e.target.value)}
+          placeholder="https://ilp.interledger-test.dev/su-billetera"
+          className="mt-3 w-full min-h-11 px-3.5 py-3 rounded-[12px] border border-[rgba(195,197,198,0.2)] focus:border-[#D2B99A] focus:outline-none font-mono text-[15px] text-white bg-black placeholder:text-[#C3C5C6]/50"
+        />
+        <div className="mt-2 flex items-center flex-wrap gap-1">
+          {WALLETS_DEMO.map((w) => (
+            <button
+              key={w.url}
+              type="button"
+              onClick={() => setWalletInput(w.url)}
+              className="inline-flex items-center min-h-11 px-3 text-[13px] font-normal text-[#C3C5C6] hover:text-white cursor-pointer"
+            >
+              {w.label}
+            </button>
+          ))}
+        </div>
+
+        <hr className="subase-filete mt-6 mb-6" />
+
+        <p className="text-[15px] font-normal text-white">Tope diario</p>
+        <div className="grid grid-cols-3 gap-2 mt-3" role="radiogroup" aria-label="Tope diario">
+          {TOPES_DISPONIBLES.map((item) => {
+            const activo = topeDiario === item.valor;
+            return (
+              <button
+                key={item.valor}
+                type="button"
+                role="radio"
+                aria-checked={activo}
+                onClick={() => setTopeDiario(item.valor)}
+                className={`min-h-11 px-2 py-3 rounded-[12px] text-center cursor-pointer border ${
+                  activo
+                    ? 'border-[#D2B99A] bg-[#113462] text-white'
+                    : 'border-[rgba(195,197,198,0.2)] bg-transparent text-white'
+                }`}
               >
-                Tu Wallet Address
-              </label>
-            </div>
-            <p id="wallet-address-help" className="text-xs font-light text-[#C3C5C6] mt-1">
-              Dirección en Interledger Test Wallet (<code className="font-mono">https://</code> o{' '}
-              <code className="font-mono">$</code>).
-            </p>
+                <span className="block text-[13px] font-normal text-[#C3C5C6] mb-1 h-4">
+                  {item.sugerido ? 'Sugerido' : '\u00a0'}
+                </span>
+                <span className="block text-[18px] font-normal text-white">{item.etiqueta}</span>
+              </button>
+            );
+          })}
+        </div>
 
-            <div className="mt-3">
-              <input
-                id="wallet-address-input"
-                name="walletAddress"
-                type="url"
-                required
-                enterKeyHint="next"
-                autoComplete="url"
-                aria-describedby="wallet-address-help"
-                value={walletInput}
-                onChange={(e) => setWalletInput(e.target.value)}
-                placeholder="https://ilp.interledger-test.dev/tu-wallet"
-                className="w-full px-3.5 py-3 rounded-[12px] border border-white/35 focus:border-[#D2B99A] focus:outline-none font-mono text-sm text-white bg-black/70 placeholder:text-[#C3C5C6]/50"
-              />
-            </div>
+        <p className="mt-10 text-[24px] font-light text-white leading-snug">
+          Que nadie se quede abajo del bus por no tener efectivo.
+        </p>
 
-            <div className="mt-3 flex items-center flex-wrap gap-2">
-              <span className="text-[11px] font-light text-[#C3C5C6]">Wallets de prueba:</span>
-              {WALLETS_DEMO.map((w) => (
-                <button
-                  key={w.url}
-                  type="button"
-                  onClick={() => setWalletInput(w.url)}
-                  className="text-xs font-light px-2.5 py-1 rounded-[8px] border border-white/25 hover:border-[#D2B99A] text-[#C3C5C6] hover:text-white transition-colors min-h-0 cursor-pointer"
-                >
-                  {w.label}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div className="mt-8">
+          <ComoUsamosOpenPayments />
+        </div>
 
-          {/* 02 · Tope diario */}
-          <div className="subase-card p-5">
-            <div className="flex items-baseline gap-2.5">
-              <span className="text-lg font-light text-[#D2B99A]">02</span>
-              <span className="block text-sm font-normal uppercase tracking-wider text-white">
-                Límite diario autorizado
-              </span>
-            </div>
-            <p className="text-xs font-light text-[#C3C5C6] mt-1">
-              Grant <code className="font-mono">outgoing-payment</code> con{' '}
-              <code className="font-mono">debitAmount</code> +{' '}
-              <code className="font-mono">interval (P1D)</code>.
-            </p>
+        <Link
+          to={volver}
+          className="inline-flex items-center min-h-11 mt-4 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+        >
+          Volver al bus
+        </Link>
+      </form>
 
-            <div className="grid grid-cols-3 gap-2.5 mt-3.5" role="radiogroup" aria-label="Tope diario">
-              {TOPES_DISPONIBLES.map((item) => {
-                const activo = topeDiario === item.valor;
-                return (
-                  <button
-                    key={item.valor}
-                    type="button"
-                    role="radio"
-                    aria-checked={activo}
-                    onClick={() => setTopeDiario(item.valor)}
-                    className={`relative p-3.5 rounded-[12px] text-left transition-all flex flex-col justify-between cursor-pointer ${
-                      activo
-                        ? 'bg-[#113462] border border-[#D2B99A] text-white'
-                        : 'bg-black/50 border border-white/25 hover:border-white/50 text-white'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-[11px] font-light text-[#D2B99A]">
-                        {item.recomendado ? 'RECOMENDADO' : item.numero}
-                      </span>
-                      {activo && <Check className="w-3.5 h-3.5 text-[#D2B99A]" strokeWidth={1.5} />}
-                    </div>
-
-                    <span className="text-lg font-light text-white mt-1.5">{item.etiqueta}</span>
-                    <span className="text-[11px] font-light text-[#C3C5C6] mt-0.5">
-                      {item.detalle}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Nota de garantías GNAP */}
-          <div className="border-t border-b subase-divider py-3.5 text-xs font-light text-[#C3C5C6] space-y-1.5">
-            <div className="flex items-center gap-2 font-normal uppercase tracking-wider text-[#D2B99A]">
-              <ShieldCheck className="w-4 h-4 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-              <span>CÓMO USAMOS OPEN PAYMENTS</span>
-            </div>
-            <p>
-              Autorizas en tu wallet una sola vez hasta{' '}
-              <strong className="font-normal text-white">{formatCOP(topeDiario)}/día</strong>. Sin
-              receptor fijo (<code className="font-mono">receiver</code> libre) para que te sirva en
-              cualquier ruta.
-            </p>
-          </div>
-
+      <div className="subase-fixed-bar">
+        <div className="subase-fixed-bar-inner">
+          <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug mb-3">
+            Lo llevamos a su billetera para que apruebe el tope, como cuando paga por PSE.
+            Solo se hace una vez.
+          </p>
           <button
             type="submit"
+            form="activar-pase-form"
             disabled={submitting}
-            className="w-full py-4 px-6 rounded-[12px] bg-[#113462] hover:bg-[#0C4672] active:scale-[0.99] disabled:opacity-50 border border-white/40 text-white font-normal uppercase tracking-[0.1em] text-sm sm:text-base flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+            className="subase-btn-primary"
           >
             {submitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin text-[#D2B99A]" strokeWidth={1.5} />
-                <span>CONECTANDO CON TU WALLET…</span>
+                <Loader2 className="w-5 h-5 animate-spin" strokeWidth={1.5} />
+                Conectando…
               </>
             ) : (
-              <>
-                <Wallet className="w-5 h-5 text-[#D2B99A]" strokeWidth={1.5} />
-                <span>AUTORIZAR {formatCOP(topeDiario)} DIARIOS</span>
-                <ExternalLink className="w-4 h-4 text-[#D2B99A]" strokeWidth={1.5} />
-              </>
+              'Aprobar en mi billetera'
             )}
           </button>
-        </form>
+        </div>
       </div>
     </AppShell>
   );

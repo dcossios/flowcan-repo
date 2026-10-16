@@ -96,14 +96,13 @@ export class SubaseApiError extends Error {
 }
 
 const ERROR_MESSAGES: Record<ErrorCode, string> = {
-  SALDO_INSUFICIENTE: 'Saldo insuficiente en tu wallet para cubrir este pasaje.',
-  TOPE_ALCANZADO: 'Alcanzaste el tope diario autorizado en tu pase. Activa o amplía tu pase para continuar.',
-  PAGO_DUPLICADO: 'Ya pagaste este vehículo hace menos de 2 minutos. No se realizó un cobro doble.',
-  PASE_INVALIDO: 'Tu pase no es válido o expiró su autorización. Activa tu pase nuevamente.',
-  PASE_VENCIDO: 'Tu pase de 30 días ha vencido. Activa uno nuevo en segundos.',
-  OP_ERROR: 'No pudimos completar la operación con Open Payments (Test Wallet). Verifica tu wallet e intenta de nuevo.',
-  BACKEND_OFFLINE:
-    'El servidor backend (/api) aún no responde en localhost:3001. Levanta server/ o activa "Vista Previa UI" arriba para inspeccionar las pantallas.',
+  SALDO_INSUFICIENTE: 'Su billetera no tiene saldo suficiente para este pasaje.',
+  TOPE_ALCANZADO: 'Llegó al tope diario de su pase. Mañana se renueva, o puede ampliarlo ahora.',
+  PAGO_DUPLICADO: 'Ya pagó este bus hace menos de 2 minutos. No le cobramos dos veces.',
+  PASE_INVALIDO: 'Su pase ya no es válido. Actívelo de nuevo.',
+  PASE_VENCIDO: 'Su pase de 30 días venció. Active uno nuevo en segundos.',
+  OP_ERROR: 'No pudimos completar el pago con su billetera. Intente de nuevo.',
+  BACKEND_OFFLINE: 'El servidor de Súbase no responde. Intente de nuevo en unos segundos.',
 };
 
 export function getFriendlyErrorMessage(err: unknown): { code: ErrorCode; message: string } {
@@ -253,6 +252,9 @@ async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T
   }
 
   if (!response.ok) {
+    if (response.status >= 500 && payload === null) {
+      throw new SubaseApiError('BACKEND_OFFLINE', ERROR_MESSAGES.BACKEND_OFFLINE);
+    }
     const errObj = (payload as { error?: { code?: ErrorCode; message?: string } })?.error;
     const code: ErrorCode = errObj?.code && errObj.code in ERROR_MESSAGES ? errObj.code : 'OP_ERROR';
     const message = errObj?.message || ERROR_MESSAGES[code] || `Error HTTP ${response.status}`;
@@ -413,7 +415,7 @@ export async function fetchVehiculoFeed(vehiculoId: string, desde?: string): Pro
       .map((v) => ({
         viajeId: v.viajeId,
         monto: v.monto,
-        estado: 'COMPLETADO',
+        estado: 'pagado',
         fecha: v.fecha,
       }));
   }

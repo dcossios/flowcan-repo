@@ -71,3 +71,52 @@ export function playPaymentChime(): void {
     // Ignorar si el navegador bloqueó el audio sin interacción previa
   }
 }
+
+export function desbloquearVoz(): void {
+  try {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !window.speechSynthesis) {
+      return;
+    }
+    if (typeof SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+    window.speechSynthesis.getVoices();
+    const utterance = new SpeechSynthesisUtterance('');
+    utterance.volume = 0;
+    window.speechSynthesis.speak(utterance);
+  } catch {
+    // Ignorar errores si el navegador no soporta Web Speech API
+  }
+}
+
+export function anunciarPago(monto: number): void {
+  try {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window) || !window.speechSynthesis) {
+      return;
+    }
+    if (typeof SpeechSynthesisUtterance === 'undefined') {
+      return;
+    }
+    const synth = window.speechSynthesis;
+    const voices = synth.getVoices();
+    const voice =
+      voices.find((v) => v.lang === 'es-CO' || v.lang.toLowerCase() === 'es-co') ||
+      voices.find((v) => v.lang.toLowerCase().startsWith('es'));
+    synth.cancel();
+    const montoEntero = Math.round(Number(monto) || 0);
+    const utterance = new SpeechSynthesisUtterance(`Pagado, ${montoEntero} pesos`);
+    // Chrome carga las voces de forma asíncrona: si aún no hay lista, el navegador elige por lang.
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = 'es-CO';
+    }
+    utterance.rate = 1;
+    utterance.volume = 1;
+    synth.speak(utterance);
+  } catch {
+    // Ignorar errores si el navegador bloquea o falla al sintetizar voz
+  }
+}
+

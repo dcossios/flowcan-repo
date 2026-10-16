@@ -33,3 +33,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.log
+
+# Estado local de los despachos a Grok/Antigravity
+.grok/
