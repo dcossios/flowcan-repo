@@ -31,13 +31,23 @@ export function opClient(): Promise<AuthenticatedClient> {
     clientePromesa = createAuthenticatedClient({
       walletAddressUrl: normalizarWallet(walletAddressUrl),
       keyId,
-      privateKey: b64 ? Buffer.from(b64, 'base64') : ruta!
+      privateKey: b64 ? llavePrivada(b64) : ruta!
     }).catch((e) => {
       clientePromesa = undefined
       throw e
     })
   }
   return clientePromesa
+}
+
+/**
+ * OP_PRIVATE_KEY_B64 se acepta de tres formas, porque al pegarla en Vercel es fácil equivocarse:
+ * base64 del archivo .key, el PEM tal cual (con saltos de línea) o el PEM con "\n" escritos como texto.
+ */
+export function llavePrivada(valor: string): Buffer {
+  const v = valor.trim()
+  if (v.includes('-----BEGIN')) return Buffer.from(v.replace(/\\n/g, '\n'))
+  return Buffer.from(v.replace(/\s+/g, ''), 'base64')
 }
 
 /** Ejecuta una llamada al SDK y traduce sus errores a los códigos de la API. */

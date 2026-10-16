@@ -52,6 +52,7 @@
 - Se usó Claude Code para hacer commit y push de ese backend y conectar el frontend responsive con el backend (`prompts/prompt53.md`): `src/lib/api.ts` (PIN de empresa, mis viajes, gestión de vehículos, `estado` del recibo), `src/pages/MiPasePage.tsx`, `src/pages/QrVehiculoPage.tsx`, `src/components/FlotaVehiculos.tsx`, y cambios en `FlotaPage.tsx` (PIN y pestañas), `ReciboPage.tsx`, `ConductorPage.tsx`, `AppShell.tsx`, `App.tsx` e `index.css`. Se verificó con `agent-browser` que no hay desborde horizontal a 320, 375, 768 y 1280 px y se probó en vista previa crear, editar y desactivar un vehículo.
 - Se usó Claude Code para revisar la base de Supabase, apuntar los vehículos a `flota1` (COP), corregir `Database Infrastructure/supabase-setup.sql` (sin `unique` en `wallet_address`) y verificar en la base el pago de punta a punta que hizo una persona en el navegador (`prompts/prompt54.md`, `prompts/prompt55.md`).
 - Se usó Claude Code para hacer commit y push a `main` (`prompts/prompt56.md`).
+- Se usó Claude Code para revisar el deploy en Vercel (variables y logs de la función), encontrar que `OP_PRIVATE_KEY_B64` no estaba en base64 y hacer que `api/_lib/op.ts` acepte la llave en base64 o PEM, y que `api/_lib/http.ts` acepte `APP_URL` sin `https://` (`prompts/prompt57.md`).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.

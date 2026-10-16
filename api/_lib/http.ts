@@ -47,7 +47,9 @@ const safeJson = (s: string) => {
 
 /** URL pública de la app (para interact.finish.uri). APP_URL manda; si falta, se usa el host del request. */
 export function appUrl(req: VercelRequest): string {
-  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '')
+  const app = process.env.APP_URL?.trim().replace(/\/$/, '')
+  // Acepta "flowcan-repo.vercel.app" sin esquema: la wallet necesita una URL completa para volver.
+  if (app) return /^https?:\/\//.test(app) ? app : `https://${app}`
   const proto = (req.headers['x-forwarded-proto'] as string) ?? 'https'
   return `${proto}://${req.headers.host}`
 }
