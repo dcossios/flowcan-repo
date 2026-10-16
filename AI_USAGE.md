@@ -53,6 +53,7 @@
 - Se usó Claude Code para revisar la base de Supabase, apuntar los vehículos a `flota1` (COP), corregir `Database Infrastructure/supabase-setup.sql` (sin `unique` en `wallet_address`) y verificar en la base el pago de punta a punta que hizo una persona en el navegador (`prompts/prompt54.md`, `prompts/prompt55.md`).
 - Se usó Claude Code para hacer commit y push a `main` (`prompts/prompt56.md`).
 - Se usó Claude Code para revisar el deploy en Vercel (variables y logs de la función), encontrar que `OP_PRIVATE_KEY_B64` no estaba en base64 y hacer que `api/_lib/op.ts` acepte la llave en base64 o PEM, y que `api/_lib/http.ts` acepte `APP_URL` sin `https://` (`prompts/prompt57.md`).
+- Se usó Claude Code para reemplazar en Vercel (Production) `OP_PRIVATE_KEY_B64`, `OP_KEY_ID` y `OP_CLIENT_WALLET_ADDRESS` desde la llave local sin mostrarla, redesplegar y verificar en la base y en los logs de producción el pago real hecho desde un celular (`prompts/prompt58.md`, `prompts/prompt59.md`).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.

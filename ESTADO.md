@@ -31,7 +31,8 @@
 | **Frontend** | Conectado al backend nuevo: PIN de empresa en `/flota` (pestañas «Resumen» y «Vehículos»: crear, editar, activar/desactivar, ver QR), «Mi pase» (`/mi-pase`: disponible hoy, vence, mis viajes, quitar pase), recibo con `pendiente`/`fallido` (se actualiza solo), QR imprimible (`/qr/:vehiculoId`), enlace «Mi pase» en el encabezado del pasajero | ✅ Listo en vista previa; sin desborde horizontal a 320, 375, 768 y 1280 px. Falta probar contra Supabase | David |
 | **Integración** | Prueba end-to-end en local (front 5173 + API 3001 + Supabase + Test Wallet): activar pase `test_platzi1` → pagar `bus-01` → recibo, «Mi pase», conductor y `/flota` | ✅ 16 oct: viaje `pagado` en ~6 s, con incoming/quote/outgoing guardados, turno del conductor y cashback 2 % | David |
 | **Integración** | Supabase: `vehiculos.wallet_address` sin `unique` y los 3 vehículos en `flota1`, COP/2, `tarifa = 320000` | ✅ Aplicado en la base; `Database Infrastructure/supabase-setup.sql` corregido | David |
-| **Deploy** | Vercel: variables `OP_CLIENT_WALLET_ADDRESS`, `OP_KEY_ID`, `OP_PRIVATE_KEY_B64`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `EMPRESA_PIN`, `APP_URL` (dominio final) | ⏳ Pendiente | Santiago / David |
+| **Deploy** | Producción en https://flowcan-repo.vercel.app con las 7 variables (`OP_*`, `SUPABASE_*`, `EMPRESA_PIN`, `APP_URL`) | ✅ 16 oct: pago real desde el celular (`test_platzi1` → `bus-01`), `pagado` en ~6,5 s; un segundo toque dentro de 2 min devolvió `409 PAGO_DUPLICADO` sin cobrar | David |
+| **Deploy** | Variables `OP_*` en el entorno **Preview** de Vercel siguen con la llave vieja (la CLI pide rama) | ⏳ Corregir desde el panel de Vercel si se usan URLs de preview | David |
 
 ---
 
