@@ -1,0 +1,1 @@
+/plan Quiero que creemos un plan paso a paso para la implementacion. Usemos Supabase y Vercel para desplegar la pagina. No se si necesitemos desplegar algo en render o railway. O si con supabase + vercel es suficiente

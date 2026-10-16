@@ -1,0 +1,1 @@
+Si no vamos a usar NFX para este momento, sino que simplemente vamos a usar un QR, ¿será que, para la demostración y para implementar todo, podríamos usar Expo para mostrarlo directamente desde el celular, como en una aplicación móvil, o no?

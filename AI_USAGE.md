@@ -36,6 +36,18 @@
 - Se usó Google Antigravity (Gemini 4 Argon, Medium) para implementarlo, con el encargo completo en `prompts/prompt30.md`: `fetchFlota` con respaldo en el cliente si la ruta no existe (`/src/lib/api.ts`), la página `/flota` (`/src/pages/FlotaPage.tsx`, `/src/App.tsx`), el ancho amplio en `/src/components/AppShell.tsx` y la alineación de los ids de vehículo con el seed (`bus-01`, `bus-02`, `taxi-01`).
 - Claude Code revisó el diff, lo probó a 375 y 1280 px y ajustó a mano el tamaño mínimo de dos notas y el formato de «último pago hace N h» (`prompts/prompt31.md` a `prompts/prompt36.md`, que también cubren la configuración local de la llave privada y del modelo de Antigravity).
 
+### 6. Backend / Infraestructura - Cambio de stack y spike de pago
+- Se usó Claude Code para planear la implementación (Supabase + Vercel, sin Railway) y decidir PWA en vez de Expo (`prompts/prompt37.md` a `prompts/prompt41.md`).
+- Se usó Claude Code para actualizar el stack, la estructura y las variables de entorno en `AGENTS.md` y `CLAUDE.md` (`prompts/prompt42.md`).
+- Se usó Claude Code para escribir `scripts/spike-pago.ts` (prueba del flujo completo contra la Test Wallet), `scripts/package.json`, `scripts/tsconfig.json` y `.env.example` (`prompts/prompt42.md`).
+- Se usó Claude Code para evaluar una recomendación sobre la jerarquía empresa → conductor y aplicar dos cambios: `metadata` en incoming/outgoing payments (`AGENTS.md` §8 y §8.1, `scripts/spike-pago.ts`) y el plan B de una sola wallet address de la flota (`AGENTS.md` §2) (`prompts/prompt43.md`, `prompts/prompt44.md`).
+- Se usó Claude Code para verificar la wallet `flota1` (datos públicos y `jwks.json`), confirmar que la llave privada corresponde a la llave registrada y crear `.env.local`, que no se sube al repo (`prompts/prompt45.md`).
+- Se usó Claude Code para cambiar la spec a una sola wallet address de la flota para todos los vehículos (`AGENTS.md` §0, §2, §3, §8, §8.1; `CLAUDE.md` regla 4) (`prompts/prompt46.md`).
+- Se usó Claude Code para verificar la wallet `test_platzi1`, configurarla como pasajero, ejecutar `scripts/spike-pago.ts` contra la Test Wallet (la aprobación del pase la hizo una persona) y pasar los resultados a `AGENTS.md` §8/§8.1, `CLAUDE.md` y `ESTADO.md` (`prompts/prompt47.md`).
+- Se usó Claude Code para integrar los cambios de GitHub (renumerar estos prompts de `prompt5`–`prompt16` a `prompt37`–`prompt48` para no chocar con los del equipo) y escribir la librería del backend `api/_lib/` (`op.ts`, `db.ts`, `auth.ts`, `errores.ts`) y `scripts/prueba-rotacion.ts`, con el mapeo de errores verificado en el código de Rafiki (`prompts/prompt48.md`).
+- Se usó Claude Code para escribir los endpoints de `api/` (`vehiculos/[id]/index.ts`, `vehiculos/[id]/feed.ts`, `pases/index.ts`, `pases/[paseId]/confirmar.ts`, `pases/me.ts`, `viajes/index.ts`, `viajes/[id].ts`), `api/_lib/http.ts`, `api/_lib/viajes.ts`, `vercel.json` y el servidor local `scripts/dev-api.ts` (`prompts/prompt49.md`).
+- Se usó Claude Code para hacer commit y push a `main` (`prompts/prompt50.md`).
+
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.
 - Definición de arquitectura, modelo de negocio, contrato de API y revisión de todos los cambios sugeridos por la IA.

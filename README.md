@@ -16,7 +16,7 @@ El pasajero escanea el QR del vehículo con la cámara nativa de su celular y pa
 ```text
 /
 ├── src/           ← Frontend PWA mobile-first (React + Vite + TypeScript + Tailwind + qrcode.react)
-├── server/        ← Backend Node 20 + Express + SQLite + @interledger/open-payments
+├── api/           ← Backend: Vercel Functions (Node) + Supabase + @interledger/open-payments
 ├── prompts/       ← Registro palabra por palabra de los prompts usados (política de IA)
 ├── AI_USAGE.md    ← Declaración de uso de herramientas de IA
 ├── AGENTS.md      ← Especificación técnica y decisiones de arquitectura
@@ -44,3 +44,11 @@ npm run dev
 ```
 
 Abre `http://localhost:5173`. Por defecto el servidor de desarrollo de Vite redirige `/api/*` a `http://localhost:3001` (o a la URL configurada en `VITE_API_URL`).
+
+## Cómo correr el Backend en local
+
+1. Copie `.env.example` a `.env.local` y llénelo (wallet de Súbase, `OP_KEY_ID`, ruta de la llave privada, Supabase). Nunca lo suba al repo.
+2. En una terminal: `npm run dev:api` (API en `http://localhost:3001`, las mismas funciones de `api/` que corren en Vercel).
+3. En otra: `npm run dev` (el front en `http://localhost:5173` manda `/api` al puerto 3001).
+
+En Vercel, front y API quedan en el mismo dominio; las variables van en *Settings → Environment Variables* (la llave como `OP_PRIVATE_KEY_B64`).

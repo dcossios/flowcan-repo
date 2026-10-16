@@ -1,6 +1,6 @@
 # ESTADO.md — Súbase
 
-> Fuente de verdad del avance y del contrato de API entre Frontend (`src/`) y Backend (`server/`).
+> Fuente de verdad del avance y del contrato de API entre Frontend (`src/`) y Backend (`api/`, Vercel Functions + Supabase).
 > Última actualización: Viernes 16 oct 2026.
 
 ---
@@ -19,11 +19,14 @@
 | **Frontend (`src/`)** | `/conductor/:vehiculoId` — QR grande + recaudo del turno + feed 2s con sonido | ✅ Listo | Frontend |
 | **Frontend (`src/`)** | Rediseño sobre el pitch y la Guía de Marca: flujo de 3 pasos, botón fijo, trato de usted, recibo para mostrar al conductor, `/` = «Pagar otra vez» | ✅ Listo (probado en Vista Previa) | Andrés |
 | **Frontend (`src/`)** | Conductor: «Empezar turno», capa a pantalla completa y voz solo con `estado === 'pagado'`; `pendiente` = «Confirmando…», `fallido` = «Pago fallido» | ✅ Listo (probado en Vista Previa) | Andrés |
-| **Frontend ↔ Backend** | El front espera `estado` en `pendiente` / `pagado` / `fallido` en el feed, y en `PAGO_DUPLICADO` el recibo en `error.recibo` o `error.details` | ⏳ Confirmar con David | Andrés / David |
+| **Frontend ↔ Backend** | El feed devuelve `estado` en `pendiente` / `pagado` / `fallido`, y `PAGO_DUPLICADO` trae el recibo en `error.recibo` | ✅ Soportado en `api/_lib/errores.ts` | Andrés / David |
 | **Frontend (`src/`)** | `/flota` — panel de la empresa: recaudo, pasajes, comisión estimada, por ruta, por vehículo y últimos pagos (polling 5 s); si `GET /api/flota` da 404, se arma con `/feed` | ✅ Listo (probado en Vista Previa, 375 y 1280 px) | Andrés |
+| **Backend (`api/`)** | Stack: Vercel Functions (Node) + Supabase Postgres + `@interledger/open-payments` 7.4.0. Sin Express, SQLite ni Railway | ✅ Decidido | David |
+| **Backend (`api/`)** | Spike de pago real (`scripts/spike-pago.ts`): 3.200 COP `test_platzi1` → `flota1`, pagado en ~3 s | ✅ Listo | David |
+| **Backend (`api/`)** | Librería `api/_lib/`: `op.ts` (pase, hash, rotación, cobro, confirmación, gastado hoy), `db.ts`, `auth.ts`, `errores.ts` | ✅ Listo (compila; helpers probados contra la Test Wallet) | David |
+| **Backend (`api/`)** | ¿Se puede rotar un token del pase ya vencido? (`scripts/prueba-rotacion.ts`) | ⏳ En prueba | David |
+| **Backend (`api/`)** | 7 endpoints + `vercel.json` + API local (`npm run dev:api`, puerto 3001) | ✅ Escritos y compilan; rutas y errores probados en local. **Falta probarlos con Supabase** (faltan `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`) | David |
 | **Backend** | `GET /api/flota` (propuesta en 2.1). Montos en COP hacia el front. Ids del seed: `bus-01`, `bus-02`, `taxi-01` | ⏳ Confirmar con David | David |
-| **Backend (`server/`)** | Inicializar Node 20 + Express + SQLite + `@interledger/open-payments` | ⏳ Pendiente | David |
-| **Backend (`server/`)** | Endpoints `/api/vehiculos/:id`, `/api/pases`, `/api/viajes`, `/feed` | ⏳ Pendiente | David |
 | **Integración** | Prueba end-to-end contra Interledger Test Wallet | ⏳ Pendiente | Santiago / David |
 
 ---
@@ -72,3 +75,14 @@
 - `PASE_INVALIDO`
 - `PASE_VENCIDO`
 - `OP_ERROR`
+- `NO_ENCONTRADO` (404) y `DATOS_INVALIDOS` (400): extra del backend; el front los muestra como `OP_ERROR` con el mensaje del backend.
+
+**Montos:** la API habla en **pesos** (`tarifa: 3200`, `topeDiario: 20000`). La base de datos y Open Payments usan unidades mínimas (COP, `assetScale` 2 → `320000`). La conversión está en `api/_lib/op.ts` (`aMinimas`, `aPesos`).
+
+---
+
+## 3. Datos verificados de la Test Wallet (16 oct)
+- Flota y cliente de Súbase: `https://ilp.interledger-test.dev/flota1` (COP, `assetScale` 2). La Test Wallet solo permite **una address en COP por cuenta**, así que todos los vehículos cobran en `flota1` y el `metadata` del incoming payment identifica vehículo, turno y viaje.
+- Pasajero de prueba: `https://ilp.interledger-test.dev/test_platzi1` (otra cuenta, COP).
+- Token del pase: `expires_in: 600` (10 min). Quote: vence a los 5 min. Pago confirmado en ~3 s.
+- **Para Santiago:** en `Database Infrastructure/supabase-setup.sql`, `vehiculos.wallet_address` es `unique` y el seed usa wallets `REEMPLAZAR-*` en USD. Debe quedar sin `unique`, con `wallet_address = 'https://ilp.interledger-test.dev/flota1'`, `asset_code = 'COP'`, `asset_scale = 2` y `tarifa = 320000` para los tres vehículos.

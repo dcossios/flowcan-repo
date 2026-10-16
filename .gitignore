@@ -36,3 +36,6 @@ Thumbs.db
 
 # Estado local de los despachos a Grok/Antigravity
 .grok/
+
+# Vercel
+.vercel/
