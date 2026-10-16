@@ -126,21 +126,69 @@ PORT=3001
 
 Errores con `{ error: { code, message } }`. Códigos: `SALDO_INSUFICIENTE`, `TOPE_ALCANZADO`, `PAGO_DUPLICADO`, `PASE_INVALIDO`, `PASE_VENCIDO`, `OP_ERROR`.
 
-**Flujo del grant:** `POST /api/pases` pide el grant interactivo con `interact.finish.uri = {FRONTEND_URL}/pase/listo?paseId=...` → la wallet redirige al front con `interact_ref` y `hash` → el front llama a `/confirmar` → el backend hace `grant.continue`, guarda `access_token.value` y `access_token.manage`, y devuelve un `paseToken` propio (nunca el token de Open Payments).
+**Flujo del grant:** `POST /api/pases` pide el grant interactivo con `interact.finish.uri = {FRONTEND_URL}/pase/listo?paseId=...` y un `interact.finish.nonce` aleatorio (`crypto.randomUUID()`), y **guarda en el pase el nonce, `interact.finish` (nonce del servidor), `continue.uri` y `continue.access_token.value`** → la wallet redirige al front con `interact_ref` y `hash` → el front llama a `/confirmar` → el backend **verifica el `hash`** (ver 8.1) y, si no coincide, responde `PASE_INVALIDO` sin continuar → hace `grant.continue`, guarda `access_token.value`, `access_token.manage` y la fecha de vencimiento (`ahora + access_token.expires_in`, si viene), y devuelve un `paseToken` propio (nunca el token de Open Payments).
 
 ---
 
 ## 8. Flujo de cobro por viaje (`POST /api/viajes`)
 
 1. Validar `paseToken`, y la **idempotencia por `(pase, vehiculo)` en una ventana de 2 min**. Si ya hay un pago, devolver ese recibo (`PAGO_DUPLICADO`).
-2. Rotar el access token del pase si expiró (`client.token.rotate`).
+2. Rotar el access token del pase si venció o está por vencer (`client.token.rotate`). El SDK **no** rota solo. La rotación devuelve un `value` **y** un `manage` nuevos: guardar ambos.
 3. Grant no interactivo `incoming-payment` en el auth server de la wallet del vehículo → crear el **incoming payment** con `incomingAmount` = tarifa.
-4. Grant no interactivo `quote` en el auth server del pasajero → crear la **quote** (`receiver` = URL del incoming payment).
-5. Crear el **outgoing payment** con `quoteId`, usando el access token del pase.
-6. Guardar el viaje (pase, vehículo, conductor del turno, monto, estado, ids de Open Payments) y calcular el cashback simulado.
-7. Responder con el recibo. El feed del conductor lo toma en el siguiente polling.
+4. Grant no interactivo `quote` en el auth server del pasajero → crear la **quote** con `{ walletAddress, receiver, method: 'ilp' }` (`receiver` = URL del incoming payment). **`method: 'ilp'` es obligatorio.**
+5. Crear el **outgoing payment** con `quoteId`, usando el access token del pase. La respuesta trae `grantSpentDebitAmount` (lo gastado en el intervalo actual del grant): usarlo para calcular `disponibleHoy = topeDiario − grantSpentDebitAmount`.
+6. **Confirmar el pago antes de marcarlo como pagado.** Crear el outgoing payment no garantiza que el dinero llegó. Consultar `client.outgoingPayment.get` hasta que `sentAmount.value === debitAmount.value` (pagado) o `failed === true` (fallido), con unos pocos reintentos cortos. Alternativa: `client.incomingPayment.get` del vehículo (`completed` o `receivedAmount`). Estado del viaje: `pendiente` → `pagado` | `fallido`.
+7. Guardar el viaje (pase, vehículo, conductor del turno, monto, estado, ids de Open Payments) y calcular el cashback simulado.
+8. Responder con el recibo. El feed del conductor lo toma en el siguiente polling y solo muestra "✅ Pasaje pagado" con estado `pagado`.
 
 Mapear los errores del SDK a los códigos de la sección 7. **Usar siempre `assetCode`/`assetScale` de la wallet address** (los montos son strings enteros escalados). Si la Test Wallet no ofrece COP, operar en la moneda disponible y mostrar el equivalente en COP en la UI.
+
+### 8.1 Detalles verificados en el código del SDK (`@interledger/open-payments` 7.4.0)
+
+Revisado con `opensrc` en `interledger/open-payments-node` (código del SDK) e `interledger/open-payments` (specs, docs y snippets). Estas firmas son reales; no usar otras sin verificarlas.
+
+```ts
+import {
+  createAuthenticatedClient, isPendingGrant, isFinalizedGrantWithAccessToken, OpenPaymentsClientError
+} from '@interledger/open-payments'
+
+// Una sola vez al arrancar. privateKey acepta ruta, PEM en string, Buffer o KeyObject
+// (OP_PRIVATE_KEY_B64 → Buffer.from(b64, 'base64')). validateResponses queda en true por defecto.
+const client = await createAuthenticatedClient({ walletAddressUrl, keyId, privateKey })
+
+const wa = await client.walletAddress.get({ url })          // → { id, assetCode, assetScale, authServer, resourceServer }
+
+// Pase (grant interactivo con tope diario)
+const pending = await client.grant.request({ url: waPasajero.authServer }, {
+  access_token: { access: [{
+    type: 'outgoing-payment', actions: ['create', 'read'], identifier: waPasajero.id,
+    limits: { debitAmount: { value, assetCode, assetScale }, interval: 'R/2026-10-17T05:00:00Z/P1D' }
+  }] },
+  interact: { start: ['redirect'], finish: { method: 'redirect', uri, nonce } }
+})                                                           // isPendingGrant(pending) → pending.interact.redirect / .finish, pending.continue
+const grant = await client.grant.continue(
+  { url: pending.continue.uri, accessToken: pending.continue.access_token.value },
+  { interact_ref })                                          // isFinalizedGrantWithAccessToken(grant) → grant.access_token.{value, manage, expires_in}
+
+const { access_token } = await client.token.rotate({ url: manage, accessToken: value })  // nuevo value + manage
+
+// Cobro por viaje
+const ip = await client.incomingPayment.create({ url: waVehiculo.resourceServer, accessToken },
+  { walletAddress: waVehiculo.id, incomingAmount: { value, assetCode, assetScale } })
+const quote = await client.quote.create({ url: waPasajero.resourceServer, accessToken },
+  { walletAddress: waPasajero.id, receiver: ip.id, method: 'ilp' })
+const op = await client.outgoingPayment.create({ url: waPasajero.resourceServer, accessToken: tokenDelPase },
+  { walletAddress: waPasajero.id, quoteId: quote.id })       // → { failed, sentAmount, debitAmount, grantSpentDebitAmount, ... }
+await client.outgoingPayment.get({ url: op.id, accessToken: tokenDelPase })
+await client.outgoingPayment.getGrantSpentAmounts({ url: waPasajero.resourceServer, accessToken: tokenDelPase })
+                                                             // → { spentDebitAmount, spentReceiveAmount } del intervalo actual
+```
+
+- **`interval`:** intervalo repetitivo ISO 8601. `R/<inicio>/P1D` = tope que se reinicia cada día. Medianoche de Colombia = `T05:00:00Z`.
+- **Hash (obligatorio en `/confirmar`):** `sha256` en base64 de `` `${nonceCliente}\n${pending.interact.finish}\n${interact_ref}\n${waPasajero.authServer}` `` (sin salto de línea al final), comparado con el `hash` del redirect. Usar `createHash('sha-256')` de `crypto` y comparar con `timingSafeEqual`. Si la URL del authServer no coincide exactamente (p. ej. por la `/` final), probar con la URL tal como se usó en `grant.request` y dejar `// TODO verificar`.
+- **`GET /api/pases/me`:** `disponibleHoy` sale de `getGrantSpentAmounts` (`topeDiario − spentDebitAmount`).
+- **Errores:** el SDK lanza `OpenPaymentsClientError` con `status`, `code` y `description`. Mapearlos a los códigos de la sección 7.
+- **Por verificar contra la Test Wallet:** la spec también permite `outgoingPayment.create` con `{ walletAddress, incomingPayment, debitAmount }` (sin quote). No depender de eso hasta probarlo.
 
 ---
 

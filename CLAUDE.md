@@ -12,6 +12,12 @@
 4. **No custodiamos fondos:** pasajero → wallet del vehículo (una wallet address por vehículo, dentro de la cuenta de la flota).
 5. **Web app (PWA), sin app nativa. Pago por QR → `/v/:vehiculoId`. NFC = roadmap.**
 6. **Pase = grant `outgoing-payment` interactivo una sola vez**, con `debitAmount` + `interval` (tope diario), sin `receiver`. Cada viaje: incoming payment → quote → outgoing payment, sin interacción.
+   - **Quote:** `method: 'ilp'` es obligatorio (`{ walletAddress, receiver, method: 'ilp' }`).
+   - **`/confirmar` verifica el `hash`** del redirect antes de `grant.continue`. Para eso, `POST /api/pases` guarda el nonce propio y `interact.finish`.
+   - **Un viaje solo queda `pagado`** cuando el outgoing payment tiene `sentAmount === debitAmount`. Si `failed`, queda `fallido`. Crear el pago no basta.
+   - **`disponibleHoy`** sale del SDK (`grantSpentDebitAmount` o `outgoingPayment.getGrantSpentAmounts`), no de un cálculo propio.
+   - **El SDK no rota el token solo:** guardar `expires_in` y rotar con `token.rotate` (guardar el nuevo `value` y `manage`).
+   - Firmas verificadas del SDK 7.4.0: sección 8.1 de AGENTS.md.
 7. **Sesión del pase: token en `localStorage` + `Authorization: Bearer`** (no cookies).
 8. **Alcance cerrado:** activar pase → QR → pagar → recibo → feed del conductor. Código congelado el sábado a las 10:15; deadline a las 11:00.
 9. **Registra cada prompt tal cual** (palabra por palabra, nunca un resumen), un archivo por prompt y numerados en orden: `/prompts/prompt1.md`, `/prompts/prompt2.md`, etc.
