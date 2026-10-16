@@ -7,8 +7,11 @@ import { PaseListoPage } from './pages/PaseListoPage';
 import { ReciboPage } from './pages/ReciboPage';
 import { ConductorPage } from './pages/ConductorPage';
 import { FlotaPage } from './pages/FlotaPage';
+import { MiPasePage } from './pages/MiPasePage';
+import { QrVehiculoPage } from './pages/QrVehiculoPage';
 import { leerUltimoVehiculo } from './lib/ultimoVehiculo';
 import { formatCOP } from './lib/format';
+import { getPaseToken } from './lib/api';
 
 const ScrollToTop: React.FC = () => {
   const location = useLocation();
@@ -50,7 +53,7 @@ const InicioPage: React.FC = () => {
 
         <div className="flex items-baseline justify-between gap-4">
           <span className="text-[15px] font-normal text-[#C3C5C6]">Pasaje</span>
-          <span className="text-[48px] font-light text-white leading-none tracking-tight">
+          <span className="text-[40px] min-[400px]:text-[48px] font-light text-white leading-none tracking-tight tabular-nums">
             {formatCOP(ultimo.tarifa)}
           </span>
         </div>
@@ -59,6 +62,14 @@ const InicioPage: React.FC = () => {
           <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary">
             Ir a pagar
           </Link>
+          {getPaseToken() && (
+            <Link
+              to="/mi-pase"
+              className="flex items-center justify-center min-h-11 mt-3 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+            >
+              Ver mi pase y mis viajes
+            </Link>
+          )}
         </div>
       </div>
     </AppShell>
@@ -77,6 +88,8 @@ export const App: React.FC = () => {
         <Route path="/recibo/:viajeId" element={<ReciboPage />} />
         <Route path="/conductor/:vehiculoId" element={<ConductorPage />} />
         <Route path="/flota" element={<FlotaPage />} />
+        <Route path="/mi-pase" element={<MiPasePage />} />
+        <Route path="/qr/:vehiculoId" element={<QrVehiculoPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

@@ -1,5 +1,7 @@
 -- Súbase · Pegar completo en Supabase → SQL Editor → Run
 -- 1) Migración 0001
+-- Si la base ya existía con wallet_address unique, correr antes:
+--   alter table public.vehiculos drop constraint if exists vehiculos_wallet_address_key;
 -- Migración 0001 — Súbase
 -- Tablas: vehiculos, turnos, pases, viajes.
 -- Solo el backend (Vercel Functions, con la service role key) accede a la base.
@@ -14,7 +16,7 @@ create table public.vehiculos (
   ruta text not null,
   conductor text not null,
   tipo text not null check (tipo in ('bus', 'taxi')),
-  wallet_address text not null unique,                   -- URL https de la wallet del vehículo en la Test Wallet
+  wallet_address text not null,                          -- wallet que recibe (hoy flota1 para todos: la Test Wallet permite una sola address COP por cuenta). SIN unique
   tarifa bigint not null check (tarifa > 0),             -- entero escalado en la moneda de la wallet
   asset_code text not null,
   asset_scale smallint not null,
@@ -139,17 +141,16 @@ revoke all on public.viajes    from anon, authenticated;
 -- Seed de demo — Súbase
 -- 2 buses y 1 taxi de Medellín, tarifa ~3.200 COP.
 
--- TODO: reemplazar con la wallet real de la Test Wallet (wallet_address de cada vehículo)
--- TODO: reemplazar asset_code/asset_scale ('USD'/2) y la tarifa escalada según la moneda real de la wallet
+-- Todos los vehículos cobran en la wallet de la flota (AGENTS.md §2). COP con assetScale 2: 3.200 COP = 320000.
 insert into public.vehiculos
   (id, nombre, ruta, conductor, tipo, wallet_address, tarifa, asset_code, asset_scale, tarifa_cop)
 values
   ('bus-01',  'Bus 01 — Circular Coonatra', 'Poblado – Centro – Laureles', 'Carlos Muñoz',  'bus',
-   'https://ilp.interledger-test.dev/REEMPLAZAR-bus-01',  100, 'USD', 2, 3200),
+   'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200),
   ('bus-02',  'Bus 02 — Buses Unidos',      'Robledo – Centro',            'Luz Marina Gil', 'bus',
-   'https://ilp.interledger-test.dev/REEMPLAZAR-bus-02',  100, 'USD', 2, 3200),
+   'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200),
   ('taxi-01', 'Taxi 01 — Poblado',          'Poblado – Aeropuerto JMC',    'Jhon Fredy Ríos', 'taxi',
-   'https://ilp.interledger-test.dev/REEMPLAZAR-taxi-01', 100, 'USD', 2, 3200);
+   'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200);
 
 -- Un turno abierto por vehículo
 insert into public.turnos (vehiculo_id, conductor)

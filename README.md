@@ -32,6 +32,9 @@ El pasajero escanea el QR del vehículo con la cámara nativa de su celular y pa
 - `/pase/activar`: Activación única del pase preautorizado GNAP (dirección de wallet + tope diario de `$10.000`, **`$20.000`** o `$30.000`).
 - `/pase/listo`: Confirmación del grant interactivo (`interact_ref` y `hash`) y retorno automático al vehículo.
 - `/recibo/:viajeId`: Comprobante digital con confirmación `"✅ Pasaje pagado"` y cashback simulado.
+- `/mi-pase`: Pase del pasajero (disponible hoy, vencimiento, cashback simulado) e historial de sus viajes.
+- `/qr/:vehiculoId`: QR imprimible del vehículo para pegar en el bus.
+- `/flota`: Panel de la empresa con PIN: «Resumen» (recaudo, por ruta, por vehículo, últimos pagos) y «Vehículos» (crear, editar tarifa y conductor, activar o desactivar, ver QR).
 - `/conductor/:vehiculoId`: Terminal del conductor con código QR grande, recaudo del turno y feed en vivo (polling cada 2 s) con alerta sonora.
 
 ---

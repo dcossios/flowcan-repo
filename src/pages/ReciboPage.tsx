@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { CircleCheck, Loader2 } from 'lucide-react';
+import { CircleCheck, Clock, Loader2, XCircle } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
@@ -73,6 +73,26 @@ export const ReciboPage: React.FC = () => {
     };
   }, [viajeId, stateRecibo]);
 
+  // Si el pago sigue confirmándose en Open Payments, se vuelve a consultar cada 3 s (máximo ~30 s).
+  const estado = recibo?.estado ?? 'pagado';
+  useEffect(() => {
+    if (!recibo || estado !== 'pendiente') return;
+    let intentos = 0;
+    const id = window.setInterval(async () => {
+      intentos += 1;
+      try {
+        const data = await fetchViaje(recibo.viajeId);
+        if (data.estado !== 'pendiente' || intentos >= 10) {
+          setRecibo(data);
+          window.clearInterval(id);
+        }
+      } catch {
+        if (intentos >= 10) window.clearInterval(id);
+      }
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [recibo, estado]);
+
   const vehiculoId =
     recibo && typeof recibo.vehiculo === 'object'
       ? recibo.vehiculo.id
@@ -120,16 +140,35 @@ export const ReciboPage: React.FC = () => {
           <>
             <PasoLinea paso={3} variante="compacta" />
 
-            <div className="mt-8 flex items-center gap-4">
-              <CircleCheck
-                className="w-16 h-16 text-[#D2B99A] shrink-0"
-                strokeWidth={1.5}
-              />
-              <h1 className="text-[56px] font-light text-white leading-none">Pagado</h1>
+            <div className="mt-8 flex items-center gap-4" role="status" aria-live="polite">
+              {estado === 'pagado' ? (
+                <CircleCheck className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
+              ) : estado === 'pendiente' ? (
+                <Clock className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#C3C5C6] shrink-0" strokeWidth={1.5} />
+              ) : (
+                <XCircle className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#C3C5C6] shrink-0" strokeWidth={1.5} />
+              )}
+              <h1
+                className={`font-light text-white leading-none min-w-0 ${
+                  estado === 'pagado' ? 'text-[44px] min-[400px]:text-[56px]' : 'text-[32px] min-[400px]:text-[44px]'
+                }`}
+              >
+                {estado === 'pagado' ? 'Pagado' : estado === 'pendiente' ? 'Confirmando…' : 'No se cobró'}
+              </h1>
             </div>
             <div className="subase-sand-rule mt-3" />
+            {estado === 'pendiente' && (
+              <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
+                Su billetera está procesando el pago. Esta pantalla se actualiza sola.
+              </p>
+            )}
+            {estado === 'fallido' && (
+              <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
+                Su billetera no completó el pago y no se le descontó nada. Revise el saldo e intente de nuevo.
+              </p>
+            )}
 
-            <p className="text-[48px] font-light text-white leading-none tracking-tight mt-8">
+            <p className="text-[40px] min-[400px]:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-8">
               {formatCOP(recibo.monto)}
             </p>
 
@@ -137,11 +176,14 @@ export const ReciboPage: React.FC = () => {
               {lineaVehiculo(vehiculoNombre, vehiculoRuta)}
             </p>
 
-            <RelojVivo />
-
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-6 leading-relaxed">
-              Muéstrele esta pantalla al conductor si se la pide.
-            </p>
+            {estado === 'pagado' && (
+              <>
+                <RelojVivo />
+                <p className="text-[15px] font-normal text-[#C3C5C6] mt-6 leading-relaxed">
+                  Muéstrele esta pantalla al conductor si se la pide.
+                </p>
+              </>
+            )}
 
             <hr className="subase-filete mt-8 mb-0" />
             <div className="flex items-baseline justify-between gap-4 py-4">
@@ -179,12 +221,20 @@ export const ReciboPage: React.FC = () => {
               <ComoUsamosOpenPayments />
             </div>
 
-            <Link
-              to={`/v/${encodeURIComponent(vehiculoId)}`}
-              className="inline-flex items-center justify-center min-h-11 mt-6 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
-            >
-              Volver al bus
-            </Link>
+            <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-1">
+              <Link
+                to={`/v/${encodeURIComponent(vehiculoId)}`}
+                className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+              >
+                {estado === 'fallido' ? 'Intentar de nuevo' : 'Volver al bus'}
+              </Link>
+              <Link
+                to="/mi-pase"
+                className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+              >
+                Ver mis viajes
+              </Link>
+            </div>
           </>
         )}
       </div>

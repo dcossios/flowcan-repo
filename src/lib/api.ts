@@ -8,7 +8,12 @@ export type ErrorCode =
   | 'PASE_INVALIDO'
   | 'PASE_VENCIDO'
   | 'OP_ERROR'
+  | 'NO_ENCONTRADO'
+  | 'DATOS_INVALIDOS'
+  | 'NO_AUTORIZADO'
   | 'BACKEND_OFFLINE';
+
+export type EstadoViaje = 'pendiente' | 'pagado' | 'fallido';
 
 export interface VehiculoInfo {
   id: string;
@@ -67,8 +72,44 @@ export interface ReciboViaje {
   } | string;
   fecha: string;
   disponibleHoy: number;
+  /** Estado del pago en Open Payments. Si falta (versiones viejas), se asume `pagado`. */
+  estado?: EstadoViaje;
   duplicado?: boolean;
 }
+
+/** Un viaje en «Mi pase» (GET /api/viajes). */
+export interface MiViaje {
+  viajeId: string;
+  monto: number;
+  cashback: number;
+  estado: EstadoViaje;
+  fecha: string;
+  vehiculo: { id: string; nombre: string; ruta: string };
+}
+
+/** Vehículo en la gestión de la empresa (GET /api/empresa/vehiculos). */
+export interface VehiculoGestion {
+  id: string;
+  nombre: string;
+  ruta: string;
+  tipo: 'bus' | 'taxi';
+  conductor: string;
+  tarifa: number;
+  moneda: string;
+  activo: boolean;
+  turnoDesde: string | null;
+}
+
+export interface NuevoVehiculo {
+  id: string;
+  nombre: string;
+  ruta: string;
+  tipo: 'bus' | 'taxi';
+  conductor: string;
+  tarifa: number;
+}
+
+export type CambiosVehiculo = Partial<Pick<VehiculoGestion, 'nombre' | 'ruta' | 'conductor' | 'tarifa' | 'activo'>>;
 
 export interface FeedItem {
   viajeId: string;
@@ -148,6 +189,9 @@ const ERROR_MESSAGES: Record<ErrorCode, string> = {
   PASE_INVALIDO: 'Su pase ya no es válido. Actívelo de nuevo.',
   PASE_VENCIDO: 'Su pase de 30 días venció. Active uno nuevo en segundos.',
   OP_ERROR: 'No pudimos completar el pago con su billetera. Intente de nuevo.',
+  NO_ENCONTRADO: 'No encontramos lo que busca.',
+  DATOS_INVALIDOS: 'Revise los datos e intente de nuevo.',
+  NO_AUTORIZADO: 'El PIN de la empresa no es correcto.',
   BACKEND_OFFLINE: 'El servidor de Súbase no responde. Intente de nuevo en unos segundos.',
 };
 
@@ -215,6 +259,39 @@ export function clearPendingPaseContext(): void {
   } catch {
     // ignore
   }
+}
+
+// --- PIN de la empresa (panel /flota). sessionStorage: se borra al cerrar la pestaña ---
+
+const EMPRESA_PIN_KEY = 'subase_empresa_pin';
+
+export function getEmpresaPin(): string | null {
+  try {
+    return sessionStorage.getItem(EMPRESA_PIN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setEmpresaPin(pin: string): void {
+  try {
+    sessionStorage.setItem(EMPRESA_PIN_KEY, pin);
+  } catch {
+    // ignore
+  }
+}
+
+export function clearEmpresaPin(): void {
+  try {
+    sessionStorage.removeItem(EMPRESA_PIN_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+function headersEmpresa(): HeadersInit {
+  const pin = getEmpresaPin();
+  return pin ? { 'X-Empresa-Pin': pin } : {};
 }
 
 // --- Modo Vista Previa UI (exclusivamente para probar maquetación cuando server/ está apagado) ---
@@ -423,6 +500,7 @@ export async function pagarViaje(vehiculoId: string): Promise<ReciboViaje> {
       },
       fecha: new Date().toISOString(),
       disponibleHoy: nuevoDisp,
+      estado: 'pagado',
     };
     const prevList = JSON.parse(localStorage.getItem('subase_preview_viajes') || '[]') as ReciboViaje[];
     prevList.unshift(recibo);
@@ -649,7 +727,7 @@ export async function fetchFlota(fecha?: string): Promise<FlotaResumen> {
 
   const query = fecha ? `?fecha=${encodeURIComponent(fecha)}` : '';
   try {
-    return await apiRequest<FlotaResumen>(`/api/flota${query}`);
+    return await apiRequest<FlotaResumen>(`/api/flota${query}`, { headers: headersEmpresa() });
   } catch (err) {
     if (err instanceof SubaseApiError && err.status === 404) {
       const resultados = await Promise.all(
@@ -689,3 +767,82 @@ export async function fetchFlota(fecha?: string): Promise<FlotaResumen> {
   }
 }
 
+// --- Pasajero: «Mi pase» ---
+
+export async function fetchMisViajes(): Promise<MiViaje[]> {
+  if (isUiPreviewMode()) {
+    const prevList = JSON.parse(localStorage.getItem('subase_preview_viajes') || '[]') as ReciboViaje[];
+    return prevList.map((v) => ({
+      viajeId: v.viajeId,
+      monto: v.monto,
+      cashback: v.cashback,
+      estado: v.estado ?? 'pagado',
+      fecha: v.fecha,
+      vehiculo:
+        typeof v.vehiculo === 'string' ? { id: v.vehiculo, nombre: v.vehiculo, ruta: '' } : v.vehiculo,
+    }));
+  }
+  return apiRequest<MiViaje[]>('/api/viajes');
+}
+
+// --- Empresa: gestión de vehículos (con PIN) ---
+
+const PREVIEW_GESTION_KEY = 'subase_preview_vehiculos';
+
+function leerVehiculosPreview(): VehiculoGestion[] {
+  const guardados = localStorage.getItem(PREVIEW_GESTION_KEY);
+  if (guardados) return JSON.parse(guardados) as VehiculoGestion[];
+  return VEHICULOS_FLOTA.map((id) => ({
+    id,
+    nombre: PREVIEW_VEHICULOS[id].nombre,
+    ruta: PREVIEW_VEHICULOS[id].ruta,
+    tipo: FLOTA_META[id].tipo,
+    conductor: FLOTA_META[id].conductor ?? '',
+    tarifa: PREVIEW_VEHICULOS[id].tarifa,
+    moneda: 'COP',
+    activo: true,
+    turnoDesde: new Date().toISOString(),
+  }));
+}
+
+function guardarVehiculosPreview(lista: VehiculoGestion[]): void {
+  localStorage.setItem(PREVIEW_GESTION_KEY, JSON.stringify(lista));
+}
+
+export async function fetchVehiculosEmpresa(): Promise<VehiculoGestion[]> {
+  if (isUiPreviewMode()) return leerVehiculosPreview();
+  return apiRequest<VehiculoGestion[]>('/api/empresa/vehiculos', { headers: headersEmpresa() });
+}
+
+export async function crearVehiculo(datos: NuevoVehiculo): Promise<VehiculoGestion> {
+  if (isUiPreviewMode()) {
+    const lista = leerVehiculosPreview();
+    if (lista.some((v) => v.id === datos.id)) {
+      throw new SubaseApiError('DATOS_INVALIDOS', `Ya existe un vehículo con el código ${datos.id}.`);
+    }
+    const nuevo: VehiculoGestion = { ...datos, moneda: 'COP', activo: true, turnoDesde: new Date().toISOString() };
+    guardarVehiculosPreview([...lista, nuevo]);
+    return nuevo;
+  }
+  return apiRequest<VehiculoGestion>('/api/empresa/vehiculos', {
+    method: 'POST',
+    headers: headersEmpresa(),
+    body: JSON.stringify(datos),
+  });
+}
+
+export async function editarVehiculo(id: string, cambios: CambiosVehiculo): Promise<VehiculoGestion> {
+  if (isUiPreviewMode()) {
+    const lista = leerVehiculosPreview();
+    const i = lista.findIndex((v) => v.id === id);
+    if (i < 0) throw new SubaseApiError('NO_ENCONTRADO', 'Ese vehículo no existe.');
+    lista[i] = { ...lista[i], ...cambios };
+    guardarVehiculosPreview(lista);
+    return lista[i];
+  }
+  return apiRequest<VehiculoGestion>(`/api/empresa/vehiculos/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: headersEmpresa(),
+    body: JSON.stringify(cambios),
+  });
+}

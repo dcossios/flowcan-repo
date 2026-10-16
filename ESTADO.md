@@ -28,8 +28,10 @@
 | **Backend (`api/`)** | 7 endpoints + `vercel.json` + API local (`npm run dev:api`, puerto 3001) | ✅ Escritos y compilan; rutas y errores probados en local. **Falta probarlos con Supabase** (faltan `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`) | David |
 | **Backend** | `GET /api/flota` (formato de 2.1, confirmado) **con PIN de empresa** (`X-Empresa-Pin`) | ✅ Escrito; falta probar con Supabase | David |
 | **Backend** | `GET /api/viajes` (mis viajes del pasajero) y gestión: `GET/POST /api/empresa/vehiculos`, `PATCH /api/empresa/vehiculos/:id` (con PIN) | ✅ Escrito; falta probar con Supabase | David |
-| **Frontend** | Conectar: PIN en `/flota` (hoy `fetchFlota` no lo manda → 401), pestaña «Vehículos», pantalla «Mi pase» (`/mi-pase`), `estado` en el recibo, `volver` por defecto `/` en `PaseListoPage` | ⏳ Pendiente | David / Andrés |
-| **Integración** | Prueba end-to-end contra Interledger Test Wallet | ⏳ Pendiente | Santiago / David |
+| **Frontend** | Conectado al backend nuevo: PIN de empresa en `/flota` (pestañas «Resumen» y «Vehículos»: crear, editar, activar/desactivar, ver QR), «Mi pase» (`/mi-pase`: disponible hoy, vence, mis viajes, quitar pase), recibo con `pendiente`/`fallido` (se actualiza solo), QR imprimible (`/qr/:vehiculoId`), enlace «Mi pase» en el encabezado del pasajero | ✅ Listo en vista previa; sin desborde horizontal a 320, 375, 768 y 1280 px. Falta probar contra Supabase | David |
+| **Integración** | Prueba end-to-end en local (front 5173 + API 3001 + Supabase + Test Wallet): activar pase `test_platzi1` → pagar `bus-01` → recibo, «Mi pase», conductor y `/flota` | ✅ 16 oct: viaje `pagado` en ~6 s, con incoming/quote/outgoing guardados, turno del conductor y cashback 2 % | David |
+| **Integración** | Supabase: `vehiculos.wallet_address` sin `unique` y los 3 vehículos en `flota1`, COP/2, `tarifa = 320000` | ✅ Aplicado en la base; `Database Infrastructure/supabase-setup.sql` corregido | David |
+| **Deploy** | Vercel: variables `OP_CLIENT_WALLET_ADDRESS`, `OP_KEY_ID`, `OP_PRIVATE_KEY_B64`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `EMPRESA_PIN`, `APP_URL` (dominio final) | ⏳ Pendiente | Santiago / David |
 
 ---
 

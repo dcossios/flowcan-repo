@@ -134,6 +134,7 @@ export const ConductorPage: React.FC = () => {
     <AppShell
       vehiculoIdActual={vehiculoId}
       subtitle="El celular del conductor es el terminal."
+      rol="conductor"
     >
       {/* Capa inicial para empezar turno y habilitar audio + voz */}
       {!turnoIniciado && (
@@ -171,7 +172,7 @@ export const ConductorPage: React.FC = () => {
         >
           <CircleCheck className="w-24 h-24 text-[#D2B99A] mb-6 shrink-0" size={96} strokeWidth={1.5} />
           <p className="text-[64px] leading-none font-light text-white">Pagado</p>
-          <p className="text-[56px] leading-none font-light text-white mt-4">
+          <p className="text-[44px] min-[400px]:text-[56px] leading-none font-light text-white mt-4 tabular-nums">
             {formatCOP(ultimoPagoAlerta.monto)}
           </p>
           <p className="text-[18px] font-normal text-[#C3C5C6] mt-4">
@@ -219,25 +220,26 @@ export const ConductorPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-[15px] font-normal text-[#C3C5C6]">Pasajes del turno</p>
-            <p className="text-[48px] leading-tight font-light text-white mt-1">
+            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-light text-white mt-1 tabular-nums">
               {totalPasajeros}
             </p>
           </div>
 
           <div>
             <p className="text-[15px] font-normal text-[#C3C5C6]">Recaudo</p>
-            <p className="text-[48px] leading-tight font-light text-white mt-1">
+            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-light text-white mt-1 tabular-nums break-words">
               {formatCOP(totalRecaudado)}
             </p>
           </div>
         </div>
 
         {/* QR con al menos 16px de margen blanco alrededor */}
-        <div className="subase-card p-6 text-center">
-          <div className="bg-white p-5 rounded-[12px] inline-flex items-center justify-center mx-auto">
+        <div className="subase-card p-4 min-[400px]:p-6 text-center">
+          <div className="bg-white p-4 min-[400px]:p-5 rounded-[12px] mx-auto w-full max-w-[280px] aspect-square">
             <QRCodeSVG
               value={qrTargetUrl}
-              size={220}
+              size={512}
+              style={{ width: '100%', height: '100%' }}
               level="M"
               includeMargin={false}
               bgColor="#FFFFFF"
@@ -277,7 +279,7 @@ export const ConductorPage: React.FC = () => {
                   >
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span>{formatHora(item.fecha)}</span>
-                      <span className="text-[#C3C5C6]">· N.º {item.viajeId}</span>
+                      <span className="text-[#C3C5C6]">· N.º {item.viajeId.slice(0, 8)}</span>
                       {esPendiente && (
                         <span className="text-[#C3C5C6]">· Confirmando…</span>
                       )}

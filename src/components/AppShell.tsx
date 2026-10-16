@@ -9,6 +9,8 @@ interface AppShellProps {
   /** Reserva espacio en el pie para la barra fija de pagar / aprobar. */
   barraFija?: boolean | 'alta';
   ancho?: 'normal' | 'amplio';
+  /** Quién usa la vista: el pasajero ve «Mi pase» en el encabezado. */
+  rol?: 'pasajero' | 'conductor' | 'empresa';
 }
 
 const MENSAJES_USTED: Record<ErrorCode, string> = {
@@ -18,6 +20,9 @@ const MENSAJES_USTED: Record<ErrorCode, string> = {
   PASE_INVALIDO: 'Su pase no es válido o venció la autorización. Actívelo de nuevo.',
   PASE_VENCIDO: 'Su pase de 30 días venció. Active uno nuevo.',
   OP_ERROR: 'No pudimos completar el pago. Verifique su billetera e intente de nuevo.',
+  NO_ENCONTRADO: 'No encontramos ese vehículo o ese recibo.',
+  DATOS_INVALIDOS: 'Revise los datos e intente de nuevo.',
+  NO_AUTORIZADO: 'El PIN de la empresa no es correcto.',
   BACKEND_OFFLINE: 'El servidor no responde. Intente de nuevo en un momento.',
 };
 
@@ -31,6 +36,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   vehiculoIdActual = 'bus-01',
   barraFija = false,
   ancho = 'normal',
+  rol = 'pasajero',
 }) => {
   const location = useLocation();
   const [previewMode, setPreviewMode] = useState<boolean>(() => isUiPreviewMode());
@@ -69,7 +75,20 @@ export const AppShell: React.FC<AppShellProps> = ({
           >
             SÚBASE
           </Link>
-          <span className="text-[15px] font-normal text-[#C3C5C6]">Medellín</span>
+          {rol === 'pasajero' ? (
+            <Link
+              to="/mi-pase"
+              className={`inline-flex items-center min-h-11 px-1 text-[15px] font-normal underline-offset-4 hover:underline ${
+                location.pathname === '/mi-pase' ? 'text-white' : 'text-[#C3C5C6] hover:text-white'
+              }`}
+            >
+              Mi pase
+            </Link>
+          ) : (
+            <span className="text-[15px] font-normal text-[#C3C5C6]">
+              {rol === 'conductor' ? 'Conductor' : 'Empresa'}
+            </span>
+          )}
         </div>
 
         {isDev && previewMode && (

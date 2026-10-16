@@ -165,3 +165,14 @@ summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
 summary::after { content: "+"; margin-left: 12px; color: #D2B99A; font-size: 22px; font-weight: 300; line-height: 1; }
 details[open] > summary::after { content: "–"; }
+
+/* Impresión del QR de un vehículo (/qr/:vehiculoId) */
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

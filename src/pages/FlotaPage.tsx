@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   Bus,
@@ -7,16 +7,23 @@ import {
   CircleCheck,
   Clock,
   Loader2,
+  LockKeyhole,
   RefreshCw,
   XCircle,
 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
+import { FlotaVehiculos } from '../components/FlotaVehiculos';
 import {
+  clearEmpresaPin,
   ErrorCode,
   fetchFlota,
   FlotaResumen,
+  getEmpresaPin,
   getFriendlyErrorMessage,
+  isUiPreviewMode,
+  setEmpresaPin,
   setUiPreviewMode,
+  SubaseApiError,
 } from '../lib/api';
 import { formatCOP } from '../lib/format';
 
@@ -73,11 +80,67 @@ function nombreCortoVehiculo(vehiculoId: string, nombreCompleto?: string): strin
   return vehiculoId;
 }
 
+const PinEmpresa: React.FC<{ onListo: () => void; error: boolean }> = ({ onListo, error }) => {
+  const [pin, setPin] = useState('');
+  return (
+    <div className="flex-1 flex flex-col max-w-sm w-full">
+      <LockKeyhole className="w-8 h-8 text-[#D2B99A]" strokeWidth={1.5} />
+      <h1 className="text-[32px] font-light text-white leading-tight mt-4">Panel de la empresa</h1>
+      <div className="subase-sand-rule mt-2.5" />
+      <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
+        Escriba el PIN de la empresa para ver el recaudo y gestionar los vehículos.
+      </p>
+      <form
+        className="mt-6"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!pin.trim()) return;
+          setEmpresaPin(pin.trim());
+          onListo();
+        }}
+      >
+        <label htmlFor="pin-empresa" className="block text-[14px] font-normal text-[#C3C5C6] mb-1.5">
+          PIN
+        </label>
+        <input
+          id="pin-empresa"
+          type="password"
+          inputMode="numeric"
+          autoComplete="current-password"
+          autoFocus
+          value={pin}
+          onChange={(e) => setPin(e.target.value)}
+          className="w-full min-h-[52px] rounded-[12px] bg-black border border-[rgba(195,197,198,0.35)] px-4 text-[20px] tracking-[0.3em] text-white focus:outline-none focus:border-[#D2B99A]"
+        />
+        {error && (
+          <p role="alert" className="text-[15px] text-[#D2B99A] mt-3">
+            Ese PIN no es correcto. Intente de nuevo.
+          </p>
+        )}
+        <button type="submit" className="subase-btn-primary mt-6" disabled={!pin.trim()}>
+          Entrar
+        </button>
+      </form>
+    </div>
+  );
+};
+
 export const FlotaPage: React.FC = () => {
   const isDev = import.meta.env.DEV;
   const [resumen, setResumen] = useState<FlotaResumen | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [errorInfo, setErrorInfo] = useState<{ code: ErrorCode; message: string } | null>(null);
+  const [tienePin, setTienePin] = useState<boolean>(() => Boolean(getEmpresaPin()) || isUiPreviewMode());
+  const [pinIncorrecto, setPinIncorrecto] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get('tab') === 'vehiculos' ? 'vehiculos' : 'resumen';
+
+  const pedirPinDeNuevo = useCallback(() => {
+    clearEmpresaPin();
+    setResumen(null);
+    setPinIncorrecto(true);
+    setTienePin(false);
+  }, []);
 
   const cargarFlota = useCallback(async (silencioso = false) => {
     if (!silencioso) {
@@ -89,6 +152,10 @@ export const FlotaPage: React.FC = () => {
       setResumen(data);
       setErrorInfo(null);
     } catch (err) {
+      if (err instanceof SubaseApiError && err.code === 'NO_AUTORIZADO') {
+        pedirPinDeNuevo();
+        return;
+      }
       if (!silencioso) {
         const friendly = getFriendlyErrorMessage(err);
         setErrorInfo({
@@ -101,15 +168,17 @@ export const FlotaPage: React.FC = () => {
         setLoading(false);
       }
     }
-  }, []);
+  }, [pedirPinDeNuevo]);
 
+  // El resumen se consulta cada 5 s solo mientras está a la vista.
   useEffect(() => {
+    if (!tienePin || tab !== 'resumen') return;
     cargarFlota(false);
     const intervalId = window.setInterval(() => {
       cargarFlota(true);
     }, 5000);
     return () => window.clearInterval(intervalId);
-  }, [cargarFlota]);
+  }, [cargarFlota, tienePin, tab]);
 
   const cargaFallida = !loading && !resumen;
 
@@ -135,9 +204,50 @@ export const FlotaPage: React.FC = () => {
   }
 
   return (
-    <AppShell ancho="amplio">
+    <AppShell ancho="amplio" rol="empresa">
+      {!tienePin ? (
+        <PinEmpresa
+          error={pinIncorrecto}
+          onListo={() => {
+            setPinIncorrecto(false);
+            setTienePin(true);
+          }}
+        />
+      ) : (
       <div className="flex-1 flex flex-col">
-        {cargaFallida ? (
+        <nav aria-label="Secciones de la empresa" className="mb-8 flex items-center justify-between gap-3">
+          <div className="inline-grid grid-cols-2 p-1 rounded-[12px] border border-[rgba(195,197,198,0.2)] flex-1 sm:flex-none">
+            {(['resumen', 'vehiculos'] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                aria-current={tab === t ? 'page' : undefined}
+                onClick={() => setSearchParams(t === 'resumen' ? {} : { tab: t })}
+                className={`min-h-11 px-5 rounded-[9px] text-[15px] font-normal cursor-pointer ${
+                  tab === t ? 'bg-[#113462] text-white' : 'text-[#C3C5C6] hover:text-white'
+                }`}
+              >
+                {t === 'resumen' ? 'Resumen' : 'Vehículos'}
+              </button>
+            ))}
+          </div>
+          {!isUiPreviewMode() && (
+            <button
+              type="button"
+              onClick={() => {
+                clearEmpresaPin();
+                setPinIncorrecto(false);
+                setTienePin(false);
+              }}
+              className="inline-flex items-center min-h-11 px-2 text-[15px] font-normal text-[#C3C5C6] hover:text-white cursor-pointer"
+            >
+              Salir
+            </button>
+          )}
+        </nav>
+        {tab === 'vehiculos' ? (
+          <FlotaVehiculos onNoAutorizado={pedirPinDeNuevo} />
+        ) : cargaFallida ? (
           <>
             <h1 className="text-[32px] font-light text-white leading-tight">
               No pudimos cargar la flota
@@ -468,6 +578,7 @@ export const FlotaPage: React.FC = () => {
           </>
         )}
       </div>
+      )}
     </AppShell>
   );
 };
