@@ -16,7 +16,7 @@
    - **`/confirmar` verifica el `hash`** del redirect antes de `grant.continue`. Para eso, `POST /api/pases` guarda el nonce propio y `interact.finish`.
    - **Un viaje solo queda `pagado`** cuando el outgoing payment tiene `sentAmount === debitAmount`. Si `failed`, queda `fallido`. Crear el pago no basta.
    - **`disponibleHoy`** sale de `outgoingPayment.getGrantSpentAmounts` después de confirmar el pago (no de `grantSpentDebitAmount` de `create`, que viene sin este pago).
-   - **El token del pase dura 10 min en la Test Wallet** (`expires_in: 600`). El SDK no rota solo: rotar con `token.rotate` si vence en < 60 s y guardar el nuevo `value`, `manage` y vencimiento.
+   - **El token del pase dura 10 min en la Test Wallet** (`expires_in: 600`). El SDK no rota solo: rotar con `token.rotate` si vence en < 60 s y guardar el nuevo `value`, `manage` y vencimiento. Rotar un token ya vencido funciona (verificado); vencido responde `403 Inactive Token`.
    - Firmas verificadas del SDK 7.4.0: sección 8.1 de AGENTS.md.
 7. **Sesión del pase: token en `localStorage` + `Authorization: Bearer`** (no cookies).
 8. **Alcance cerrado:** activar pase → QR → pagar → recibo → feed del conductor. Código congelado el sábado a las 10:15; deadline a las 11:00.

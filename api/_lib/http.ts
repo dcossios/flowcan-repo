@@ -2,7 +2,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { ErrorApi, responderError } from './errores.js'
 
-type Metodo = 'GET' | 'POST'
+type Metodo = 'GET' | 'POST' | 'PATCH'
 type Handler = (req: VercelRequest, res: VercelResponse) => Promise<unknown>
 
 export function manejador(metodos: Partial<Record<Metodo, Handler>>) {
@@ -16,7 +16,7 @@ export function manejador(metodos: Partial<Record<Metodo, Handler>>) {
     }
     try {
       const datos = await h(req, res)
-      if (!res.headersSent) res.status(200).json(datos)
+      if (!res.headersSent) res.json(datos) // 200 salvo que el handler haya fijado otro (p. ej. 201)
     } catch (e) {
       responderError(res, e)
     }

@@ -184,7 +184,8 @@ export async function asegurarToken(pase: Pase): Promise<string> {
     Object.assign(pase, cambios)
     return access_token.value
   } catch (e) {
-    // TODO verificar (scripts/prueba-rotacion.ts): si la Test Wallet no deja rotar un token vencido, el pase muere aquí.
+    // Rotar un token vencido SÍ funciona (verificado con scripts/prueba-rotacion.ts). Si falla con 401/403,
+    // el grant fue revocado o no existe: el pase queda vencido.
     if (e instanceof ErrorApi && e.code === 'PASE_VENCIDO') {
       ok(await db().from('pases').update({ estado: 'vencido' }).eq('id', pase.id), 'marcar pase vencido')
     }

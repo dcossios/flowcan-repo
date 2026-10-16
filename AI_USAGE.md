@@ -47,6 +47,9 @@
 - Se usó Claude Code para integrar los cambios de GitHub (renumerar estos prompts de `prompt5`–`prompt16` a `prompt37`–`prompt48` para no chocar con los del equipo) y escribir la librería del backend `api/_lib/` (`op.ts`, `db.ts`, `auth.ts`, `errores.ts`) y `scripts/prueba-rotacion.ts`, con el mapeo de errores verificado en el código de Rafiki (`prompts/prompt48.md`).
 - Se usó Claude Code para escribir los endpoints de `api/` (`vehiculos/[id]/index.ts`, `vehiculos/[id]/feed.ts`, `pases/index.ts`, `pases/[paseId]/confirmar.ts`, `pases/me.ts`, `viajes/index.ts`, `viajes/[id].ts`), `api/_lib/http.ts`, `api/_lib/viajes.ts`, `vercel.json` y el servidor local `scripts/dev-api.ts` (`prompts/prompt49.md`).
 - Se usó Claude Code para hacer commit y push a `main` (`prompts/prompt50.md`).
+- Se usó Claude Code para verificar con `scripts/prueba-rotacion.ts` que un token vencido se puede rotar y mapear `403 Inactive Token` a `PASE_VENCIDO` (`api/_lib/errores.ts`).
+- Se usó Claude Code para revisar el frontend y planear el enlace front ↔ back y las tres vistas (pasajero, conductor, empresa) (`prompts/prompt51.md`), y para escribir el backend de ese plan: `GET /api/viajes`, `api/flota.ts`, `api/empresa/vehiculos/index.ts`, `api/empresa/vehiculos/[id].ts`, `api/_lib/empresa.ts` y `api/_lib/gestion.ts` (`prompts/prompt52.md`).
+- Se usó Claude Code para hacer commit y push de ese backend y conectar el frontend responsive con el backend (`prompts/prompt53.md`).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.

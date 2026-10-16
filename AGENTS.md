@@ -123,11 +123,17 @@ SUPABASE_SERVICE_ROLE_KEY=...                                      # NUNCA en el
 | POST | `/api/pases/:paseId/confirmar` | — | `{ interactRef, hash }` → `{ paseToken, pase }` |
 | GET | `/api/pases/me` | Bearer | → `{ activo, topeDiario, disponibleHoy, venceEn }` |
 | POST | `/api/viajes` | Bearer | `{ vehiculoId }` → `{ viajeId, monto, cashback, vehiculo, fecha, disponibleHoy }` |
-| GET | `/api/viajes/:id` | Bearer | → recibo |
+| GET | `/api/viajes` | Bearer | → mis viajes `[{ viajeId, monto, cashback, estado, fecha, vehiculo: { id, nombre, ruta } }]` (50 más recientes) |
+| GET | `/api/viajes/:id` | Bearer | → recibo (incluye `estado`) |
 | GET | `/api/vehiculos/:id/feed?desde=` | — | → `[{ viajeId, monto, estado, fecha }]` |
-| GET | `/api/flota` | — | (opcional) recaudo por vehículo |
+| GET | `/api/flota?fecha=` | PIN | → resumen del día (formato en `ESTADO.md` §2.1) |
+| GET | `/api/empresa/vehiculos` | PIN | → `[{ id, nombre, ruta, tipo, conductor, tarifa, moneda, activo, turnoDesde }]` (incluye inactivos) |
+| POST | `/api/empresa/vehiculos` | PIN | `{ id, nombre, ruta, tipo, conductor, tarifa }` → vehículo (201). Cobra en la wallet de la flota y abre turno |
+| PATCH | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, conductor?, activo? }` → vehículo. Cambiar conductor cierra y abre turno; desactivar cierra el turno y el QR deja de cobrar |
 
-Errores con `{ error: { code, message } }`. Códigos: `SALDO_INSUFICIENTE`, `TOPE_ALCANZADO`, `PAGO_DUPLICADO`, `PASE_INVALIDO`, `PASE_VENCIDO`, `OP_ERROR`.
+**PIN de empresa:** header `X-Empresa-Pin`, comparado con la variable `EMPRESA_PIN` (nunca en el repo). Montos de la API siempre en pesos.
+
+Errores con `{ error: { code, message } }`. Códigos: `SALDO_INSUFICIENTE`, `TOPE_ALCANZADO`, `PAGO_DUPLICADO`, `PASE_INVALIDO`, `PASE_VENCIDO`, `OP_ERROR`, y además `NO_ENCONTRADO` (404), `DATOS_INVALIDOS` (400) y `NO_AUTORIZADO` (401, PIN de empresa).
 
 **Flujo del grant:** `POST /api/pases` pide el grant interactivo con `interact.finish.uri = {APP_URL}/pase/listo?paseId=...` y un `interact.finish.nonce` aleatorio (`crypto.randomUUID()`), y **guarda en el pase el nonce, `interact.finish` (nonce del servidor), `continue.uri` y `continue.access_token.value`** → la wallet redirige al front con `interact_ref` y `hash` → el front llama a `/confirmar` → el backend **verifica el `hash`** (ver 8.1) y, si no coincide, responde `PASE_INVALIDO` sin continuar → hace `grant.continue`, guarda `access_token.value`, `access_token.manage` y la fecha de vencimiento (`ahora + access_token.expires_in`, si viene), y devuelve un `paseToken` propio (nunca el token de Open Payments).
 
@@ -136,7 +142,7 @@ Errores con `{ error: { code, message } }`. Códigos: `SALDO_INSUFICIENTE`, `TOP
 ## 8. Flujo de cobro por viaje (`POST /api/viajes`)
 
 1. Validar `paseToken`, y la **idempotencia por `(pase, vehiculo)` en una ventana de 2 min**. Si ya hay un pago, devolver ese recibo (`PAGO_DUPLICADO`).
-2. **Rotar el access token del pase si vence en menos de 60 s** (`client.token.rotate`). En la Test Wallet el token del pase dura **solo 600 s (10 min)** (`expires_in: 600`, verificado), así que casi todos los viajes rotan. El SDK **no** rota solo. La rotación devuelve un `value` **y** un `manage` nuevos (con `expires_in: 600` otra vez): guardar ambos y la nueva fecha de vencimiento. **Por verificar:** si se puede rotar un token ya vencido. Si no se puede, el pase muere a los 10 min sin uso.
+2. **Rotar el access token del pase si vence en menos de 60 s** (`client.token.rotate`). En la Test Wallet el token del pase dura **solo 600 s (10 min)** (`expires_in: 600`, verificado), así que casi todos los viajes rotan. El SDK **no** rota solo. La rotación devuelve un `value` **y** un `manage` nuevos (con `expires_in: 600` otra vez): guardar ambos y la nueva fecha de vencimiento. **Verificado:** un token ya vencido **sí se puede rotar** y el nuevo funciona, así que el pase sobrevive sin uso. Un token vencido responde **`403 Inactive Token`** (no `401`).
 3. Grant no interactivo `incoming-payment` en el auth server de la wallet de la flota (`vehiculos.wallet_address`) → crear el **incoming payment** con `incomingAmount` = tarifa y `metadata: { vehiculoId, turnoId, viajeId }` (lo ve la flota en su wallet; sin datos personales).
 4. Grant no interactivo `quote` en el auth server del pasajero → crear la **quote** con `{ walletAddress, receiver, method: 'ilp' }` (`receiver` = URL del incoming payment). **`method: 'ilp'` es obligatorio.**
 5. Crear el **outgoing payment** con `quoteId` y `metadata: { descripcion: 'Súbase · <vehículo> · <ruta>' }` (lo ve el pasajero en su historial), usando el access token del pase. Crear la quote justo antes: **vence a los 5 min**.

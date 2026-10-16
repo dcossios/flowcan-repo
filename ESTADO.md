@@ -24,9 +24,11 @@
 | **Backend (`api/`)** | Stack: Vercel Functions (Node) + Supabase Postgres + `@interledger/open-payments` 7.4.0. Sin Express, SQLite ni Railway | ✅ Decidido | David |
 | **Backend (`api/`)** | Spike de pago real (`scripts/spike-pago.ts`): 3.200 COP `test_platzi1` → `flota1`, pagado en ~3 s | ✅ Listo | David |
 | **Backend (`api/`)** | Librería `api/_lib/`: `op.ts` (pase, hash, rotación, cobro, confirmación, gastado hoy), `db.ts`, `auth.ts`, `errores.ts` | ✅ Listo (compila; helpers probados contra la Test Wallet) | David |
-| **Backend (`api/`)** | ¿Se puede rotar un token del pase ya vencido? (`scripts/prueba-rotacion.ts`) | ⏳ En prueba | David |
+| **Backend (`api/`)** | ¿Se puede rotar un token del pase ya vencido? (`scripts/prueba-rotacion.ts`) | ✅ Sí: el pase sobrevive sin uso. Token vencido = `403 Inactive Token` (mapeado a `PASE_VENCIDO`) | David |
 | **Backend (`api/`)** | 7 endpoints + `vercel.json` + API local (`npm run dev:api`, puerto 3001) | ✅ Escritos y compilan; rutas y errores probados en local. **Falta probarlos con Supabase** (faltan `SUPABASE_URL` y `SUPABASE_SERVICE_ROLE_KEY`) | David |
-| **Backend** | `GET /api/flota` (propuesta en 2.1). Montos en COP hacia el front. Ids del seed: `bus-01`, `bus-02`, `taxi-01` | ⏳ Confirmar con David | David |
+| **Backend** | `GET /api/flota` (formato de 2.1, confirmado) **con PIN de empresa** (`X-Empresa-Pin`) | ✅ Escrito; falta probar con Supabase | David |
+| **Backend** | `GET /api/viajes` (mis viajes del pasajero) y gestión: `GET/POST /api/empresa/vehiculos`, `PATCH /api/empresa/vehiculos/:id` (con PIN) | ✅ Escrito; falta probar con Supabase | David |
+| **Frontend** | Conectar: PIN en `/flota` (hoy `fetchFlota` no lo manda → 401), pestaña «Vehículos», pantalla «Mi pase» (`/mi-pase`), `estado` en el recibo, `volver` por defecto `/` en `PaseListoPage` | ⏳ Pendiente | David / Andrés |
 | **Integración** | Prueba end-to-end contra Interledger Test Wallet | ⏳ Pendiente | Santiago / David |
 
 ---
@@ -42,11 +44,17 @@
 | `POST` | `/api/viajes` | `Bearer` | `{ vehiculoId }` → `{ viajeId, monto, cashback, vehiculo, fecha, disponibleHoy }` |
 | `GET` | `/api/viajes/:id` | `Bearer` | → `{ viajeId, monto, cashback, vehiculo, fecha, disponibleHoy }` |
 | `GET` | `/api/vehiculos/:id/feed?desde=` | — | → `[{ viajeId, monto, estado, fecha }]` |
+| `GET` | `/api/viajes` | `Bearer` | → mis viajes `[{ viajeId, monto, cashback, estado, fecha, vehiculo: { id, nombre, ruta } }]` |
+| `GET` | `/api/flota?fecha=` | PIN | → resumen del día (2.1) |
+| `GET` / `POST` | `/api/empresa/vehiculos` | PIN | lista (incluye inactivos) / crea `{ id, nombre, ruta, tipo, conductor, tarifa }` |
+| `PATCH` | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, conductor?, activo? }` |
 | `GET` | `/api/flota?fecha=` | — | → resumen de la flota del día (propuesta, ver 2.1) |
 
 > **Montos hacia el front: siempre en pesos colombianos enteros.** `viajes.monto` en Supabase está escalado en la moneda de la wallet (USD, escala 2), así que el backend responde con el valor en COP (`vehiculos.tarifa_cop`) en `monto`, `tarifa`, `recaudo`, `cashback`, `disponibleHoy` y `topeDiario`. Si el front recibe `monto: 100`, muestra «$100».
 
-### 2.1 Propuesta `GET /api/flota` (panel de la empresa, `/flota`) — por confirmar con David
+### 2.1 `GET /api/flota` (panel de la empresa, `/flota`) — confirmado e implementado en `api/flota.ts`
+
+**Cambio respecto a la propuesta:** pide el PIN de empresa en el header `X-Empresa-Pin` (el panel muestra el recaudo). Si falta o es incorrecto responde `401 NO_AUTORIZADO`. Incluye los vehículos inactivos solo si tuvieron viajes ese día.
 
 `fecha` es opcional (`YYYY-MM-DD`, por defecto hoy en `America/Bogota`). Sale de `vehiculos` + `viajes` del esquema de `Database Infrastructure/supabase-setup.sql`.
 
@@ -75,7 +83,7 @@
 - `PASE_INVALIDO`
 - `PASE_VENCIDO`
 - `OP_ERROR`
-- `NO_ENCONTRADO` (404) y `DATOS_INVALIDOS` (400): extra del backend; el front los muestra como `OP_ERROR` con el mensaje del backend.
+- `NO_ENCONTRADO` (404), `DATOS_INVALIDOS` (400) y `NO_AUTORIZADO` (401, PIN de empresa): extra del backend; el front los muestra como `OP_ERROR` con el mensaje del backend hasta que `api.ts` los agregue.
 
 **Montos:** la API habla en **pesos** (`tarifa: 3200`, `topeDiario: 20000`). La base de datos y Open Payments usan unidades mínimas (COP, `assetScale` 2 → `320000`). La conversión está en `api/_lib/op.ts` (`aMinimas`, `aPesos`).
 

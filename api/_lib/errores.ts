@@ -10,6 +10,7 @@ export type CodigoError =
   | 'PASE_VENCIDO'
   | 'NO_ENCONTRADO'
   | 'DATOS_INVALIDOS'
+  | 'NO_AUTORIZADO'
   | 'OP_ERROR'
 
 const STATUS: Record<CodigoError, number> = {
@@ -20,6 +21,7 @@ const STATUS: Record<CodigoError, number> = {
   PASE_VENCIDO: 401,
   NO_ENCONTRADO: 404,
   DATOS_INVALIDOS: 400,
+  NO_AUTORIZADO: 401,
   OP_ERROR: 502
 }
 
@@ -31,6 +33,7 @@ const MENSAJES: Record<CodigoError, string> = {
   PASE_VENCIDO: 'Su pase venció. Actívelo de nuevo.',
   NO_ENCONTRADO: 'No encontramos lo que busca.',
   DATOS_INVALIDOS: 'Faltan datos o no son válidos.',
+  NO_AUTORIZADO: 'El PIN de la empresa no es correcto.',
   OP_ERROR: 'No pudimos completar el pago con Open Payments. Intente de nuevo.'
 }
 
@@ -47,13 +50,14 @@ export class ErrorApi extends Error {
 
 /**
  * Traduce un error del SDK a nuestros códigos. Verificado en el código de Rafiki (backend de la Test Wallet):
- * - 401 = token inválido o vencido (auth/middleware.ts) → PASE_VENCIDO
+ * - 401 = token inválido (auth/middleware.ts) → PASE_VENCIDO
+ * - 403 "Inactive Token" = token vencido (verificado en la Test Wallet con scripts/prueba-rotacion.ts) → PASE_VENCIDO
  * - 403 al crear el outgoing payment = OutgoingPaymentError.InsufficientGrant (el grant no alcanza) → TOPE_ALCANZADO
  * El saldo insuficiente NO falla al crear: el pago queda `failed` después (ver op.ts → esperarConfirmacion).
  */
 export function desdeOpenPayments(e: OpenPaymentsClientError, operacion: string): ErrorApi {
   const detalle = { operacion, status: e.status, description: e.description }
-  if (e.status === 401) return new ErrorApi('PASE_VENCIDO', undefined, detalle)
+  if (e.status === 401 || /inactive token/i.test(e.description)) return new ErrorApi('PASE_VENCIDO', undefined, detalle)
   if (e.status === 403 && operacion === 'outgoingPayment.create') return new ErrorApi('TOPE_ALCANZADO', undefined, detalle)
   return new ErrorApi('OP_ERROR', undefined, detalle)
 }
