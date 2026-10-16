@@ -84,7 +84,7 @@ Recaudo digital para buses barriales y taxis de Medellín. El pasajero escanea e
 │   │   └── index.ts
 │   ├── seed/vehiculos.json
 │   └── .env.example
-├── prompts/       ← TEXTO REAL de todos los prompts (obligatorio)
+├── prompts/       ← TEXTO REAL de todos los prompts: prompt1.md, prompt2.md, … (obligatorio)
 ├── AI_USAGE.md    ← obligatorio
 ├── AGENTS.md
 ├── CLAUDE.md
@@ -165,8 +165,49 @@ Español colombiano, alto contraste, botones grandes. Montos en COP formateados 
 4. **Seguridad mínima:** sin llaves en el código ni en los logs; CORS restringido a `FRONTEND_URL`; validar los inputs.
 5. **Cambios pequeños y que funcionen.** Cada endpoint se prueba contra la Test Wallet antes de darlo por hecho.
 6. **Actualiza ESTADO.md** cuando cambie un endpoint, una decisión o el estado de una tarea.
-7. **Política de IA (obligatoria del hackathon):** todo prompt usado para generar código o UI se guarda con su texto real en `/prompts/` con el nombre `AAAA-MM-DD_HHMM_<persona>_<herramienta>_<tema>.md`, y `AI_USAGE.md` lista las herramientas, para qué, en qué archivos y qué se hizo sin IA.
+7. **Política de IA (obligatoria del hackathon):** mantener `AI_USAGE.md` y la carpeta `/prompts/` al día según la sección 10.1.
 8. Todo el código se escribe durante el evento. No importar código previo del equipo.
+
+### 10.1 Política de IA: `AI_USAGE.md` y `/prompts/`
+
+**`AI_USAGE.md`** (en la raíz del repo) debe incluir:
+
+- Qué herramientas de IA se usaron.
+- Para qué se usaron.
+- En qué parte del proyecto se usaron (archivos, funciones o componentes específicos).
+- Los archivos específicos en los que se usó poca o ninguna IA.
+
+Formato obligatorio:
+
+```markdown
+# AI Usage Disclosure
+
+## Tools Used
+- Claude (Claude Code)
+- <otra herramienta>
+
+## Where and How We Used AI
+
+### 1. Backend - Payment flow (`/server/src/op/...`)
+- Se usó Claude para ... (incoming payments, quotes, outgoing payments, grants).
+- Revisamos y reescribimos ... a mano después de probar contra la Test Wallet.
+
+### 2. Frontend - <componente> (`/src/...`)
+- Se usó <herramienta> para ...
+
+### 3. Documentation - <documento>
+- Se usó <herramienta> para ...
+- Editado a mano para ...
+
+## What We Did Ourselves
+- Archivos hechos con poca o ninguna IA: `<ruta>`, `<ruta>`.
+- Pruebas y verificación de todo el código sugerido por la IA.
+
+## Prompt Log
+Ver `/prompts/` para el texto completo de cada prompt (`prompt1.md`, `prompt2.md`, …).
+```
+
+**`/prompts/`**: cada prompt que se le pase a una herramienta de IA se guarda **tal cual, palabra por palabra** (nunca un resumen), un archivo por prompt, numerados en orden: `/prompts/prompt1.md`, `/prompts/prompt2.md`, `/prompts/prompt3.md`, etc. Si el prompt incluye texto pegado, se copia también tal cual.
 
 ---
 

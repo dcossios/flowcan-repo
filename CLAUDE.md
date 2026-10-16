@@ -14,7 +14,8 @@
 6. **Pase = grant `outgoing-payment` interactivo una sola vez**, con `debitAmount` + `interval` (tope diario), sin `receiver`. Cada viaje: incoming payment → quote → outgoing payment, sin interacción.
 7. **Sesión del pase: token en `localStorage` + `Authorization: Bearer`** (no cookies).
 8. **Alcance cerrado:** activar pase → QR → pagar → recibo → feed del conductor. Código congelado el sábado a las 10:15; deadline a las 11:00.
-9. **Registra cada prompt** con su texto real en `/prompts/AAAA-MM-DD_HHMM_<persona>_<herramienta>_<tema>.md` y mantén `AI_USAGE.md` al día.
+9. **Registra cada prompt tal cual** (palabra por palabra, nunca un resumen), un archivo por prompt y numerados en orden: `/prompts/prompt1.md`, `/prompts/prompt2.md`, etc.
+10. **Mantén `AI_USAGE.md` al día** con el formato de la sección 10.1 de AGENTS.md (`# AI Usage Disclosure` → `## Tools Used` → `## Where and How We Used AI` → `## What We Did Ourselves` → `## Prompt Log`). Debe decir qué herramientas de IA se usaron, para qué, en qué archivos, funciones o componentes, y en qué archivos se usó poca o ninguna IA.
 
 ## Stack
 
