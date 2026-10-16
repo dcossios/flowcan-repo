@@ -32,6 +32,7 @@
 | **Integración** | Prueba end-to-end en local (front 5173 + API 3001 + Supabase + Test Wallet): activar pase `test_platzi1` → pagar `bus-01` → recibo, «Mi pase», conductor y `/flota` | ✅ 16 oct: viaje `pagado` en ~6 s, con incoming/quote/outgoing guardados, turno del conductor y cashback 2 % | David |
 | **Integración** | Supabase: `vehiculos.wallet_address` sin `unique` y los 3 vehículos en `flota1`, COP/2, `tarifa = 320000` | ✅ Aplicado en la base; `Database Infrastructure/supabase-setup.sql` corregido | David |
 | **Deploy** | Producción en https://flowcan-repo.vercel.app con las 7 variables (`OP_*`, `SUPABASE_*`, `EMPRESA_PIN`, `APP_URL`) | ✅ 16 oct: pago real desde el celular (`test_platzi1` → `bus-01`), `pagado` en ~6,5 s; un segundo toque dentro de 2 min devolvió `409 PAGO_DUPLICADO` sin cobrar | David |
+| **Frontend** | Scroll «pegado» en el celular: el contenedor de `AppShell` tenía scroll propio (`overflow-x: hidden`) y `min-h-dvh` recalculaba el diseño al esconderse la barra de Safari; capas del conductor sin bloqueo del fondo | ✅ Corregido y verificado en emulación de iPhone 14; falta confirmarlo en un iPhone real | David |
 | **Deploy** | Variables `OP_*` en el entorno **Preview** de Vercel siguen con la llave vieja (la CLI pide rama) | ⏳ Corregir desde el panel de Vercel si se usan URLs de preview | David |
 
 ---

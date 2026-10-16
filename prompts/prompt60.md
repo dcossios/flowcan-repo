@@ -1,0 +1,1 @@
+Quiero que revises bien la página de conductor porque la estoy viendo desde el celular y no está bien diseñada la parte del frontend. Está bien diseñada pero hay ciertos bugs a la hora de descrollear o algo por el estilo: se queda pegada la página. Quiero que revises bien esto y revises todas las páginas para que estén funcionando como deberían estar funcionando.

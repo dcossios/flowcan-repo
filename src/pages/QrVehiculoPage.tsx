@@ -19,7 +19,7 @@ export const QrVehiculoPage: React.FC = () => {
   }, [vehiculoId]);
 
   return (
-    <div className="min-h-dvh bg-black text-white flex flex-col items-center px-4 py-6 sm:py-10 print:bg-white print:p-0">
+    <div className="min-h-svh bg-black text-white flex flex-col items-center px-4 py-6 sm:py-10 print:bg-white print:p-0">
       <div className="w-full max-w-md flex items-center justify-between gap-3 no-print">
         <Link to="/flota?tab=vehiculos" className="inline-flex items-center min-h-11 text-[15px] text-[#C3C5C6] hover:text-white">
           ← Volver a la empresa

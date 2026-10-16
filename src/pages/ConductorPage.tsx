@@ -119,6 +119,19 @@ export const ConductorPage: React.FC = () => {
     return () => window.clearTimeout(t);
   }, [ultimoPagoAlerta]);
 
+  // Mientras una capa ocupa toda la pantalla («Empezar turno» o «Pagado»), la página de atrás no se mueve:
+  // si no, en el celular el gesto la desplaza por detrás y al cerrar la capa queda en otra posición.
+  const capaVisible = !turnoIniciado || Boolean(ultimoPagoAlerta);
+  useEffect(() => {
+    if (!capaVisible) return;
+    const html = document.documentElement;
+    const previo = html.style.overflow;
+    html.style.overflow = 'hidden';
+    return () => {
+      html.style.overflow = previo;
+    };
+  }, [capaVisible]);
+
   const handleEmpezarTurno = () => {
     unlockAudio();
     desbloquearVoz();
@@ -138,7 +151,7 @@ export const ConductorPage: React.FC = () => {
     >
       {/* Capa inicial para empezar turno y habilitar audio + voz */}
       {!turnoIniciado && (
-        <div className="fixed inset-0 z-50 bg-[#000000] flex flex-col items-center justify-center px-6 text-center font-normal">
+        <div className="fixed inset-0 z-50 bg-[#000000] flex flex-col items-center justify-center px-6 text-center font-normal overscroll-none touch-none">
           <div className="max-w-md w-full space-y-6">
             <div>
               <h1 className="text-[28px] font-light text-white leading-snug">
@@ -168,7 +181,7 @@ export const ConductorPage: React.FC = () => {
           role="status"
           aria-live="assertive"
           onClick={() => setUltimoPagoAlerta(null)}
-          className="fixed inset-0 z-40 bg-[#000000] border-2 border-[#D2B99A] flex flex-col items-center justify-center px-6 text-center cursor-pointer font-normal"
+          className="fixed inset-0 z-40 bg-[#000000] border-2 border-[#D2B99A] flex flex-col items-center justify-center px-6 text-center cursor-pointer font-normal overscroll-none touch-none"
         >
           <CircleCheck className="w-24 h-24 text-[#D2B99A] mb-6 shrink-0" size={96} strokeWidth={1.5} />
           <p className="text-[64px] leading-none font-light text-white">Pagado</p>

@@ -61,7 +61,10 @@ export const AppShell: React.FC<AppShellProps> = ({
 
   return (
     <div
-      className={`min-h-dvh flex flex-col bg-black text-white relative overflow-x-hidden ${
+      // overflow-x-clip (no hidden): hidden convierte el div en un contenedor con scroll propio, rompe el header
+      // sticky y en Safari de iPhone hace que la página se «pegue» al hacer scroll. svh no cambia cuando la barra
+      // de Safari se esconde, así que no hay recálculo de diseño a mitad del gesto.
+      className={`min-h-svh flex flex-col bg-black text-white relative overflow-x-clip ${
         barraFija === 'alta' ? 'subase-shell-bar-alta' : barraFija ? 'subase-shell-bar' : ''
       }`}
     >
@@ -110,10 +113,12 @@ export const AppShell: React.FC<AppShellProps> = ({
       </main>
 
       <footer className={`relative z-10 w-full ${contenedorAncho} mx-auto px-5 pt-2 pb-4`}>
-        <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
-          Su plata va directo de su billetera a la del bus.
-        </p>
-        <p className="text-[15px] font-normal text-[#C3C5C6]/80 mt-1">
+        {rol === 'pasajero' && (
+          <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
+            Su plata va directo de su billetera a la del bus.
+          </p>
+        )}
+        <p className={`text-[15px] font-normal text-[#C3C5C6]/80 ${rol === 'pasajero' ? 'mt-1' : ''}`}>
           Construido sobre Interledger Open Payments
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-x-5 gap-y-1">
