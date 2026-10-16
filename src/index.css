@@ -1,0 +1,90 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* Tokens exactos de Guia_de_Marca_SUBASE.pdf (Sección 01) */
+    --subase-black: #000000;
+    --subase-white: #ffffff;
+    --subase-silver: #c3c5c6;
+    --subase-sand: #d2b99a;
+    --subase-navy: #113462;
+    --subase-glow-blue: #0c4672;
+    --subase-steel-blue: #34567c;
+    --subase-amber: #7e5432;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-weight: 300;
+    background-color: #000000;
+    color: #ffffff;
+    min-height: 100dvh;
+  }
+
+  input,
+  button,
+  select {
+    min-height: 48px;
+    box-sizing: border-box;
+    font-family: var(--font-sans);
+  }
+
+  @media (pointer: coarse) {
+    input,
+    button,
+    select {
+      min-height: 52px;
+    }
+  }
+}
+
+/* Sección 2.1 Guía de Marca: Estela principal (variante radial fiel sobre #000000) */
+.subase-estela-bg {
+  position: relative;
+  background:
+    radial-gradient(ellipse 34% 27% at 21% 68%, #113659 0%, rgba(17, 54, 89, 0) 100%),
+    radial-gradient(ellipse 28% 22% at 55% 33%, #34567c 0%, rgba(52, 86, 124, 0) 100%),
+    radial-gradient(ellipse 24% 20% at 66% 26%, #12406d 0%, rgba(18, 64, 109, 0) 100%),
+    radial-gradient(ellipse 16% 18% at 84% 34%, #7e5432 0%, rgba(126, 84, 50, 0) 100%),
+    #000000;
+}
+
+/* Sección 2.3 Guía de Marca: Grano fino SVG al ~4.5% de opacidad sobre el degradado */
+.subase-estela-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Sección 04 Guía de Marca: Subrayado corto de arena (≈ 45 × 3 px) bajo cada título H1 */
+.subase-sand-rule {
+  width: 45px;
+  height: 3px;
+  background-color: #d2b99a;
+}
+
+/* Sección 04 Guía de Marca: Tarjetas con borde de 1 px, esquinas redondeadas (12 px), sin relleno ni sombras */
+.subase-card {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.subase-card-sand {
+  border: 1px solid #d2b99a;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* Divisores horizontales finos en gris plata (#C3C5C6) */
+.subase-divider {
+  border-color: rgba(195, 197, 198, 0.26);
+}

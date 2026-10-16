@@ -2,6 +2,7 @@
 
 ## Tools Used
 - Claude (Claude Code)
+- Google Antigravity (Gemini)
 
 ## Where and How We Used AI
 
@@ -14,9 +15,16 @@
 - Se usó Claude Code con `opensrc` para descargar y revisar el código de `@interledger/open-payments` 7.4.0 (`interledger/open-payments-node`) y del repo `interledger/open-payments` (specs, docs y snippets), antes de escribir el backend (`prompts/prompt3.md`).
 - Se usó Claude Code para agregar lo encontrado en esa revisión a `AGENTS.md` (secciones 7, 8 y 8.1) y a `CLAUDE.md` (regla 6) (`prompts/prompt4.md`).
 
+### 3. Frontend - Aplicación Web PWA (`/src/...`, `/index.html`, `/vite.config.ts`)
+- Se usó Google Antigravity para estructurar el frontend React + Vite + TypeScript + Tailwind CSS (`prompts/prompt5.md`, `prompts/prompt6.md`, `prompts/prompt7.md`) y aplicar la Guía de Marca oficial (`prompts/prompt8.md`):
+  - Sistema de diseño fiel a `Guia_de_Marca_SUBASE.pdf` (`/src/index.css`, `/index.html`): fondo negro `#000000`, estela radial azul-a-ámbar (`#113659`, `#34567C`, `#12406D`, `#7E5432`) con textura de grano fino, tipografía **Poppins Light (300)** y **Regular (400)**, subrayados cortos en color Arena (`#D2B99A`, `45×3 px`), texto secundario Gris plata (`#C3C5C6`), botones en Azul marino (`#113462`) y tarjetas de borde `1 px` sin sombras.
+  - Cliente de API y manejo de token `Bearer` en `localStorage` (`/src/lib/api.ts`), utilidades de formato COP (`/src/lib/format.ts`) y sonido de confirmación Web Audio API (`/src/lib/sound.ts`).
+  - Vistas núcleo: cobro en vehículo (`/src/pages/VehiculoCobroPage.tsx`), activación de pase GNAP (`/src/pages/ActivarPasePage.tsx`), confirmación de grant (`/src/pages/PaseListoPage.tsx`), recibo con cashback (`/src/pages/ReciboPage.tsx`) y terminal del conductor con QR y polling cada 2 s (`/src/pages/ConductorPage.tsx`).
+- Se usó Claude Code para revisar el frontend frente a los criterios de evaluación del hackathon y la Guía de Marca, y para hacer el commit del frontend, sin editar código (`prompts/prompt9.md`, `prompts/prompt10.md`, `prompts/prompt11.md`, `prompts/prompt12.md`).
+
 ## What We Did Ourselves
-- Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`.
-- Revisión de todos los cambios sugeridos por la IA.
+- Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.
+- Definición de arquitectura, modelo de negocio, contrato de API y revisión de todos los cambios sugeridos por la IA.
 
 ## Prompt Log
-Ver `/prompts/` para el texto completo de cada prompt (`prompt1.md`, `prompt2.md`, …).
+Ver `/prompts/` para el texto completo de cada prompt (`prompt1.md`, `prompt2.md`, … en orden).

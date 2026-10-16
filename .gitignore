@@ -1,0 +1,35 @@
+# Dependencias
+node_modules/
+server/node_modules/
+
+# Build
+dist/
+server/dist/
+*.tsbuildinfo
+
+# Entorno y secretos (NUNCA commitear)
+.env
+.env.*
+!.env.example
+server/.env
+server/.env.*
+!server/.env.example
+*.key
+*.pem
+private.key
+server/private.key
+
+# Base de datos SQLite
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/
+server/data/
+
+# Sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
