@@ -25,7 +25,8 @@ const ScrollToTop: React.FC = () => {
 
 // Un QR dibujado (tres esquinas y algunos módulos), no un ícono de librería
 const IconoQr: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg width="34" height="34" viewBox="0 0 21 21" fill="#FFFFFF" aria-hidden="true" className={className}>
+  // Tinta, como el resto del texto sobre el crema (el blanco era del fondo negro y casi no se veía)
+  <svg width="34" height="34" viewBox="0 0 21 21" fill="#1E2230" aria-hidden="true" className={className}>
     <path
       fillRule="evenodd"
       d="M0 0h7v7H0zM1 1v5h5V1zM14 0h7v7h-7zM15 1v5h5V1zM0 14h7v7H0zM1 15v5h5v-5z"
@@ -68,8 +69,8 @@ const InicioPage: React.FC = () => {
         <div className="mt-6 flex items-start gap-3.5">
           <IconoQr className="shrink-0 mt-0.5" />
           <p className="leading-snug">
-            <span className="block text-[16px] font-medium text-white">¿Otro bus? Escanee su QR</span>
-            <span className="block text-[14px] text-[#C3C5C6] mt-0.5">
+            <span className="block text-[16px] font-medium text-[#1E2230]">¿Otro bus? Escanee su QR</span>
+            <span className="block text-[14px] text-[#3A3F4E] mt-0.5">
               Con la cámara del celular, en el código pegado en el vehículo.
             </span>
           </p>
@@ -78,7 +79,7 @@ const InicioPage: React.FC = () => {
         {getPaseToken() && (
           <Link
             to="/mi-pase"
-            className="flex items-center min-h-11 mt-3 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
+            className="flex items-center min-h-11 mt-3 text-[15px] font-normal text-[#3A3F4E] underline-offset-2 hover:text-[#1E2230] hover:underline"
           >
             Ver mi pase y mis viajes
           </Link>

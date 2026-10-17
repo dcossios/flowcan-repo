@@ -29,22 +29,22 @@ const walletCorta = (w?: string) => (w ? w.replace(/^https:\/\//, '$') : '');
 const EstadoChip: React.FC<{ estado: EstadoViaje }> = ({ estado }) => {
   if (estado === 'pagado') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-white">
-        <CircleCheck className="w-4 h-4 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
+      <span className="inline-flex items-center gap-1.5 text-[#1E2230]">
+        <CircleCheck className="w-4 h-4 text-[#2F865F] shrink-0" strokeWidth={1.5} />
         Pagado
       </span>
     );
   }
   if (estado === 'pendiente') {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[#C3C5C6]">
+      <span className="inline-flex items-center gap-1.5 text-[#3A3F4E]">
         <Clock className="w-4 h-4 shrink-0" strokeWidth={1.5} />
         Confirmando…
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 text-[#C3C5C6]">
+    <span className="inline-flex items-center gap-1.5 text-[#3A3F4E]">
       <XCircle className="w-4 h-4 shrink-0" strokeWidth={1.5} />
       No se cobró
     </span>
@@ -127,14 +127,14 @@ export const MiPasePage: React.FC = () => {
 
         {loading && (
           <div className="flex-1 flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
-            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3">Consultando su pase…</p>
+            <Loader2 className="w-8 h-8 text-[#1E2230] animate-spin" strokeWidth={1.5} />
+            <p className="text-[14px] font-normal text-[#3A3F4E] mt-3">Consultando su pase…</p>
           </div>
         )}
 
         {!loading && errorInfo && (
           <div role="alert" className="mt-6">
-            <p className="text-[14px] font-normal text-[#C3C5C6] leading-relaxed">{errorInfo.message}</p>
+            <p className="text-[14px] font-normal text-[#3A3F4E] leading-relaxed">{errorInfo.message}</p>
             <button type="button" onClick={cargar} className="subase-btn-primary mt-6">
               <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
               Reintentar
@@ -144,10 +144,10 @@ export const MiPasePage: React.FC = () => {
 
         {!loading && !errorInfo && sinPase && (
           <div className="mt-4">
-            <p className="text-[18px] font-normal text-white leading-snug">
+            <p className="text-[18px] font-normal text-[#1E2230] leading-snug">
               Todavía no tiene un pase en este celular.
             </p>
-            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
+            <p className="text-[14px] font-normal text-[#3A3F4E] mt-3 leading-relaxed">
               Escanee el QR de un bus y toque «Pagar». Activa el pase una sola vez y después paga con un
               toque.
             </p>
@@ -168,37 +168,37 @@ export const MiPasePage: React.FC = () => {
             {/* Resumen del pase */}
             <section aria-label="Resumen del pase" className="mt-1">
               <dl>
-                <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                  <dt className="text-[14px] font-normal text-[#C3C5C6]">Vence</dt>
-                  <dd className="text-[16px] font-medium text-white text-right">{fechaCorta(pase.venceEn)}</dd>
+                <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(30,34,48,0.15)]">
+                  <dt className="text-[14px] font-normal text-[#3A3F4E]">Vence</dt>
+                  <dd className="text-[16px] font-medium text-[#1E2230] text-right">{fechaCorta(pase.venceEn)}</dd>
                 </div>
                 {pase.walletAddress && (
                   // La dirección va en su propio renglón: al lado de la etiqueta se partía a mitad del nombre
-                  <div className="py-3 border-b border-[rgba(195,197,198,0.2)]">
-                    <dt className="text-[14px] font-normal text-[#C3C5C6]">Billetera</dt>
-                    <dd className="mt-1 text-[16px] font-medium text-white break-all">
+                  <div className="py-3 border-b border-[rgba(30,34,48,0.15)]">
+                    <dt className="text-[14px] font-normal text-[#3A3F4E]">Billetera</dt>
+                    <dd className="mt-1 text-[16px] font-medium text-[#1E2230] break-all">
                       {walletCorta(pase.walletAddress)}
                     </dd>
                   </div>
                 )}
-                <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                  <dt className="text-[14px] font-normal text-[#C3C5C6]">Cashback acumulado (simulado)</dt>
-                  <dd className="text-[16px] font-medium text-white text-right">+{formatCOP(cashbackTotal)}</dd>
+                <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(30,34,48,0.15)]">
+                  <dt className="text-[14px] font-normal text-[#3A3F4E]">Cashback acumulado (simulado)</dt>
+                  <dd className="text-[16px] font-medium text-[#1E2230] text-right">+{formatCOP(cashbackTotal)}</dd>
                 </div>
               </dl>
             </section>
 
             {/* Mis viajes */}
             <section aria-labelledby="mis-viajes" className="mt-10">
-              <h2 id="mis-viajes" className="text-[18px] font-normal text-white">
+              <h2 id="mis-viajes" className="text-[18px] font-normal text-[#1E2230]">
                 Mis viajes
               </h2>
               {viajes.length === 0 ? (
-                <p className="mt-3 py-6 border-t border-b border-[rgba(195,197,198,0.2)] text-[14px] font-normal text-[#C3C5C6]">
+                <p className="mt-3 py-6 border-t border-b border-[rgba(30,34,48,0.15)] text-[14px] font-normal text-[#3A3F4E]">
                   Aún no tiene viajes. Cuando pague un pasaje, aparece aquí.
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-[rgba(195,197,198,0.2)] border-t border-b border-[rgba(195,197,198,0.2)]">
+                <ul className="mt-3 divide-y divide-[rgba(30,34,48,0.15)] border-t border-b border-[rgba(30,34,48,0.15)]">
                   {viajes.map((v) => (
                     <li key={v.viajeId}>
                       <Link
@@ -207,19 +207,19 @@ export const MiPasePage: React.FC = () => {
                       >
                         <div className="min-w-0 flex-1">
                           <div className="flex items-baseline justify-between gap-3">
-                            <span className="text-[16px] font-normal text-white truncate group-hover:underline">
+                            <span className="text-[16px] font-normal text-[#1E2230] truncate group-hover:underline">
                               {v.vehiculo.nombre}
                             </span>
-                            <span className="text-[16px] font-normal text-white tabular-nums shrink-0">
+                            <span className="text-[16px] font-normal text-[#1E2230] tabular-nums shrink-0">
                               {formatMoneda(v.montoPagado ?? v.monto, v.monedaPagada ?? v.moneda)}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-1 text-[14px] font-normal">
-                            <span className="text-[#C3C5C6]">{formatFechaHora(v.fecha)}</span>
+                            <span className="text-[#3A3F4E]">{formatFechaHora(v.fecha)}</span>
                             <EstadoChip estado={v.estado} />
                           </div>
                         </div>
-                        <ChevronRight className="w-5 h-5 text-[#C3C5C6] shrink-0" strokeWidth={1.5} aria-hidden="true" />
+                        <ChevronRight className="w-5 h-5 text-[#3A3F4E] shrink-0" strokeWidth={1.5} aria-hidden="true" />
                       </Link>
                     </li>
                   ))}
@@ -236,21 +236,21 @@ export const MiPasePage: React.FC = () => {
             <div className="mt-8">
               {confirmarQuitar ? (
                 <div className="subase-card p-4">
-                  <p className="text-[16px] font-medium text-white leading-relaxed">
+                  <p className="text-[16px] font-medium text-[#1E2230] leading-relaxed">
                     ¿Quitar el pase de este celular? Para volver a pagar tendrá que activarlo otra vez.
                   </p>
                   <div className="mt-4 flex flex-col min-[400px]:flex-row gap-3">
                     <button
                       type="button"
                       onClick={quitarPase}
-                      className="min-h-11 px-4 rounded-[12px] border border-[#D2B99A] text-[16px] font-medium text-white cursor-pointer"
+                      className="min-h-11 px-4 rounded-[12px] border-[1.5px] border-[#1E2230] text-[16px] font-medium text-[#1E2230] cursor-pointer"
                     >
                       Sí, quitarlo
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmarQuitar(false)}
-                      className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[14px] font-normal text-[#C3C5C6] cursor-pointer"
+                      className="min-h-11 px-4 rounded-[12px] border border-[rgba(30,34,48,0.15)] text-[14px] font-normal text-[#3A3F4E] cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -260,7 +260,7 @@ export const MiPasePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setConfirmarQuitar(true)}
-                  className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white underline-offset-4 hover:underline cursor-pointer"
+                  className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#3A3F4E] hover:text-[#1E2230] underline-offset-4 hover:underline cursor-pointer"
                 >
                   Quitar el pase de este celular
                 </button>

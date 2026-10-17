@@ -219,16 +219,15 @@ export const ConductorPage: React.FC = () => {
       vehiculoIdActual={vehiculoId}
       subtitle="El celular del conductor es el terminal."
       rol="conductor"
-      fondo="crema"
       ancho="amplio"
     >
       {/* Capa inicial para empezar turno y habilitar audio + voz */}
       {/* Las capas a pantalla completa van al body: dentro de <main> quedarían bajo el encabezado */}
       {!turnoIniciado &&
         createPortal(
-        <div className="fixed inset-0 z-50 bg-black flex flex-col font-normal">
+        <div className="fixed inset-0 z-50 flex flex-col font-normal text-[#1E2230]" style={{ backgroundColor: CREMA }}>
           {/* Como la portada de referencia: el bus y la acción sobre el crema, la escena hasta el borde y el botón
-              blanco flotando sobre la calle */}
+              tinta flotando sobre la calle */}
           <div className="w-full max-w-lg mx-auto px-5 pt-6 flex-1 flex flex-col min-h-0">
             <PanelEscena vehiculoId={vehiculoId} letrero={vehiculo?.ruta ?? ''} llenar>
               <IdentidadVehiculo vehiculoId={vehiculoId} nombre={nombreVehiculo} />
@@ -329,18 +328,18 @@ export const ConductorPage: React.FC = () => {
             <Pasaje monto={tarifaVehiculo} moneda={vehiculo?.moneda} className="mt-5" />
           </div>
 
-          {/* Tablero de llegadas en tinta */}
-          <div className="w-full rounded-[3px] p-5 text-white" style={{ backgroundColor: TINTA }}>
-            <h2 className={`${ETIQUETA} text-[#C9CCCE]`}>Llegadas del turno</h2>
+          {/* Tablero de llegadas sobre el crema (diseño final, prompt199): líneas finas y el monto en un cuadro tinta */}
+          <div className="w-full">
+            <h2 className={`${ETIQUETA} text-[#3A3F4E]`}>Llegadas del turno</h2>
 
             {feed.length === 0 ? (
-              <div className="mt-3 pt-5 pb-2 border-t border-white/12">
-                <p className="text-[16px] font-normal text-[#C9CCCE]">
+              <div className="mt-3 pt-5 pb-2 border-t border-[rgba(30,34,48,0.15)]">
+                <p className="text-[16px] font-normal text-[#3A3F4E]">
                   Aún no hay pagos en este turno.
                 </p>
               </div>
             ) : (
-              <ul className="mt-3 divide-y divide-white/12 border-t border-white/12">
+              <ul className="mt-3 divide-y divide-[rgba(30,34,48,0.15)] border-y border-[rgba(30,34,48,0.15)]">
                 {feed.map((item) => {
                   const esPendiente = item.estado === 'pendiente';
                   const esFallido = item.estado === 'fallido';
@@ -357,20 +356,23 @@ export const ConductorPage: React.FC = () => {
                     >
                       <div className="flex flex-wrap items-center gap-2.5 min-w-0">
                         <FichaEstado estado={estadoFicha} tamano={22} />
-                        <span className="font-mono text-[14px] text-white tabular-nums">
+                        <span className="font-mono text-[14px] text-[#1E2230] tabular-nums">
                           {formatHoraCorta(item.fecha)}
                         </span>
-                        <span className="font-mono text-[14px] text-[#C9CCCE]">
+                        <span className="font-mono text-[14px] text-[#3A3F4E]">
                           N.º {item.viajeId.slice(0, 8)}
                         </span>
                         {esPendiente && (
-                          <span className="text-[14px] font-normal text-[#C9CCCE]">Confirmando…</span>
+                          <span className="text-[14px] font-normal text-[#3A3F4E]">Confirmando…</span>
                         )}
                         {esFallido && (
-                          <span className="text-[14px] font-normal text-[#C9CCCE]">Pago fallido</span>
+                          <span className="text-[14px] font-normal text-[#B8403A]">Pago fallido</span>
                         )}
                       </div>
-                      <span className="text-[16px] font-semibold tabular-nums text-white shrink-0">
+                      <span
+                        className="shrink-0 rounded-[3px] px-2 py-1 text-[15px] font-semibold tabular-nums text-white leading-none"
+                        style={{ backgroundColor: TINTA }}
+                      >
                         +{formatCOP(item.monto)}
                       </span>
                     </li>

@@ -5,26 +5,24 @@
     --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
-    /* Tokens exactos de Guia_de_Marca_SUBASE.pdf (Sección 01) */
-    --subase-black: #000000;
-    --subase-white: #ffffff;
-    --subase-silver: #c3c5c6;
-    --subase-sand: #d2b99a;
-    --subase-navy: #113462;
-    --subase-glow-blue: #0c4672;
-    --subase-steel-blue: #34567c;
-    --subase-amber: #7e5432;
+    /* Diseño final (prompt199): todo sobre el crema de la ilustración, con tinta y el color de cada ruta.
+       Los mismos valores están en src/components/Sistema.tsx (CREMA, TINTA). */
+    --subase-crema: #f0e9d6;
+    --subase-tinta: #1e2230;
+    --subase-tinta-2: #3a3f4e;
+    --subase-borde: rgba(30, 34, 48, 0.15);
+    --subase-coral: #ee5a52;
   }
 
   html {
-    background-color: #000000;
+    background-color: #f0e9d6;
   }
 
   body {
     font-family: var(--font-sans);
     font-weight: 400;
-    background-color: #000000;
-    color: #ffffff;
+    background-color: #f0e9d6;
+    color: #1e2230;
     min-height: 100svh;
   }
 
@@ -38,51 +36,6 @@
   }
 }
 
-/*
- * Estela principal (Guía 2.1): una sola mancha detrás del título (~380px),
- * desvanecida a negro. El grano fino (2.3) cubre el viewport.
- */
-.subase-estela-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 380px;
-  pointer-events: none;
-  z-index: 0;
-  background:
-    radial-gradient(ellipse 34% 27% at 21% 68%, #113659 0%, rgba(17, 54, 89, 0) 100%),
-    radial-gradient(ellipse 28% 22% at 55% 33%, #34567c 0%, rgba(52, 86, 124, 0) 100%),
-    radial-gradient(ellipse 24% 20% at 66% 26%, #12406d 0%, rgba(18, 64, 109, 0) 100%),
-    radial-gradient(ellipse 16% 18% at 84% 34%, #7e5432 0%, rgba(126, 84, 50, 0) 100%),
-    #000000;
-}
-
-.subase-estela-bg::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  opacity: 0.045;
-  /* Capa propia en la GPU: el grano se pinta una vez y no en cada cuadro del scroll. */
-  transform: translateZ(0);
-  will-change: transform;
-  contain: strict;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-}
-
-.subase-estela-bg::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 160px;
-  pointer-events: none;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000000 100%);
-}
-
 /* Sección 04 Guía de Marca: Subrayado corto de arena (≈ 45 × 3 px) bajo cada título H1 */
 .subase-sand-rule {
   width: 45px;
@@ -92,27 +45,27 @@
 
 /* Sección 04: borde 1 px, radio 12 px, sin relleno ni sombras */
 .subase-card {
-  border: 1px solid rgba(195, 197, 198, 0.2);
+  border: 1px solid rgba(30, 34, 48, 0.15);
   border-radius: 12px;
   background: transparent;
 }
 
 .subase-card-sand {
-  border: 1px solid rgba(210, 185, 154, 0.45);
+  border: 1px solid rgba(30, 34, 48, 0.3);
   border-radius: 12px;
   background: transparent;
 }
 
 .subase-divider {
-  border-color: rgba(195, 197, 198, 0.2);
+  border-color: rgba(30, 34, 48, 0.15);
 }
 
 .subase-filete {
   border: 0;
-  border-top: 1px solid rgba(195, 197, 198, 0.2);
+  border-top: 1px solid rgba(30, 34, 48, 0.15);
 }
 
-/* Botón principal del sistema (src/components/Sistema.tsx): píldora blanca como la de la portada de referencia. */
+/* Botón principal del sistema: píldora tinta con letra blanca, como el cuadro del pasaje del diseño final. */
 .subase-btn-primary {
   display: flex;
   align-items: center;
@@ -123,10 +76,9 @@
   padding: 0 24px;
   border: 0;
   border-radius: 29px;
-  /* Blanco sobre la barra negra (21 : 1). El marino daba 1,7 : 1 —la guía de marca lo marca «NO»— y de reojo
-     solo se veía el texto, no el botón. */
-  background: #ffffff;
-  color: #1e2230;
+  /* Tinta sobre crema (13,9 : 1) y letra blanca sobre tinta (16 : 1). */
+  background: #1e2230;
+  color: #ffffff;
   font-family: var(--font-sans);
   font-weight: 500;
   font-size: 17px;
@@ -147,11 +99,11 @@
 }
 
 .subase-btn-primary:hover {
-  background: #e9e9e9;
+  background: #2c3142;
 }
 
 .subase-btn-primary:focus-visible {
-  outline: 2px solid #d2b99a;
+  outline: 2px solid #1e2230;
   outline-offset: 3px;
 }
 
@@ -166,8 +118,8 @@
   left: 0;
   right: 0;
   z-index: 40;
-  background: #000000;
-  border-top: 1px solid rgba(195, 197, 198, 0.2);
+  background: #f0e9d6;
+  border-top: 1px solid rgba(30, 34, 48, 0.15);
 }
 
 .subase-fixed-bar-inner {
@@ -190,7 +142,7 @@
 /* Plegable «Cómo usamos Open Payments»: sin el triángulo por defecto del navegador */
 summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
-summary::after { content: "+"; margin-left: 12px; color: #D2B99A; font-size: 22px; font-weight: 300; line-height: 1; }
+summary::after { content: "+"; margin-left: 12px; color: #1E2230; font-size: 22px; font-weight: 300; line-height: 1; }
 details[open] > summary::after { content: "–"; }
 /* Sobre el crema el + va en tinta: la arena casi no se ve sobre el crema */
 .subase-plegable-crema summary::after { color: #1E2230; }
@@ -227,21 +179,20 @@ details[open] > summary::after { content: "–"; }
   background: #2c3142;
 }
 
-/* Barra y botón de pago del cobro (prompt145, prompt168): el botón coral monta mitad sobre el crema y mitad sobre
-   el negro (sin filete superior), como en el diseño de Andrés. El coral es solo para pagar. Texto blanco: sobre
+/* Barra y botón de pago del cobro (prompt145, prompt168): el coral es solo para pagar. Con todo en crema
+   (prompt199) el botón ya no monta entre el crema y el negro: va dentro de la barra crema. Texto blanco: sobre
    #EE5A52 da 3,38 : 1, sobre el mínimo AA de texto grande (3 : 1); el crema daba 2,79 : 1 (prompt184). */
 .subase-fixed-bar-pago {
   border-top: none;
 }
 .subase-fixed-bar-pago .subase-fixed-bar-inner {
-  padding-top: 0;
+  padding-top: 12px;
   padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
 }
 .subase-btn-pago {
   background: #EE5A52;
   color: #FFFFFF;
   min-height: 64px;
-  margin-top: -32px;
   border-radius: 9999px;
   font-weight: 600;
   font-size: 21px;
@@ -259,11 +210,11 @@ details[open] > summary::after { content: "–"; }
   background: #E04B43;
 }
 .subase-btn-pago:focus-visible {
-  outline: 2px solid #F0E9D6;
+  outline: 2px solid #1E2230;
   outline-offset: 3px;
 }
 
-/* Pie de la app sobre el campo crema (conductor y empresa): tinta secundaria en vez del gris pensado para el negro */
+/* Pie de la app: tinta secundaria sobre el crema */
 .subase-pie-crema p,
 .subase-pie-crema a {
   color: #3A3F4E;

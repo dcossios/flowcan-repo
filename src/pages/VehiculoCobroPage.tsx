@@ -151,7 +151,6 @@ export const VehiculoCobroPage: React.FC = () => {
     <AppShell
       vehiculoIdActual={vehiculoId}
       barraFija={!loading && vehiculo ? (paseActivo ? 'alta' : true) : false}
-      fondo="crema"
       previa={
         <nav className="flex items-center min-w-0">
           {['bus-01', 'bus-02', 'taxi-01'].map((id) => (
@@ -307,10 +306,10 @@ export const VehiculoCobroPage: React.FC = () => {
             )}
             {paseActivo && (
               <div className="flex items-center justify-between gap-3 mt-3">
-                <p className="min-w-0 truncate text-[16px] text-[#F0E9D6]">
+                <p className="min-w-0 truncate text-[16px] text-[#3A3F4E]">
                   {billetera ? (
                     <>
-                      Su pase: <span className="font-semibold text-[#F0E9D6]">{billetera}</span>
+                      Su pase: <span className="font-semibold text-[#1E2230]">{billetera}</span>
                     </>
                   ) : (
                     'Paga con su pase'
@@ -319,7 +318,7 @@ export const VehiculoCobroPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCambiarPase}
-                  className="shrink-0 inline-flex items-center min-h-11 px-1 text-[16px] font-medium text-[#F0E9D6] underline decoration-[1.5px] underline-offset-4 hover:text-white cursor-pointer"
+                  className="shrink-0 inline-flex items-center min-h-11 px-1 text-[16px] font-medium text-[#1E2230] underline decoration-[1.5px] underline-offset-4 hover:text-[#3A3F4E] cursor-pointer"
                 >
                   Cambiar
                 </button>

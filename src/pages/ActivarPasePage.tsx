@@ -139,7 +139,7 @@ export const ActivarPasePage: React.FC = () => {
   };
 
   return (
-    <AppShell barraFija fondo="crema">
+    <AppShell barraFija>
       <form id="activar-pase-form" onSubmit={handleSubmit} className="flex-1 flex flex-col">
         {/* Lo que va a pasar, en una línea: primero el formulario, la explicación larga queda al final y plegada */}
         <PanelCrema>

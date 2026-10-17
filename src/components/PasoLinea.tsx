@@ -9,24 +9,16 @@ const PASOS = [
   { n: 2 as const, titulo: 'Pague con un toque', descripcion: 'En este bus y en los demás.' },
 ];
 
-// Colores de los pasos sobre el negro y sobre el crema
-const TONOS = {
-  negro: {
-    actual: 'bg-white text-[#1E2230]',
-    otro: 'border border-[rgba(195,197,198,0.35)] text-[#C3C5C6]',
-    titulo: 'text-white',
-    secundario: 'text-[#C3C5C6]',
-  },
-  crema: {
-    actual: 'bg-[#1E2230] text-white',
-    otro: 'border border-[rgba(30,34,48,0.3)] text-[#3A3F4E]',
-    titulo: 'text-[#1E2230]',
-    secundario: 'text-[#3A3F4E]',
-  },
+// Colores de los pasos sobre el crema (diseño final: ya no hay variante sobre negro)
+const TONO = {
+  actual: 'bg-[#1E2230] text-white',
+  otro: 'border border-[rgba(30,34,48,0.3)] text-[#3A3F4E]',
+  titulo: 'text-[#1E2230]',
+  secundario: 'text-[#3A3F4E]',
 };
 
-export const PasoLinea: React.FC<{ paso: 1 | 2; tono?: 'negro' | 'crema' }> = ({ paso, tono = 'negro' }) => {
-  const t = TONOS[tono];
+export const PasoLinea: React.FC<{ paso: 1 | 2; tono?: 'crema' }> = ({ paso }) => {
+  const t = TONO;
   return (
     <ol className="flex flex-col gap-3" aria-label={`Paso ${paso} de ${PASOS.length}`}>
       {PASOS.map((p) => {
@@ -56,26 +48,11 @@ export const PasoLinea: React.FC<{ paso: 1 | 2; tono?: 'negro' | 'crema' }> = ({
 const TEXTO_OPEN_PAYMENTS =
   'Su pase es un grant de Open Payments para pagos salientes (outgoing-payment) con tope diario (debitAmount + interval). En cada viaje creamos un incoming payment en la billetera del bus, una quote y un outgoing payment bajo su pase, sin pedirle nada más. Súbase nunca guarda su plata.';
 
-export const ComoUsamosOpenPayments: React.FC<{ tono?: 'negro' | 'crema' }> = ({ tono = 'negro' }) => {
-  const crema = tono === 'crema';
-  return (
-    <details
-      className={`border-t py-1 ${
-        crema ? 'subase-plegable-crema border-[rgba(30,34,48,0.15)]' : 'border-[rgba(195,197,198,0.2)]'
-      }`}
-    >
-      <summary
-        className={`min-h-11 flex items-center text-[16px] font-medium cursor-pointer justify-between ${
-          crema ? 'text-[#1E2230]' : 'text-white'
-        }`}
-      >
-        Cómo usamos Open Payments
-      </summary>
-      <p
-        className={`mt-2 mb-3 text-[14px] font-normal leading-relaxed ${crema ? 'text-[#3A3F4E]' : 'text-[#C3C5C6]'}`}
-      >
-        {TEXTO_OPEN_PAYMENTS}
-      </p>
-    </details>
-  );
-};
+export const ComoUsamosOpenPayments: React.FC<{ tono?: 'crema' }> = () => (
+  <details className="subase-plegable-crema border-t border-[rgba(30,34,48,0.15)] py-1">
+    <summary className="min-h-11 flex items-center text-[16px] font-medium cursor-pointer justify-between text-[#1E2230]">
+      Cómo usamos Open Payments
+    </summary>
+    <p className="mt-2 mb-3 text-[14px] font-normal leading-relaxed text-[#3A3F4E]">{TEXTO_OPEN_PAYMENTS}</p>
+  </details>
+);

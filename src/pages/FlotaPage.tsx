@@ -388,7 +388,7 @@ export const FlotaPage: React.FC = () => {
   );
 
   return (
-    <AppShell ancho="amplio" rol="empresa" fondo="crema">
+    <AppShell ancho="amplio" rol="empresa">
       {!tienePin ? (
         <PinEmpresa
           error={pinIncorrecto}
@@ -510,15 +510,18 @@ export const FlotaPage: React.FC = () => {
                   </section>
 
                   <section aria-labelledby="flota-llegadas" className="lg:w-1/3 min-w-0">
-                    <div className="rounded-[3px] p-4" style={{ backgroundColor: TINTA }}>
-                      <h2 id="flota-llegadas" className={`${ETIQUETA} text-[#C9CCCE]`}>
+                    {/* Llegadas sobre el crema (diseño final, prompt199): líneas finas y el monto en un cuadro tinta */}
+                    <div>
+                      <h2 id="flota-llegadas" className={`${ETIQUETA} text-[#3A3F4E]`}>
                         Llegadas · Open Payments
                       </h2>
 
                       {resumen.ultimosPagos.length === 0 ? (
-                        <p className="mt-3 py-3 text-[16px] text-[#C9CCCE]">Todavía no hay pagos hoy.</p>
+                        <p className="mt-3 py-3 border-y border-[rgba(30,34,48,0.15)] text-[16px] text-[#3A3F4E]">
+                          Todavía no hay pagos hoy.
+                        </p>
                       ) : (
-                        <ul className="mt-1">
+                        <ul className="mt-2 border-t border-[rgba(30,34,48,0.15)]">
                           {resumen.ultimosPagos.map((pago) => {
                             const estadoPago = normalizarEstadoPago(pago.estado);
                             const infoVehiculo = mapaVehiculoPorId.get(pago.vehiculoId);
@@ -534,9 +537,9 @@ export const FlotaPage: React.FC = () => {
                             return (
                               <li
                                 key={pago.viajeId}
-                                className="py-3 flex items-center gap-2.5 min-h-11 border-b border-white/[0.12] last:border-b-0"
+                                className="py-3 flex items-center gap-2.5 min-h-11 border-b border-[rgba(30,34,48,0.15)]"
                               >
-                                <span className="font-mono text-[14px] text-white tabular-nums shrink-0">
+                                <span className="font-mono text-[14px] text-[#3A3F4E] tabular-nums shrink-0">
                                   {formatearHoraHHMM(pago.fecha)}
                                 </span>
                                 <span
@@ -545,8 +548,13 @@ export const FlotaPage: React.FC = () => {
                                 >
                                   {num}
                                 </span>
-                                <span className="text-[16px] font-medium text-white min-w-0">{nombreCorto}</span>
-                                <span className="ml-auto text-[16px] font-semibold tabular-nums text-white shrink-0">
+                                <span className="text-[16px] font-medium text-[#1E2230] min-w-0">{nombreCorto}</span>
+                                <span
+                                  className={`ml-auto shrink-0 rounded-[3px] px-2 py-1 text-[15px] font-semibold tabular-nums leading-none ${
+                                    esPagado ? 'text-white' : 'text-[#3A3F4E] border border-[rgba(30,34,48,0.3)]'
+                                  }`}
+                                  style={esPagado ? { backgroundColor: TINTA } : undefined}
+                                >
                                   {esPagado ? `+${formatCOP(pago.monto)}` : formatCOP(pago.monto)}
                                 </span>
                                 <FichaEstado estado={estadoPago} tamano={22} />

@@ -79,7 +79,7 @@ export const PaseListoPage: React.FC = () => {
   }, [confirmado, destinoVolver, navigate]);
 
   return (
-    <AppShell fondo="crema">
+    <AppShell>
       <div className="flex-1 flex flex-col">
         <PanelCrema>
           {loading && (

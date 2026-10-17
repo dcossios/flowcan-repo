@@ -127,8 +127,8 @@ export const ReciboPage: React.FC = () => {
       <div className="flex-1 flex flex-col">
         {loading && (
           <div className="flex-1 flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
-            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3">
+            <Loader2 className="w-8 h-8 text-[#1E2230] animate-spin" strokeWidth={1.5} />
+            <p className="text-[14px] font-normal text-[#3A3F4E] mt-3">
               Consultando el tiquete…
             </p>
           </div>
@@ -143,7 +143,7 @@ export const ReciboPage: React.FC = () => {
             <Link to="/" className="subase-btn-primary subase-btn-flecha mt-8">
               Volver al inicio
             </Link>
-            <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
+            <p className="text-[13px] font-normal text-[#3A3F4E] mt-8">{errorInfo.code}</p>
           </div>
         )}
 
@@ -177,12 +177,12 @@ export const ReciboPage: React.FC = () => {
             </PanelCrema>
 
             {estado === 'pagado' && (
-              <p className="text-[16px] font-medium text-white mt-6 leading-relaxed">
+              <p className="text-[16px] font-medium text-[#1E2230] mt-6 leading-relaxed">
                 Muéstrele esta pantalla al conductor si se la pide.
               </p>
             )}
 
-            <div className="mt-4 border-t border-[rgba(195,197,198,0.2)]">
+            <div className="mt-4 border-t border-[rgba(30,34,48,0.15)]">
               <Fila etiqueta="Fecha del pago">{formatFechaHora(recibo.fecha)}</Fila>
               <Fila etiqueta="Tiquete N.º">{recibo.viajeId}</Fila>
               {/* Pagó en otra moneda: el bus recibió la tarifa exacta en pesos (la conversión la hizo su billetera) */}
@@ -200,13 +200,13 @@ export const ReciboPage: React.FC = () => {
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-1">
               <Link
                 to={`/v/${encodeURIComponent(vehiculoId)}`}
-                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#3A3F4E] hover:text-[#1E2230]"
               >
                 {estado === 'fallido' ? 'Intentar de nuevo' : 'Volver al bus'}
               </Link>
               <Link
                 to="/mi-pase"
-                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#3A3F4E] hover:text-[#1E2230]"
               >
                 Ver mis viajes
               </Link>

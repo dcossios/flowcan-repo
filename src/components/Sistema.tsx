@@ -10,7 +10,7 @@ REFERENCIA: portada «Terminal del Bus 01» (docs/prototipo-portada.html), estil
 TIPOGRAFÍA: Poppins (la de la Guía de Marca). Títulos 600 a 34 px (30 px bajo 360 px) con interlineado 1,05; ruta 500
             a 17 px; etiquetas 500 a 12 px en versalitas con tracking 0,12em; montos 600 en cifras tabulares
 PALETA:     #F0E9D6 crema de la ilustración · #1E2230 tinta · color de la línea de cada vehículo (lib/rutas.ts) ·
-            #3A3F4E texto secundario sobre crema · negro y #C3C5C6 debajo, como en el resto de la marca
+            #3A3F4E texto secundario. Todo sobre el crema, sin negro (diseño final, prompt199)
 RIESGO:     la parte de arriba de cada pantalla es un panel crema a sangre (con la escena en el inicio) sobre la app
             negra; las fichas son bloques sólidos, sin cajas ni bordes
 
@@ -238,10 +238,10 @@ export const Alcance: React.FC<{
   );
 };
 
-/** Fila de dato en el negro: etiqueta terciaria (14 px gris) y valor secundario (16 px blanco). */
+/** Fila de dato: etiqueta secundaria (14 px, tinta 2) y valor (16 px, tinta). */
 export const Fila: React.FC<{ etiqueta: string; children: React.ReactNode }> = ({ etiqueta, children }) => (
-  <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(195,197,198,0.2)]">
-    <span className="text-[14px] font-normal text-[#C3C5C6] shrink-0">{etiqueta}</span>
-    <span className="text-[16px] font-medium text-white text-right min-w-0 break-all">{children}</span>
+  <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(30,34,48,0.15)]">
+    <span className="text-[14px] font-normal text-[#3A3F4E] shrink-0">{etiqueta}</span>
+    <span className="text-[16px] font-medium text-[#1E2230] text-right min-w-0 break-all">{children}</span>
   </div>
 );
