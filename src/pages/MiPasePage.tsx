@@ -118,13 +118,13 @@ export const MiPasePage: React.FC = () => {
         {loading && (
           <div className="flex-1 flex flex-col items-center justify-center py-16">
             <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">Consultando su pase…</p>
+            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3">Consultando su pase…</p>
           </div>
         )}
 
         {!loading && errorInfo && (
           <div role="alert" className="mt-6">
-            <p className="text-[15px] font-normal text-[#C3C5C6] leading-relaxed">{errorInfo.message}</p>
+            <p className="text-[14px] font-normal text-[#C3C5C6] leading-relaxed">{errorInfo.message}</p>
             <button type="button" onClick={cargar} className="subase-btn-primary mt-6">
               <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
               Reintentar
@@ -137,7 +137,7 @@ export const MiPasePage: React.FC = () => {
             <p className="text-[18px] font-normal text-white leading-snug">
               Todavía no tiene un pase en este celular.
             </p>
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
+            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
               Escanee el QR de un bus y toque «Pagar». Activa el pase una sola vez y después paga con un
               toque.
             </p>
@@ -157,27 +157,27 @@ export const MiPasePage: React.FC = () => {
           <>
             {/* Resumen del pase */}
             <section aria-label="Resumen del pase" className="mt-6">
-              <p className="text-[15px] font-normal text-[#C3C5C6]">Usado hoy</p>
+              <p className="text-[14px] font-normal text-[#C3C5C6]">Usado hoy</p>
               <div aria-hidden="true" className="mt-3 h-[6px] w-full bg-[rgba(195,197,198,0.15)] overflow-hidden">
                 {pct > 0 && <div className="h-full bg-[#D2B99A] rounded-r-[4px]" style={{ width: `${pct}%` }} />}
               </div>
 
               <dl className="mt-6 border-t border-[rgba(195,197,198,0.2)]">
                 <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                  <dt className="text-[15px] font-normal text-[#C3C5C6]">Vence</dt>
-                  <dd className="text-[15px] font-normal text-white text-right">{fechaCorta(pase.venceEn)}</dd>
+                  <dt className="text-[14px] font-normal text-[#C3C5C6]">Vence</dt>
+                  <dd className="text-[16px] font-medium text-white text-right">{fechaCorta(pase.venceEn)}</dd>
                 </div>
                 {pase.walletAddress && (
                   <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                    <dt className="text-[15px] font-normal text-[#C3C5C6] shrink-0">Billetera</dt>
-                    <dd className="text-[15px] font-normal text-white text-right min-w-0 break-all">
+                    <dt className="text-[14px] font-normal text-[#C3C5C6] shrink-0">Billetera</dt>
+                    <dd className="text-[16px] font-medium text-white text-right min-w-0 break-all">
                       {walletCorta(pase.walletAddress)}
                     </dd>
                   </div>
                 )}
                 <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                  <dt className="text-[15px] font-normal text-[#C3C5C6]">Cashback acumulado (simulado)</dt>
-                  <dd className="text-[15px] font-normal text-white text-right">+{formatCOP(cashbackTotal)}</dd>
+                  <dt className="text-[14px] font-normal text-[#C3C5C6]">Cashback acumulado (simulado)</dt>
+                  <dd className="text-[16px] font-medium text-white text-right">+{formatCOP(cashbackTotal)}</dd>
                 </div>
               </dl>
             </section>
@@ -188,7 +188,7 @@ export const MiPasePage: React.FC = () => {
                 Mis viajes
               </h2>
               {viajes.length === 0 ? (
-                <p className="mt-3 py-6 border-t border-b border-[rgba(195,197,198,0.2)] text-[15px] font-normal text-[#C3C5C6]">
+                <p className="mt-3 py-6 border-t border-b border-[rgba(195,197,198,0.2)] text-[14px] font-normal text-[#C3C5C6]">
                   Aún no tiene viajes. Cuando pague un pasaje, aparece aquí.
                 </p>
               ) : (
@@ -230,21 +230,21 @@ export const MiPasePage: React.FC = () => {
             <div className="mt-8">
               {confirmarQuitar ? (
                 <div className="subase-card p-4">
-                  <p className="text-[15px] font-normal text-white leading-relaxed">
+                  <p className="text-[16px] font-medium text-white leading-relaxed">
                     ¿Quitar el pase de este celular? Para volver a pagar tendrá que activarlo otra vez.
                   </p>
                   <div className="mt-4 flex flex-col min-[400px]:flex-row gap-3">
                     <button
                       type="button"
                       onClick={quitarPase}
-                      className="min-h-11 px-4 rounded-[12px] border border-[#D2B99A] text-[15px] font-normal text-white cursor-pointer"
+                      className="min-h-11 px-4 rounded-[12px] border border-[#D2B99A] text-[16px] font-medium text-white cursor-pointer"
                     >
                       Sí, quitarlo
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmarQuitar(false)}
-                      className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[15px] font-normal text-[#C3C5C6] cursor-pointer"
+                      className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[14px] font-normal text-[#C3C5C6] cursor-pointer"
                     >
                       Cancelar
                     </button>
@@ -254,7 +254,7 @@ export const MiPasePage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setConfirmarQuitar(true)}
-                  className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white underline-offset-4 hover:underline cursor-pointer"
+                  className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white underline-offset-4 hover:underline cursor-pointer"
                 >
                   Quitar el pase de este celular
                 </button>

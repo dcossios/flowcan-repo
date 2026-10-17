@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { CircleCheck, Clock, Loader2, XCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
-import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
-import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
+import { ComoUsamosOpenPayments } from '../components/PasoLinea';
+import { Bajada, FichaEstado, Fila, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
 import { nombreDesdeId } from '../lib/rutas';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
 import { formatCOP, formatFechaHora } from '../lib/format';
 
-const RelojVivo: React.FC = () => {
+// Hora en vivo junto a «Pagado»: prueba de que la pantalla no es una captura vieja, que es lo que mira el conductor.
+const HoraEnVivo: React.FC = () => {
   const [ahora, setAhora] = useState(() => new Date());
 
   useEffect(() => {
@@ -24,10 +25,11 @@ const RelojVivo: React.FC = () => {
   });
 
   return (
-    <div className="mt-6">
-      <p className="text-[13px] font-normal text-[#C3C5C6]">Hora actual</p>
-      <p className="text-[20px] font-normal text-white tabular-nums mt-1">{texto}</p>
-    </div>
+    <p className="mt-3 flex items-center gap-2.5" aria-label={`Hora actual ${texto}`}>
+      <span aria-hidden="true" className="subase-latido w-2.5 h-2.5 rounded-full bg-[#2F865F]" />
+      <span className="text-[22px] font-semibold tabular-nums leading-none">{texto}</span>
+      <span className="text-[14px] text-[#3A3F4E] leading-tight">hora actual</span>
+    </p>
   );
 };
 
@@ -109,7 +111,7 @@ export const ReciboPage: React.FC = () => {
         {loading && (
           <div className="flex-1 flex flex-col items-center justify-center py-16">
             <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">
+            <p className="text-[14px] font-normal text-[#C3C5C6] mt-3">
               Consultando el tiquete…
             </p>
           </div>
@@ -134,17 +136,12 @@ export const ReciboPage: React.FC = () => {
             <PanelCrema>
               <IdentidadVehiculo vehiculoId={vehiculoId} nombre={vehiculoNombre} />
               <div className="mt-4 flex items-center gap-3" role="status" aria-live="polite">
-                {estado === 'pagado' ? (
-                  <CircleCheck className="w-11 h-11 shrink-0 text-[#2F865F]" strokeWidth={2} />
-                ) : estado === 'pendiente' ? (
-                  <Clock className="w-11 h-11 shrink-0 text-[#3A3F4E]" strokeWidth={2} />
-                ) : (
-                  <XCircle className="w-11 h-11 shrink-0 text-[#B8403A]" strokeWidth={2} />
-                )}
+                <FichaEstado estado={estado} />
                 <h1 className="text-[40px] min-[360px]:text-[44px] font-semibold leading-none tracking-[-0.01em]">
                   {estado === 'pagado' ? 'Pagado' : estado === 'pendiente' ? 'Confirmando…' : 'No se cobró'}
                 </h1>
               </div>
+              {estado === 'pagado' && <HoraEnVivo />}
               {estado === 'pendiente' && (
                 <Bajada className="mt-2">Su billetera está procesando el pago. Esta pantalla se actualiza sola.</Bajada>
               )}
@@ -157,50 +154,18 @@ export const ReciboPage: React.FC = () => {
               <Pasaje monto={recibo.monto} etiqueta={estado === 'pagado' ? 'Pagó' : 'Pasaje'} className="mt-4" />
             </PanelCrema>
 
-            <div className="mt-6">
-              <PasoLinea paso={3} variante="compacta" />
-            </div>
-
             {estado === 'pagado' && (
-              <>
-                <RelojVivo />
-                <p className="text-[15px] font-normal text-[#C3C5C6] mt-6 leading-relaxed">
-                  Muéstrele esta pantalla al conductor si se la pide.
-                </p>
-              </>
+              <p className="text-[16px] font-medium text-white mt-6 leading-relaxed">
+                Muéstrele esta pantalla al conductor si se la pide.
+              </p>
             )}
 
-            <hr className="subase-filete mt-8 mb-0" />
-            <div className="flex items-baseline justify-between gap-4 py-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Fecha del pago</span>
-              <span className="text-[15px] font-normal text-white text-right">
-                {formatFechaHora(recibo.fecha)}
-              </span>
+            <div className="mt-4 border-t border-[rgba(195,197,198,0.2)]">
+              <Fila etiqueta="Fecha del pago">{formatFechaHora(recibo.fecha)}</Fila>
+              <Fila etiqueta="Tiquete N.º">{recibo.viajeId}</Fila>
+              <Fila etiqueta="Disponible hoy">{formatCOP(recibo.disponibleHoy)}</Fila>
+              <Fila etiqueta="Cashback (simulado)">+{formatCOP(recibo.cashback)}</Fila>
             </div>
-            <hr className="subase-filete" />
-            <div className="flex items-baseline justify-between gap-4 py-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Tiquete N.º</span>
-              <span className="text-[15px] font-normal text-white text-right break-all">
-                {recibo.viajeId}
-              </span>
-            </div>
-            <hr className="subase-filete" />
-            <div className="flex items-baseline justify-between gap-4 py-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</span>
-              <span className="text-[15px] font-normal text-white">
-                {formatCOP(recibo.disponibleHoy)}
-              </span>
-            </div>
-            <hr className="subase-filete" />
-            <div className="flex items-baseline justify-between gap-4 py-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">
-                Cashback (simulado)
-              </span>
-              <span className="text-[15px] font-normal text-white">
-                +{formatCOP(recibo.cashback)}
-              </span>
-            </div>
-            <hr className="subase-filete" />
 
             <div className="mt-6">
               <ComoUsamosOpenPayments />
@@ -209,13 +174,13 @@ export const ReciboPage: React.FC = () => {
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-1">
               <Link
                 to={`/v/${encodeURIComponent(vehiculoId)}`}
-                className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
               >
                 {estado === 'fallido' ? 'Intentar de nuevo' : 'Volver al bus'}
               </Link>
               <Link
                 to="/mi-pase"
-                className="inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
               >
                 Ver mis viajes
               </Link>

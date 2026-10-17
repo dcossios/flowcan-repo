@@ -236,16 +236,18 @@ const moduloTranvia = (cabina: 'frente' | 'cola' | null): Bloque => ({
     ((cabina === 'frente') === c.frente && cabina ? `<polygon points="${c.rect(0.08, 0.92, 28, 64)}" fill="#2B3240"/>` : ''),
 });
 
-// Recorridos de fuera de cuadro a fuera de cuadro y ciclo común de 16 s. La buseta ocupa el cruce hacia los 3,3–7,7 s
-// y el tranvía, con 8 s de desfase, hacia los 10,9–16,2 s: nunca se encuentran en la cuadrícula.
-const BUS_U0 = -660;
+// Recorridos de fuera de cuadro a fuera de cuadro (con el encuadre ancho de ESCALA y el del conductor, que llega más
+// abajo). Despacio y sin bucle seguido (prompts/prompt121.md): cada vehículo pasa una vez por minuto. La buseta entra
+// enseguida y cruza la cuadrícula hacia los 10,5–18,7 s; el tranvía entra a los 14 s y la cruza hacia los
+// 19,7–29,3 s, así que nunca se encuentran. Después quedan unos 18 s de calle quieta.
+const BUS_U0 = -950;
 const BUS_U1 = 560;
-const TRANVIA_V0 = -420;
-const TRANVIA_V1 = 730;
-const VEL_BUS = 120;
-const VEL_TRANVIA = 100;
-const CICLO = 16;
-const DESFASE_TRANVIA = 8;
+const TRANVIA_V0 = -440;
+const TRANVIA_V1 = 800;
+const VEL_BUS = 65;
+const VEL_TRANVIA = 55;
+const CICLO = 60;
+const DESFASE_TRANVIA = 14;
 const ciclo = (t: number) => ((t % CICLO) + CICLO) % CICLO;
 
 interface Cuadro {
@@ -336,7 +338,7 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre 
       if (busAdelante.current) busAdelante.current.innerHTML = c.busAdelante;
     };
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      pintar(3, 9.8); // quietos y a la vista: la buseta llegando al cruce y el tranvía entrando por la derecha
+      pintar(10, DESFASE_TRANVIA + 4.4); // quietos y a la vista: la buseta llegando al cruce y el tranvía entrando por la derecha
       return;
     }
     let id = 0;

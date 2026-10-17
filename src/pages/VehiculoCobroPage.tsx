@@ -3,12 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { PasoLinea } from '../components/PasoLinea';
-import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
+import { Bajada, Disponible, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
 import {
   clearPaseToken,
   ErrorCode,
   fetchVehiculo,
   getFriendlyErrorMessage,
+  isUiPreviewMode,
   pagarViaje,
   ReciboViaje,
   setUiPreviewMode,
@@ -130,10 +131,6 @@ export const VehiculoCobroPage: React.FC = () => {
   const paseActivo = Boolean(vehiculo?.paseActivo);
   const disponibleHoy = vehiculo?.disponibleHoy ?? 0;
   const topeDiario = vehiculo?.topeDiario ?? 20000;
-  const porcentajeDisponible =
-    topeDiario > 0
-      ? Math.min(100, Math.max(0, Math.round((disponibleHoy / topeDiario) * 100)))
-      : 0;
   return (
     <AppShell vehiculoIdActual={vehiculoId} barraFija={Boolean(!loading && vehiculo)}>
       <div className="flex-1 flex flex-col">
@@ -144,6 +141,8 @@ export const VehiculoCobroPage: React.FC = () => {
               <Titulo className="mt-4">Pague su pasaje</Titulo>
               <Ruta ruta={vehiculo.ruta} className="mt-1.5" />
               <Pasaje monto={vehiculo.tarifa} className="mt-4" />
+              {/* ¿Me alcanza? Se responde aquí, antes del botón, y no abajo en el negro */}
+              {paseActivo && <Disponible disponible={disponibleHoy} tope={topeDiario} className="mt-4" />}
             </>
           ) : cargaFallida ? (
             <>
@@ -172,7 +171,7 @@ export const VehiculoCobroPage: React.FC = () => {
                     setUiPreviewMode(true);
                     cargarVehiculo();
                   }}
-                  className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[15px] font-normal text-white cursor-pointer"
+                  className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[16px] font-medium text-white cursor-pointer"
                 >
                   Activar Vista Previa UI
                 </button>
@@ -184,48 +183,29 @@ export const VehiculoCobroPage: React.FC = () => {
 
         {!loading && vehiculo && (
           <>
-            <div className="mt-6">
-              <PasoLinea paso={paseActivo ? 2 : 1} variante="compacta" />
-            </div>
-
-            <hr className="subase-filete mt-6 mb-6" />
-
             {paseActivo ? (
-              <div>
-                <p className="text-[15px] font-normal text-white">
-                  Disponible hoy {formatCOP(disponibleHoy)} de {formatCOP(topeDiario)}
-                </p>
-                <div className="w-full h-1.5 bg-white/10 overflow-hidden mt-3 rounded-full">
-                  <div
-                    className="h-full bg-[#D2B99A] rounded-full"
-                    style={{ width: `${porcentajeDisponible}%` }}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCambiarPase}
-                  className="mt-2 inline-flex items-center min-h-11 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline cursor-pointer"
-                >
-                  Cambiar pase
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleCambiarPase}
+                className="mt-3 inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline cursor-pointer"
+              >
+                Cambiar pase
+              </button>
             ) : (
-              <p className="text-[15px] font-normal text-[#C3C5C6] leading-relaxed">
-                Active su pase una vez. Después paga cada viaje con un toque.
-              </p>
+              <div className="mt-6">
+                <PasoLinea paso={1} />
+              </div>
             )}
 
             {errorInfo && (
               <div role="alert" className="mt-6">
-                <p className="text-[15px] font-normal text-white leading-relaxed">
-                  {errorInfo.message}
-                </p>
+                <p className="text-[16px] font-medium text-white leading-relaxed">{errorInfo.message}</p>
                 {(errorInfo.code === 'PASE_INVALIDO' ||
                   errorInfo.code === 'PASE_VENCIDO' ||
                   errorInfo.code === 'TOPE_ALCANZADO') && (
                   <Link
                     to={`/pase/activar?volver=${encodeURIComponent(`/v/${vehiculoId}`)}`}
-                    className="inline-flex items-center min-h-11 mt-2 text-[15px] font-normal text-white underline"
+                    className="inline-flex items-center min-h-11 mt-2 text-[16px] font-medium text-white underline"
                   >
                     Activar o ampliar pase
                   </Link>
@@ -237,7 +217,7 @@ export const VehiculoCobroPage: React.FC = () => {
                       setUiPreviewMode(true);
                       cargarVehiculo();
                     }}
-                    className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[15px] font-normal text-white cursor-pointer"
+                    className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[16px] font-medium text-white cursor-pointer"
                   >
                     Activar Vista Previa UI
                   </button>
@@ -246,23 +226,25 @@ export const VehiculoCobroPage: React.FC = () => {
               </div>
             )}
 
-            <div className="mt-8 flex items-center justify-between gap-3">
-              <span className="text-[13px] font-normal text-[#C3C5C6]">Rutas piloto</span>
-              <div className="flex items-center gap-1">
-                {['bus-01', 'bus-02', 'taxi-01'].map((id) => (
-                  <Link
-                    key={id}
-                    to={`/v/${id}`}
-                    className={`inline-flex items-center justify-center min-h-11 px-3 text-[13px] font-normal ${
-                      id === vehiculoId ? 'text-white' : 'text-[#C3C5C6]'
-                    }`}
-                  >
-                    {id}
-                  </Link>
-                ))}
+            {/* Atajos de la demo: no los ve el pasajero real */}
+            {(isDev || isUiPreviewMode()) && (
+              <div className="mt-8 flex items-center justify-between gap-3">
+                <span className="text-[13px] font-normal text-[#C3C5C6]">Rutas piloto</span>
+                <div className="flex items-center gap-1">
+                  {['bus-01', 'bus-02', 'taxi-01'].map((id) => (
+                    <Link
+                      key={id}
+                      to={`/v/${id}`}
+                      className={`inline-flex items-center justify-center min-h-11 px-3 text-[13px] font-normal ${
+                        id === vehiculoId ? 'text-white' : 'text-[#C3C5C6]'
+                      }`}
+                    >
+                      {id}
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-
+            )}
           </>
         )}
       </div>

@@ -203,3 +203,15 @@ details[open] > summary::after { content: "–"; }
     display: none !important;
   }
 }
+
+/* Punto que late junto a la hora en vivo del recibo: prueba de que no es una captura vieja */
+.subase-latido {
+  animation: subase-latido 1.6s ease-in-out infinite;
+}
+@keyframes subase-latido {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .subase-latido { animation: none; }
+}

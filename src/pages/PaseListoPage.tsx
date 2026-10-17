@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
-import { PasoLinea } from '../components/PasoLinea';
 import { Bajada, PanelCrema, Titulo } from '../components/Sistema';
 import {
   clearPendingPaseContext,
@@ -79,8 +78,6 @@ export const PaseListoPage: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [confirmado, destinoVolver, navigate]);
 
-  const paso: 1 | 2 | 3 = confirmado ? 2 : 1;
-
   return (
     <AppShell>
       <div className="flex-1 flex flex-col">
@@ -106,12 +103,8 @@ export const PaseListoPage: React.FC = () => {
           )}
         </PanelCrema>
 
-        <div className="mt-6">
-          <PasoLinea paso={paso} variante="compacta" />
-        </div>
-
         {!loading && errorInfo && (
-          <div className="mt-8 flex-1 flex flex-col">
+          <div className="mt-6 flex-1 flex flex-col">
             <div className="flex flex-col gap-3">
               <Link
                 to={`/pase/activar?volver=${encodeURIComponent(destinoVolver)}`}
@@ -121,7 +114,7 @@ export const PaseListoPage: React.FC = () => {
               </Link>
               <Link
                 to={destinoVolver}
-                className="inline-flex items-center justify-center min-h-11 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center justify-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
               >
                 Volver al bus
               </Link>
@@ -134,19 +127,19 @@ export const PaseListoPage: React.FC = () => {
           <div className="mt-6 flex-1 flex flex-col">
             <hr className="subase-filete mb-6" />
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</span>
+              <span className="text-[14px] font-normal text-[#C3C5C6]">Disponible hoy</span>
               <span className="text-[32px] font-semibold text-white leading-none tabular-nums">
                 {formatCOP(confirmado.pase.disponibleHoy)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-4 mt-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Tope diario</span>
-              <span className="text-[15px] font-normal text-white">{formatCOP(confirmado.pase.topeDiario)}</span>
+              <span className="text-[14px] font-normal text-[#C3C5C6]">Tope diario</span>
+              <span className="text-[16px] font-medium text-white">{formatCOP(confirmado.pase.topeDiario)}</span>
             </div>
             {confirmado.pase.venceEn && (
               <div className="flex items-baseline justify-between gap-4 mt-4">
-                <span className="text-[15px] font-normal text-[#C3C5C6]">Vigencia</span>
-                <span className="text-[15px] font-normal text-white">{formatFechaHora(confirmado.pase.venceEn)}</span>
+                <span className="text-[14px] font-normal text-[#C3C5C6]">Vigencia</span>
+                <span className="text-[16px] font-medium text-white">{formatFechaHora(confirmado.pase.venceEn)}</span>
               </div>
             )}
 

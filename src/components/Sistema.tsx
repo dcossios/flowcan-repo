@@ -88,3 +88,54 @@ export const Pasaje: React.FC<{ monto: number; etiqueta?: string; className?: st
 export const Bajada: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
   <p className={`text-[16px] leading-normal text-[#3A3F4E] ${className}`}>{children}</p>
 );
+
+/** Ficha de estado: un ícono blanco dentro de un cuadro sólido, hermano del cuadro con el número de ruta. */
+export const FichaEstado: React.FC<{
+  estado: 'pagado' | 'pendiente' | 'fallido';
+  tamano?: number;
+  className?: string;
+}> = ({ estado, tamano = 44, className = '' }) => {
+  const fondo = estado === 'pagado' ? '#2F865F' : estado === 'pendiente' ? TINTA : '#B8403A';
+  const icono = Math.round(tamano * 0.6);
+  return (
+    <span
+      aria-hidden="true"
+      className={`inline-flex items-center justify-center shrink-0 rounded-[3px] text-white ${className}`}
+      style={{ backgroundColor: fondo, width: tamano, height: tamano }}
+    >
+      <svg width={icono} height={icono} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="square">
+        {estado === 'pagado' && <path d="M4.5 12.5l5 5 10-11" />}
+        {estado === 'pendiente' && <path d="M12 6v6l4 2.5" />}
+        {estado === 'fallido' && <path d="M6 6l12 12M18 6L6 18" />}
+      </svg>
+    </span>
+  );
+};
+
+/** Lo que le queda del tope de hoy, sobre el crema: responde «¿me alcanza?» antes de tocar «Pagar». */
+export const Disponible: React.FC<{ disponible: number; tope: number; className?: string }> = ({
+  disponible,
+  tope,
+  className = '',
+}) => {
+  const pct = tope > 0 ? Math.min(100, Math.max(0, Math.round((disponible / tope) * 100))) : 0;
+  return (
+    <div className={className}>
+      <p className="text-[16px] leading-snug text-[#3A3F4E]">
+        Le quedan <span className="font-semibold text-[#1E2230] tabular-nums">{formatCOP(disponible)}</span> de{' '}
+        {formatCOP(tope)} hoy
+      </p>
+      <div aria-hidden="true" className="mt-2 h-[6px] w-full max-w-[280px] bg-[#DCD2BF]">
+        <div className="h-full" style={{ width: `${pct}%`, backgroundColor: TINTA }} />
+      </div>
+    </div>
+  );
+};
+
+/** Fila de dato en el negro: etiqueta terciaria (14 px gris) y valor secundario (16 px blanco). */
+export const Fila: React.FC<{ etiqueta: string; children: React.ReactNode }> = ({ etiqueta, children }) => (
+  <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(195,197,198,0.2)]">
+    <span className="text-[14px] font-normal text-[#C3C5C6] shrink-0">{etiqueta}</span>
+    <span className="text-[16px] font-medium text-white text-right min-w-0 break-all">{children}</span>
+  </div>
+);

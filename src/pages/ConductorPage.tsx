@@ -2,9 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { CircleCheck } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
-import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, TINTA, Titulo, CREMA } from '../components/Sistema';
+import { Bajada, FichaEstado, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, TINTA, Titulo, CREMA } from '../components/Sistema';
 import { PanelEscena } from '../components/EscenaInicio';
 import { nombreDesdeId } from '../lib/rutas';
 import {
@@ -190,7 +189,7 @@ export const ConductorPage: React.FC = () => {
           style={{ backgroundColor: CREMA }}
         >
           {/* Crema y tinta: se lee de lejos, de día y de noche */}
-          <CircleCheck className="w-24 h-24 text-[#2F865F] mb-6 shrink-0" size={96} strokeWidth={2} />
+          <FichaEstado estado="pagado" tamano={96} className="mb-6" />
           <p className="text-[64px] leading-none font-semibold tracking-[-0.01em]">Pagado</p>
           <p
             className="inline-flex mt-5 rounded-[3px] px-5 py-3 text-[44px] min-[400px]:text-[56px] leading-none font-semibold text-white tabular-nums"
@@ -215,7 +214,7 @@ export const ConductorPage: React.FC = () => {
         {/* Aviso si el servidor no responde */}
         {backendOffline && (
           <div className="subase-card-sand p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <span className="text-[15px] font-normal text-[#C3C5C6]">
+            <span className="text-[14px] font-normal text-[#C3C5C6]">
               El servidor de Súbase no responde. Intente de nuevo en unos segundos.
             </span>
             {import.meta.env.DEV && (
@@ -236,14 +235,14 @@ export const ConductorPage: React.FC = () => {
         {/* Pasajes del turno y Recaudo arriba, antes del QR, en dos columnas sin tarjeta anidada */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-[15px] font-normal text-[#C3C5C6]">Pasajes del turno</p>
+            <p className="text-[14px] font-normal text-[#C3C5C6]">Pasajes del turno</p>
             <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums">
               {totalPasajeros}
             </p>
           </div>
 
           <div>
-            <p className="text-[15px] font-normal text-[#C3C5C6]">Recaudo</p>
+            <p className="text-[14px] font-normal text-[#C3C5C6]">Recaudo</p>
             <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums break-words">
               {formatCOP(totalRecaudado)}
             </p>

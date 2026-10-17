@@ -113,6 +113,9 @@ export const AppShell: React.FC<AppShellProps> = ({
         {children}
       </main>
 
+      {/* Pie de la demo (cambiar de vista, Interledger): solo en el inicio y en las vistas de conductor y empresa. En el
+          cobro, el pase y el recibo distraía del único paso que el pasajero tiene que dar. */}
+      {(rol !== 'pasajero' || location.pathname === '/') && (
       <footer className={`relative z-10 w-full ${contenedorAncho} mx-auto px-5 pt-2 pb-4`}>
         {rol === 'pasajero' && (
           <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
@@ -137,6 +140,7 @@ export const AppShell: React.FC<AppShellProps> = ({
           </Link>
         </div>
       </footer>
+      )}
     </div>
   );
 };
