@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
+import { PanelEscena, RayaRuta } from './components/EscenaInicio';
 import { VehiculoCobroPage } from './pages/VehiculoCobroPage';
 import { ActivarPasePage } from './pages/ActivarPasePage';
 import { PaseListoPage } from './pages/PaseListoPage';
@@ -28,50 +30,54 @@ const InicioPage: React.FC = () => {
     return (
       <AppShell>
         <div className="flex-1 flex flex-col">
-          <h1 className="text-[32px] font-light text-white leading-tight">
-            Escanee el QR del bus para pagar.
-          </h1>
-          <div className="subase-sand-rule mt-2.5" />
-          <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
-            Abra la cámara de su celular, apunte al código del vehículo y confirme el pasaje.
-          </p>
+          <PanelEscena>
+            <h1 className="text-[32px] font-light leading-tight">Escanee el QR del bus para pagar.</h1>
+            <RayaRuta />
+            <p className="text-[15px] font-normal text-[#4A4F5C] mt-4 leading-relaxed max-w-[26ch]">
+              Abra la cámara de su celular, apunte al código del vehículo y confirme el pasaje.
+            </p>
+          </PanelEscena>
         </div>
       </AppShell>
     );
   }
 
   return (
-    <AppShell vehiculoIdActual={ultimo.id}>
+    <AppShell vehiculoIdActual={ultimo.id} barraFija>
       <div className="flex-1 flex flex-col">
-        <h1 className="text-[32px] font-light text-white leading-tight">Pagar otra vez</h1>
-        <div className="subase-sand-rule mt-2.5" />
-
-        <p className="text-[15px] font-normal text-[#C3C5C6] mt-4">{ultimo.nombre}</p>
-        <p className="text-[18px] font-normal text-white mt-1 leading-snug">{ultimo.ruta}</p>
-
-        <hr className="subase-filete my-6" />
-
-        <div className="flex items-baseline justify-between gap-4">
-          <span className="text-[15px] font-normal text-[#C3C5C6]">Pasaje</span>
-          <span className="text-[40px] min-[400px]:text-[48px] font-light text-white leading-none tracking-tight tabular-nums">
+        <PanelEscena vehiculoId={ultimo.id}>
+          <h1 className="text-[32px] font-light leading-tight">Pagar otra vez</h1>
+          <RayaRuta vehiculoId={ultimo.id} />
+          <p className="text-[15px] font-normal text-[#4A4F5C] mt-4">{ultimo.nombre}</p>
+          <p className="text-[18px] font-normal mt-1 leading-snug max-w-[26ch]">{ultimo.ruta}</p>
+          <p className="text-[15px] font-normal text-[#4A4F5C] mt-4">Pasaje</p>
+          <p className="text-[40px] font-light leading-none tracking-tight tabular-nums mt-1">
             {formatCOP(ultimo.tarifa)}
-          </span>
-        </div>
+          </p>
+        </PanelEscena>
 
-        <div className="mt-8">
-          <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary">
-            Ir a pagar
+        {getPaseToken() && (
+          <Link
+            to="/mi-pase"
+            className="flex items-center justify-center min-h-11 mt-4 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+          >
+            Ver mi pase y mis viajes
           </Link>
-          {getPaseToken() && (
-            <Link
-              to="/mi-pase"
-              className="flex items-center justify-center min-h-11 mt-3 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
-            >
-              Ver mi pase y mis viajes
-            </Link>
-          )}
-        </div>
+        )}
       </div>
+
+      {/* Barra fija, como en la página de cobro: el botón no tapa la línea ni la buseta de la escena.
+          Va en un portal porque <main> y el pie comparten z-10 y el pie se pintaría encima de la barra. */}
+      {createPortal(
+        <div className="subase-fixed-bar">
+          <div className="subase-fixed-bar-inner">
+            <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary">
+              Ir a pagar
+            </Link>
+          </div>
+        </div>,
+        document.body
+      )}
     </AppShell>
   );
 };

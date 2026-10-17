@@ -1,0 +1,1 @@
+no porque esas y atienen su svg no?, ademas las carreteras matan el concepto de las lineas (si hay mas con carreteras desrtalas (ademas si las imagenes  tienen los vehiculos como vas hacer con las animaciones d elos vehiculos
