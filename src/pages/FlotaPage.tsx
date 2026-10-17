@@ -437,9 +437,6 @@ export const FlotaPage: React.FC = () => {
                                 )
                               : 0;
                           const IconoVehiculo = v.tipo === 'taxi' ? CarTaxiFront : Bus;
-                          const lineaConductorRuta = v.conductor
-                            ? `${v.conductor} · ${v.ruta}`
-                            : v.ruta;
                           const textoFallidos =
                             v.fallidos > 0
                               ? ` · ${v.fallidos} ${v.fallidos === 1 ? 'fallido' : 'fallidos'}`
@@ -467,7 +464,7 @@ export const FlotaPage: React.FC = () => {
                                   </span>
                                 </div>
                                 <p className="text-[15px] font-normal text-[#C3C5C6] mt-1">
-                                  {lineaConductorRuta}
+                                  {v.ruta}
                                 </p>
                                 <p className="text-[15px] font-normal text-[#C3C5C6] mt-0.5">
                                   {textoUltimoPago(v.ultimoPagoEn)}

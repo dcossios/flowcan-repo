@@ -1,6 +1,6 @@
-// PATCH /api/empresa/vehiculos/:id  (X-Empresa-Pin) { nombre?, ruta?, tarifa?, conductor?, activo? } → vehículo
-// - Cambiar el conductor cierra el turno abierto y abre otro: los pagos quedan atribuidos al conductor correcto.
-// - Desactivar cierra el turno y el QR deja de cobrar (el historial se conserva). Reactivar abre un turno.
+// PATCH /api/empresa/vehiculos/:id  (X-Empresa-Pin) { nombre?, ruta?, tarifa?, activo? } → vehículo
+// - Desactivar cierra el turno y el QR deja de cobrar (el historial se conserva).
+// - Reactivar (sin turno abierto) abre un turno sin nombre: el vehículo no tiene conductor.
 import { db, ok, type Vehiculo } from '../../_lib/db.js'
 import { exigirPinEmpresa } from '../../_lib/empresa.js'
 import { ErrorApi } from '../../_lib/errores.js'
@@ -22,7 +22,6 @@ export default manejador({
       cambios.tarifa = tarifaMinimas(b.tarifa, actual.asset_scale)
       cambios.tarifa_cop = Math.round(Number(b.tarifa))
     }
-    if (b.conductor !== undefined) cambios.conductor = texto(b.conductor, 'el conductor')
     if (b.activo !== undefined) {
       if (typeof b.activo !== 'boolean') throw new ErrorApi('DATOS_INVALIDOS', 'activo debe ser true o false.')
       cambios.activo = b.activo
@@ -32,16 +31,11 @@ export default manejador({
     const v = ok(await db().from('vehiculos').update(cambios).eq('id', id).select('*').single(), 'editar vehiculo') as Vehiculo
 
     const turno = (await turnosAbiertos()).get(id) ?? null
-    const conductor = cambios.conductor ?? turno?.conductor ?? v.conductor
     if (!v.activo) {
       if (turno) await cerrarTurno(id)
       return vehiculoGestion(v, null)
     }
-    if (!turno) return vehiculoGestion(v, await abrirTurno(id, conductor))
-    if (cambios.conductor && cambios.conductor !== turno.conductor) {
-      await cerrarTurno(id)
-      return vehiculoGestion(v, await abrirTurno(id, conductor))
-    }
+    if (!turno) return vehiculoGestion(v, await abrirTurno(id))
     return vehiculoGestion(v, turno)
   }
 })

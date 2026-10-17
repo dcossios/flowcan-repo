@@ -35,6 +35,7 @@
 | **Frontend** | Scroll «pegado» en el celular: el contenedor de `AppShell` tenía scroll propio (`overflow-x: hidden`) y `min-h-dvh` recalculaba el diseño al esconderse la barra de Safari; capas del conductor sin bloqueo del fondo | ✅ Corregido y verificado en emulación de iPhone 14; falta confirmarlo en un iPhone real | David |
 | **Frontend** | Sistema de diseño (`src/components/Sistema.tsx`), elegido por Andrés el 17 oct: panel crema arriba de cada pantalla con el número de ruta en un cuadro del color de su línea, título Poppins 600, ruta con flechas y «Pasaje» con el monto en cuadro tinta; detalles en negro; botón principal blanco en píldora con flecha (el marino daba 1,7 : 1 sobre negro). Inicio con la escena de Ayacucho (Flow + SVG animado); el conductor empieza el turno con la misma escena | ✅ Aplicado a inicio, cobro, activar pase, pase listo, recibo, mi pase, conductor y empresa; probado en Vista Previa a 375 y 320 px. Escena fija en la variante D (sin el edificio vecino, al 78 %); en el conductor llena la pantalla con las calles hasta el borde. Prioridad 3 (17 oct): cobro con fondo crema completo y la ruta por titular; «Hoy le alcanza para N pasajes» con un cuadro por pasaje; el pase y «Cambiar» encima de «Pagar»; recaudo del turno arriba en el conductor; «¿Otro bus? Escanee su QR» en el inicio | Andrés |
 | **Pagos** | Pago en cualquier moneda: el pasajero paga en la suya (CAD, USD…) y el bus recibe COP exactos. `GET /api/wallet`, topes por moneda, `viajes.debito_*`, confirmación por el incoming payment, recibo «Pagó CAD 1,44 · el bus recibió $3.200» | ✅ 17 oct: migración 0002 aplicada y prueba de punta a punta en local: `turista1` pagó **CAD 1,44** y `flota1` recibió **320000 COP** (incoming `completed`), viaje `pagado` en ~6 s | David |
+| **Base / API / Front** | El vehículo ya no tiene conductor: se quita `vehiculos.conductor` de la base, del backend y del front; los turnos se abren sin nombre (`turnos.conductor` opcional) y cada viaje sigue atado a su turno. Arregla crear un vehículo desde `/flota`, que fallaba en producción porque la columna ya no existía. Migración `Database Infrastructure/0003_sin_conductor_en_vehiculo.sql` (correr **antes** del deploy) | ✅ Código listo y verificado en Vista Previa; ⏳ correr 0003 en Supabase y probar en producción | David |
 | **Deploy** | Variables `OP_*` en el entorno **Preview** de Vercel siguen con la llave vieja (la CLI pide rama) | ⏳ Corregir desde el panel de Vercel si se usan URLs de preview | David |
 
 ---
@@ -52,8 +53,8 @@
 | `GET` | `/api/vehiculos/:id/feed?desde=` | — | → `[{ viajeId, monto, estado, fecha }]` |
 | `GET` | `/api/viajes` | `Bearer` | → mis viajes `[{ viajeId, monto, cashback, estado, fecha, vehiculo: { id, nombre, ruta } }]` |
 | `GET` | `/api/flota?fecha=` | PIN | → resumen del día (2.1) |
-| `GET` / `POST` | `/api/empresa/vehiculos` | PIN | lista (incluye inactivos) / crea `{ id, nombre, ruta, tipo, conductor, tarifa }` |
-| `PATCH` | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, conductor?, activo? }` |
+| `GET` / `POST` | `/api/empresa/vehiculos` | PIN | lista (incluye inactivos) / crea `{ id, nombre, ruta, tipo, tarifa }` (abre un turno sin nombre) |
+| `PATCH` | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, activo? }` (desactivar cierra el turno; reactivar abre uno) |
 | `GET` | `/api/flota?fecha=` | — | → resumen de la flota del día (propuesta, ver 2.1) |
 
 > **Montos hacia el front: siempre en pesos colombianos enteros.** `viajes.monto` en Supabase está escalado en la moneda de la wallet (USD, escala 2), así que el backend responde con el valor en COP (`vehiculos.tarifa_cop`) en `monto`, `tarifa`, `recaudo`, `cashback`, `disponibleHoy` y `topeDiario`. Si el front recibe `monto: 100`, muestra «$100».
@@ -70,7 +71,7 @@
   "actualizadoEn": "2026-10-17T14:05:00Z",
   "totales": { "recaudo": 9600, "pasajes": 3, "pendientes": 0, "fallidos": 1, "vehiculosConPagos": 2, "vehiculos": 3 },
   "porRuta": [ { "ruta": "Poblado – Centro – Laureles", "recaudo": 6400, "pasajes": 2, "vehiculos": 1 } ],
-  "porVehiculo": [ { "id": "bus-01", "nombre": "Bus 01 — Circular Coonatra", "ruta": "Poblado – Centro – Laureles", "tipo": "bus", "conductor": "Carlos Muñoz", "tarifa": 3200, "recaudo": 6400, "pasajes": 2, "fallidos": 0, "ultimoPagoEn": "2026-10-17T14:03:10Z" } ],
+  "porVehiculo": [ { "id": "bus-01", "nombre": "Bus 01 — Circular Coonatra", "ruta": "Poblado – Centro – Laureles", "tipo": "bus", "tarifa": 3200, "recaudo": 6400, "pasajes": 2, "fallidos": 0, "ultimoPagoEn": "2026-10-17T14:03:10Z" } ],
   "ultimosPagos": [ { "viajeId": "…", "vehiculoId": "bus-01", "monto": 3200, "estado": "pagado", "fecha": "2026-10-17T14:03:10Z" } ]
 }
 ```
@@ -78,7 +79,7 @@
 - `recaudo` y `pasajes` cuentan solo `estado = 'pagado'`. `pendientes` y `fallidos` cuentan los otros dos estados del día.
 - `porRuta` agrupa por `vehiculos.ruta`; `porRuta` y `porVehiculo` van ordenados por `recaudo` de mayor a menor e incluyen vehículos sin pagos (con 0).
 - `ultimosPagos`: los 20 viajes más recientes del día, de cualquier estado.
-- `conductor` sale del turno abierto (`turnos.conductor`) o, si no hay, de `vehiculos.conductor`. `ultimoPagoEn` y `conductor` pueden ser `null`.
+- `porVehiculo` no trae `conductor`: el vehículo no tiene conductor (un bus tiene varios) y cada viaje queda atado a su turno (`viajes.turno_id`). `ultimoPagoEn` puede ser `null`.
 - La comisión de Súbase (1,5 %) la calcula el front sobre `recaudo`; no hace falta en la respuesta.
 - **Si la ruta todavía no existe (404), el front arma el mismo resumen** con `GET /api/vehiculos/:id` y `/feed` de `bus-01`, `bus-02` y `taxi-01`. La demo no depende de este endpoint.
 

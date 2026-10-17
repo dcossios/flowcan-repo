@@ -11,7 +11,6 @@ export function vehiculoGestion(v: Vehiculo, turno: Turno | null) {
     nombre: v.nombre,
     ruta: v.ruta,
     tipo: v.tipo,
-    conductor: turno?.conductor ?? v.conductor,
     tarifa: aPesos(v.tarifa, v.asset_scale),
     moneda: v.asset_code,
     activo: v.activo,
@@ -41,6 +40,7 @@ export async function cerrarTurno(vehiculoId: string): Promise<void> {
   ok(await db().from('turnos').update({ fin: new Date().toISOString() }).eq('vehiculo_id', vehiculoId).is('fin', null), 'cerrar turno')
 }
 
-export async function abrirTurno(vehiculoId: string, conductor: string): Promise<Turno> {
-  return ok(await db().from('turnos').insert({ vehiculo_id: vehiculoId, conductor }).select('*').single(), 'abrir turno') as Turno
+/** Abre un turno sin nombre: el vehículo no tiene conductor y cada viaje queda atado a su turno (viajes.turno_id). */
+export async function abrirTurno(vehiculoId: string): Promise<Turno> {
+  return ok(await db().from('turnos').insert({ vehiculo_id: vehiculoId }).select('*').single(), 'abrir turno') as Turno
 }

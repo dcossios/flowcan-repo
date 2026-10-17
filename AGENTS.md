@@ -128,9 +128,9 @@ SUPABASE_SERVICE_ROLE_KEY=...                                      # NUNCA en el
 | GET | `/api/viajes/:id` | Bearer | → recibo (incluye `estado`) |
 | GET | `/api/vehiculos/:id/feed?desde=` | — | → `[{ viajeId, monto, estado, fecha }]` |
 | GET | `/api/flota?fecha=` | PIN | → resumen del día (formato en `ESTADO.md` §2.1) |
-| GET | `/api/empresa/vehiculos` | PIN | → `[{ id, nombre, ruta, tipo, conductor, tarifa, moneda, activo, turnoDesde }]` (incluye inactivos) |
-| POST | `/api/empresa/vehiculos` | PIN | `{ id, nombre, ruta, tipo, conductor, tarifa }` → vehículo (201). Cobra en la wallet de la flota y abre turno |
-| PATCH | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, conductor?, activo? }` → vehículo. Cambiar conductor cierra y abre turno; desactivar cierra el turno y el QR deja de cobrar |
+| GET | `/api/empresa/vehiculos` | PIN | → `[{ id, nombre, ruta, tipo, tarifa, moneda, activo, turnoDesde }]` (incluye inactivos) |
+| POST | `/api/empresa/vehiculos` | PIN | `{ id, nombre, ruta, tipo, tarifa }` → vehículo (201). Cobra en la wallet de la flota y abre un turno sin nombre |
+| PATCH | `/api/empresa/vehiculos/:id` | PIN | `{ nombre?, ruta?, tarifa?, activo? }` → vehículo. Desactivar cierra el turno y el QR deja de cobrar; reactivar abre un turno |
 
 **PIN de empresa:** header `X-Empresa-Pin`, comparado con la variable `EMPRESA_PIN` (nunca en el repo). Montos de la API siempre en pesos.
 

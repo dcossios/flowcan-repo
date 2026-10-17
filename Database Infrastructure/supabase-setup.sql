@@ -14,7 +14,6 @@ create table public.vehiculos (
   id text primary key,                                   -- slug corto que va en el QR (ej. 'bus-01')
   nombre text not null,
   ruta text not null,
-  conductor text not null,
   tipo text not null check (tipo in ('bus', 'taxi')),
   wallet_address text not null,                          -- wallet que recibe (hoy flota1 para todos: la Test Wallet permite una sola address COP por cuenta). SIN unique
   tarifa bigint not null check (tarifa > 0),             -- entero escalado en la moneda de la wallet
@@ -31,7 +30,7 @@ create table public.vehiculos (
 create table public.turnos (
   id uuid primary key default gen_random_uuid(),
   vehiculo_id text not null references public.vehiculos (id),
-  conductor text not null,
+  conductor text null,                                   -- opcional: el vehículo no tiene conductor; el turno se abre sin nombre
   inicio timestamptz not null default now(),
   fin timestamptz null
 );
@@ -146,18 +145,17 @@ revoke all on public.viajes    from anon, authenticated;
 
 -- Todos los vehículos cobran en la wallet de la flota (AGENTS.md §2). COP con assetScale 2: 3.200 COP = 320000.
 insert into public.vehiculos
-  (id, nombre, ruta, conductor, tipo, wallet_address, tarifa, asset_code, asset_scale, tarifa_cop)
+  (id, nombre, ruta, tipo, wallet_address, tarifa, asset_code, asset_scale, tarifa_cop)
 values
-  ('bus-01',  'Bus 01 — Circular Coonatra', 'Poblado – Centro – Laureles', 'Carlos Muñoz',  'bus',
+  ('bus-01',  'Bus 01 — Circular Coonatra', 'Poblado – Centro – Laureles', 'bus',
    'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200),
-  ('bus-02',  'Bus 02 — Buses Unidos',      'Robledo – Centro',            'Luz Marina Gil', 'bus',
+  ('bus-02',  'Bus 02 — Buses Unidos',      'Robledo – Centro',            'bus',
    'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200),
-  ('taxi-01', 'Taxi 01 — Poblado',          'Poblado – Aeropuerto JMC',    'Jhon Fredy Ríos', 'taxi',
+  ('taxi-01', 'Taxi 01 — Poblado',          'Poblado – Aeropuerto JMC',    'taxi',
    'https://ilp.interledger-test.dev/flota1', 320000, 'COP', 2, 3200);
 
 -- Un turno abierto por vehículo
-insert into public.turnos (vehiculo_id, conductor)
-select id, conductor from public.vehiculos;
+insert into public.turnos (vehiculo_id) select id from public.vehiculos;
 
 -- 3) Verificación (debe mostrar 3 vehículos y 3 turnos abiertos)
 select id, tipo, tarifa, asset_code, wallet_address from public.vehiculos;

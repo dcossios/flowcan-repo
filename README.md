@@ -34,7 +34,7 @@ El pasajero escanea el QR del vehículo con la cámara nativa de su celular y pa
 - `/recibo/:viajeId`: Comprobante digital con confirmación `"✅ Pasaje pagado"` y cashback simulado.
 - `/mi-pase`: Pase del pasajero (disponible hoy, vencimiento, cashback simulado) e historial de sus viajes.
 - `/qr/:vehiculoId`: QR imprimible del vehículo para pegar en el bus.
-- `/flota`: Panel de la empresa con PIN: «Resumen» (recaudo, por ruta, por vehículo, últimos pagos) y «Vehículos» (crear, editar tarifa y conductor, activar o desactivar, ver QR).
+- `/flota`: Panel de la empresa con PIN: «Resumen» (recaudo, por ruta, por vehículo, últimos pagos) y «Vehículos» (crear, editar nombre, ruta y tarifa, activar o desactivar, ver QR).
 - `/conductor/:vehiculoId`: Terminal del conductor con código QR grande, recaudo del turno y feed en vivo (polling cada 2 s) con alerta sonora.
 
 ---

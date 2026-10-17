@@ -111,7 +111,6 @@ export interface VehiculoGestion {
   nombre: string;
   ruta: string;
   tipo: 'bus' | 'taxi';
-  conductor: string;
   tarifa: number;
   moneda: string;
   activo: boolean;
@@ -123,11 +122,10 @@ export interface NuevoVehiculo {
   nombre: string;
   ruta: string;
   tipo: 'bus' | 'taxi';
-  conductor: string;
   tarifa: number;
 }
 
-export type CambiosVehiculo = Partial<Pick<VehiculoGestion, 'nombre' | 'ruta' | 'conductor' | 'tarifa' | 'activo'>>;
+export type CambiosVehiculo = Partial<Pick<VehiculoGestion, 'nombre' | 'ruta' | 'tarifa' | 'activo'>>;
 
 export interface FeedItem {
   viajeId: string;
@@ -148,7 +146,6 @@ export interface FlotaVehiculo {
   nombre: string;
   ruta: string;
   tipo: 'bus' | 'taxi';
-  conductor: string | null;
   tarifa: number;
   recaudo: number;
   pasajes: number;
@@ -361,10 +358,10 @@ const PREVIEW_VEHICULOS: Record<string, Omit<VehiculoInfo, 'paseActivo' | 'dispo
   },
 };
 
-const FLOTA_META: Record<string, { tipo: 'bus' | 'taxi'; conductor: string | null }> = {
-  'bus-01': { tipo: 'bus', conductor: 'Carlos Muñoz' },
-  'bus-02': { tipo: 'bus', conductor: 'Luz Marina Gil' },
-  'taxi-01': { tipo: 'taxi', conductor: 'Jhon Fredy Ríos' },
+const FLOTA_META: Record<string, { tipo: 'bus' | 'taxi' }> = {
+  'bus-01': { tipo: 'bus' },
+  'bus-02': { tipo: 'bus' },
+  'taxi-01': { tipo: 'taxi' },
 };
 
 // --- Helper HTTP ---
@@ -661,7 +658,6 @@ function armarResumenFlota(
   const porVehiculo: FlotaVehiculo[] = vehiculosDef.map((v) => {
     const meta = FLOTA_META[v.id] || {
       tipo: v.id.startsWith('taxi') ? 'taxi' : 'bus',
-      conductor: null,
     };
     const pagosV = pagosOrdenados.filter((p) => p.vehiculoId === v.id);
     const pagadosV = pagosV.filter((p) => p.estado === 'pagado');
@@ -674,7 +670,6 @@ function armarResumenFlota(
       nombre: v.nombre,
       ruta: v.ruta,
       tipo: meta.tipo,
-      conductor: meta.conductor,
       tarifa: v.tarifa,
       recaudo: recaudoV,
       pasajes: pagadosV.length,
@@ -815,7 +810,6 @@ function leerVehiculosPreview(): VehiculoGestion[] {
     nombre: PREVIEW_VEHICULOS[id].nombre,
     ruta: PREVIEW_VEHICULOS[id].ruta,
     tipo: FLOTA_META[id].tipo,
-    conductor: FLOTA_META[id].conductor ?? '',
     tarifa: PREVIEW_VEHICULOS[id].tarifa,
     moneda: 'COP',
     activo: true,

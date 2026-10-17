@@ -7,7 +7,6 @@ export interface Vehiculo {
   id: string
   nombre: string
   ruta: string
-  conductor: string
   tipo: 'bus' | 'taxi'
   wallet_address: string
   tarifa: number // unidades mínimas (COP con assetScale 2 → 3.200 COP = 320000)
@@ -20,7 +19,8 @@ export interface Vehiculo {
 export interface Turno {
   id: string
   vehiculo_id: string
-  conductor: string
+  /** Opcional: el vehículo no tiene conductor y el turno se abre sin nombre (migración 0003). */
+  conductor: string | null
   inicio: string
   fin: string | null
 }

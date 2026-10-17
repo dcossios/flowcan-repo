@@ -1,6 +1,6 @@
 // GET /api/flota?fecha=YYYY-MM-DD  (X-Empresa-Pin) → resumen del día para el panel de la empresa.
 // Formato acordado en ESTADO.md §2.1. Montos en pesos. recaudo y pasajes cuentan solo `pagado`.
-import { db, ok, type Turno, type Vehiculo, type Viaje } from './_lib/db.js'
+import { db, ok, type Vehiculo, type Viaje } from './_lib/db.js'
 import { exigirPinEmpresa, rangoDiaColombia } from './_lib/empresa.js'
 import { manejador } from './_lib/http.js'
 import { aPesos } from './_lib/op.js'
@@ -12,19 +12,17 @@ export default manejador({
     exigirPinEmpresa(req)
     const { fecha, desde, hasta } = rangoDiaColombia(typeof req.query.fecha === 'string' ? req.query.fecha : undefined)
 
-    const [vehiculos, viajes, turnos] = await Promise.all([
+    const [vehiculos, viajes] = await Promise.all([
       db().from('vehiculos').select('*').order('id'),
       db()
         .from('viajes')
         .select('id, vehiculo_id, monto, asset_scale, estado, creado_en')
         .gte('creado_en', desde)
         .lt('creado_en', hasta)
-        .order('creado_en', { ascending: false }),
-      db().from('turnos').select('*').is('fin', null)
+        .order('creado_en', { ascending: false })
     ])
     const vs = ok(vehiculos, 'vehiculos') as Vehiculo[]
     const vj = ok(viajes, 'viajes del día') as FilaViaje[]
-    const conductorTurno = new Map((ok(turnos, 'turnos') as Turno[]).map((t) => [t.vehiculo_id, t.conductor]))
 
     const pesos = (v: FilaViaje) => aPesos(v.monto, v.asset_scale)
     const pagados = vj.filter((v) => v.estado === 'pagado')
@@ -41,7 +39,6 @@ export default manejador({
           nombre: v.nombre,
           ruta: v.ruta,
           tipo: v.tipo,
-          conductor: conductorTurno.get(v.id) ?? v.conductor ?? null,
           tarifa: aPesos(v.tarifa, v.asset_scale),
           recaudo: propios.reduce((s, p) => s + pesos(p), 0),
           pasajes: propios.length,

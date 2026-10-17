@@ -38,7 +38,7 @@ const Campo: React.FC<{ label: string; ayuda?: string; grupo?: boolean; children
   );
 };
 
-const VACIO: NuevoVehiculo = { id: '', nombre: '', ruta: '', tipo: 'bus', conductor: '', tarifa: 3200 };
+const VACIO: NuevoVehiculo = { id: '', nombre: '', ruta: '', tipo: 'bus', tarifa: 3200 };
 
 interface Props {
   /** El PIN dejó de ser válido: el panel vuelve a pedirlo. */
@@ -106,7 +106,7 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
     if (!actual) return;
     // Solo se envía lo que cambió.
     const cambios: CambiosVehiculo = {};
-    for (const k of ['nombre', 'ruta', 'conductor', 'tarifa'] as const) {
+    for (const k of ['nombre', 'ruta', 'tarifa'] as const) {
       const val = editando.datos[k];
       if (val !== undefined && val !== actual[k]) (cambios as Record<string, unknown>)[k] = k === 'tarifa' ? Number(val) : val;
     }
@@ -209,9 +209,6 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
             <Campo label="Ruta">
               <input className={campo} value={nuevo.ruta} onChange={(e) => setNuevo({ ...nuevo, ruta: e.target.value })} placeholder="Belén – Centro" required maxLength={80} />
             </Campo>
-            <Campo label="Conductor">
-              <input className={campo} value={nuevo.conductor} onChange={(e) => setNuevo({ ...nuevo, conductor: e.target.value })} required maxLength={80} />
-            </Campo>
             <Campo label="Tarifa (COP)">
               <input
                 className={campo}
@@ -284,14 +281,9 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
                     <Campo label="Ruta">
                       <input className={campo} value={editando.datos.ruta ?? ''} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, ruta: e.target.value } })} required maxLength={80} />
                     </Campo>
-                    <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
-                      <Campo label="Conductor" ayuda="Cambiarlo abre un turno nuevo">
-                        <input className={campo} value={editando.datos.conductor ?? ''} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, conductor: e.target.value } })} required maxLength={80} />
-                      </Campo>
-                      <Campo label="Tarifa (COP)">
-                        <input className={campo} type="number" inputMode="numeric" min={100} max={50000} step={100} value={editando.datos.tarifa ?? 0} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, tarifa: Number(e.target.value) } })} required />
-                      </Campo>
-                    </div>
+                    <Campo label="Tarifa (COP)">
+                      <input className={campo} type="number" inputMode="numeric" min={100} max={50000} step={100} value={editando.datos.tarifa ?? 0} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, tarifa: Number(e.target.value) } })} required />
+                    </Campo>
                     {errorForm && <p role="alert" className="text-[15px] text-[#D2B99A]">{errorForm}</p>}
                     <div className="flex flex-col-reverse min-[420px]:flex-row min-[420px]:justify-end gap-3 mt-1">
                       <button type="button" onClick={() => setEditando(null)} className={btnSecundario}>
@@ -310,8 +302,6 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
                       <dd className="text-white break-all">{v.id}</dd>
                       <dt className="text-[#C3C5C6]">Ruta</dt>
                       <dd className="text-white min-w-0">{v.ruta}</dd>
-                      <dt className="text-[#C3C5C6]">Conductor</dt>
-                      <dd className="text-white min-w-0">{v.conductor}</dd>
                       <dt className="text-[#C3C5C6]">Tarifa</dt>
                       <dd className="text-white tabular-nums">{formatCOP(v.tarifa)}</dd>
                     </dl>
@@ -341,7 +331,7 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
                           onClick={() => {
                             setErrorForm(null);
                             setNuevo(null);
-                            setEditando({ id: v.id, datos: { nombre: v.nombre, ruta: v.ruta, conductor: v.conductor, tarifa: v.tarifa } });
+                            setEditando({ id: v.id, datos: { nombre: v.nombre, ruta: v.ruta, tarifa: v.tarifa } });
                           }}
                           className={btnSecundario}
                         >
