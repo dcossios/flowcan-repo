@@ -24,6 +24,8 @@ export interface VehiculoInfo {
   paseActivo: boolean;
   disponibleHoy?: number | null;
   topeDiario?: number | null;
+  /** Moneda del pase (la de la billetera del pasajero). topeDiario y disponibleHoy van en ella. */
+  monedaPase?: string | null;
 }
 
 export interface CrearPaseRequest {
@@ -49,6 +51,8 @@ export interface ConfirmarPaseResponse {
     walletAddress?: string;
     topeDiario: number;
     disponibleHoy: number;
+    /** Moneda del pase (la de la billetera). */
+    moneda?: string;
     venceEn: string;
   };
 }
@@ -57,13 +61,20 @@ export interface PaseMeResponse {
   activo: boolean;
   topeDiario: number;
   disponibleHoy: number;
+  /** Moneda del pase (la de la billetera). topeDiario y disponibleHoy van en ella. */
+  moneda?: string;
   venceEn: string;
   walletAddress?: string;
 }
 
 export interface ReciboViaje {
   viajeId: string;
+  /** Lo que recibió el bus, en `moneda` (COP). */
   monto: number;
+  moneda?: string;
+  /** Lo que pagó el pasajero en SU moneda (CAD, USD…). Igual a monto/moneda si pagó en pesos. */
+  montoPagado?: number;
+  monedaPagada?: string;
   cashback: number;
   vehiculo: {
     id: string;
@@ -71,7 +82,9 @@ export interface ReciboViaje {
     ruta: string;
   } | string;
   fecha: string;
+  /** En `monedaPase` (la del pasajero). */
   disponibleHoy: number;
+  monedaPase?: string;
   /** Estado del pago en Open Payments. Si falta (versiones viejas), se asume `pagado`. */
   estado?: EstadoViaje;
   duplicado?: boolean;
@@ -80,7 +93,12 @@ export interface ReciboViaje {
 /** Un viaje en «Mi pase» (GET /api/viajes). */
 export interface MiViaje {
   viajeId: string;
+  /** Lo que recibió el bus, en `moneda` (COP). */
   monto: number;
+  moneda?: string;
+  /** Lo que pagó el pasajero en SU moneda (CAD, USD…). Igual a monto/moneda si pagó en pesos. */
+  montoPagado?: number;
+  monedaPagada?: string;
   cashback: number;
   estado: EstadoViaje;
   fecha: string;
@@ -845,4 +863,35 @@ export async function editarVehiculo(id: string, cambios: CambiosVehiculo): Prom
     headers: headersEmpresa(),
     body: JSON.stringify(cambios),
   });
+}
+
+// --- Billetera del pasajero: de quién es, en qué moneda paga y topes sugeridos en esa moneda ---
+
+export interface WalletInfo {
+  direccion: string;
+  nombre: string;
+  moneda: string;
+  escala: number;
+  topes: number[];
+  topeSugerido: number;
+}
+
+export async function fetchWallet(entrada: string): Promise<WalletInfo> {
+  if (isUiPreviewMode()) {
+    return {
+      direccion: normalizarEnPreview(entrada),
+      nombre: entrada.trim(),
+      moneda: 'COP',
+      escala: 2,
+      topes: [10000, 20000, 30000],
+      topeSugerido: 20000,
+    };
+  }
+  return apiRequest<WalletInfo>(`/api/wallet?direccion=${encodeURIComponent(entrada.trim())}`);
+}
+
+function normalizarEnPreview(entrada: string): string {
+  const t = entrada.trim();
+  if (t.startsWith('$')) return `https://${t.slice(1)}`;
+  return /^https?:\/\//.test(t) ? t : `https://ilp.interledger-test.dev/${t}`;
 }

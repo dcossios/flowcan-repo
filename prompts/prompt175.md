@@ -1,0 +1,1 @@
+Listo me parece bien lo del nombre pero creo que eso ya lo implementamos. Entonces, breve: ahora quiero que implementemos lo de la conversión entre monedas. Que si yo pago, por ejemplo, en dólares, que llegue en pesos al bus y que si yo pago en libras esterlinas, que lleguen en pesos, etc. No te equivoques. /plan

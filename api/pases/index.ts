@@ -4,9 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { db, ok } from '../_lib/db.js'
 import { ErrorApi } from '../_lib/errores.js'
 import { appUrl, body, manejador } from '../_lib/http.js'
-import { aMinimas, obtenerWallet, solicitarPase } from '../_lib/op.js'
-
-const TOPE_MAX = 100_000 // pesos
+import { aMinimas, obtenerWallet, solicitarPase, topesPara } from '../_lib/op.js'
 
 export default manejador({
   POST: async (req) => {
@@ -16,11 +14,13 @@ export default manejador({
     // Solo rutas internas (evita redirecciones abiertas).
     const volver = typeof b.volver === 'string' && /^\/(?!\/)/.test(b.volver) ? b.volver : null
     if (!walletAddress) throw new ErrorApi('DATOS_INVALIDOS', 'Escriba la dirección de su wallet.')
-    if (!Number.isFinite(topeDiario) || topeDiario <= 0 || topeDiario > TOPE_MAX) {
+
+    // El tope va en la moneda de la wallet del pasajero (20.000 COP o 10 CAD), así que se valida contra ella.
+    const wallet = await obtenerWallet(walletAddress)
+    const topeMax = Math.max(...topesPara(wallet.assetCode)) * 5
+    if (!Number.isFinite(topeDiario) || topeDiario <= 0 || topeDiario > topeMax) {
       throw new ErrorApi('DATOS_INVALIDOS', 'El tope diario no es válido.')
     }
-
-    const wallet = await obtenerWallet(walletAddress)
     const paseId = randomUUID()
     const finishUri = `${appUrl(req)}/pase/listo?paseId=${paseId}${volver ? `&volver=${encodeURIComponent(volver)}` : ''}`
     const { clientNonce, pendiente } = await solicitarPase({

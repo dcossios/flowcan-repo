@@ -192,6 +192,7 @@ export const VehiculoCobroPage: React.FC = () => {
                     tope={topeDiario}
                     tarifa={vehiculo.tarifa}
                     vehiculoId={vehiculo.id}
+                    moneda={vehiculo.monedaPase}
                     className="mt-5"
                   />
                 )}

@@ -15,7 +15,7 @@ import {
   PaseMeResponse,
   SubaseApiError,
 } from '../lib/api';
-import { formatCOP, formatFechaHora } from '../lib/format';
+import { formatCOP, formatFechaHora, formatMoneda } from '../lib/format';
 import { leerUltimoVehiculo } from '../lib/ultimoVehiculo';
 
 function fechaCorta(iso: string): string {
@@ -105,7 +105,7 @@ export const MiPasePage: React.FC = () => {
           <Titulo>Mi pase</Titulo>
           {!loading && !errorInfo && !sinPase && pase && (
             <>
-              <Pasaje monto={pase.disponibleHoy} etiqueta="Le queda del tope hoy" className="mt-4" />
+              <Pasaje monto={pase.disponibleHoy} moneda={pase.moneda} etiqueta="Le queda del tope hoy" className="mt-4" />
               {/* Lo mismo que en el cobro: pasajes que alcanzan, un cuadro por pasaje (prompt129). La barra «Usado
                   hoy» se llenaba con lo disponible y, sin gastar nada, salía llena */}
               {ultimo && ultimo.tarifa > 0 ? (
@@ -115,10 +115,11 @@ export const MiPasePage: React.FC = () => {
                   tarifa={ultimo.tarifa}
                   vehiculoId={ultimo.id}
                   conTarifa
+                  moneda={pase.moneda}
                   className="mt-5"
                 />
               ) : (
-                <Bajada className="mt-2">de {formatCOP(pase.topeDiario)} diarios · se renueva cada medianoche</Bajada>
+                <Bajada className="mt-2">de {formatMoneda(pase.topeDiario, pase.moneda)} diarios · se renueva cada medianoche</Bajada>
               )}
             </>
           )}
@@ -210,7 +211,7 @@ export const MiPasePage: React.FC = () => {
                               {v.vehiculo.nombre}
                             </span>
                             <span className="text-[16px] font-normal text-white tabular-nums shrink-0">
-                              {formatCOP(v.monto)}
+                              {formatMoneda(v.montoPagado ?? v.monto, v.monedaPagada ?? v.moneda)}
                             </span>
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mt-1 text-[14px] font-normal">

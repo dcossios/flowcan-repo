@@ -123,6 +123,7 @@ SUPABASE_SERVICE_ROLE_KEY=...                                      # NUNCA en el
 | POST | `/api/pases/:paseId/confirmar` | — | `{ interactRef, hash }` → `{ paseToken, pase }` |
 | GET | `/api/pases/me` | Bearer | → `{ activo, topeDiario, disponibleHoy, venceEn }` |
 | POST | `/api/viajes` | Bearer | `{ vehiculoId }` → `{ viajeId, monto, cashback, vehiculo, fecha, disponibleHoy }` |
+| GET | `/api/wallet?direccion=` | — | → `{ direccion, nombre, moneda, escala, topes, topeSugerido }` (antes de activar el pase) |
 | GET | `/api/viajes` | Bearer | → mis viajes `[{ viajeId, monto, cashback, estado, fecha, vehiculo: { id, nombre, ruta } }]` (50 más recientes) |
 | GET | `/api/viajes/:id` | Bearer | → recibo (incluye `estado`) |
 | GET | `/api/vehiculos/:id/feed?desde=` | — | → `[{ viajeId, monto, estado, fecha }]` |
@@ -204,6 +205,8 @@ await client.outgoingPayment.getGrantSpentAmounts({ url: waPasajero.resourceServ
   - Token del pase: `expires_in: 600`. `token.rotate` funciona con un token vigente y devuelve otro de 600 s.
   - El `metadata` del incoming payment vuelve tal cual. La quote vence a los 5 min. El incoming payment vence a los 30 días si no se pasa `expiresAt`.
   - Recién creado, el outgoing payment tiene `sentAmount: 0`. A los ~3 s ya es igual a `debitAmount`.
+- **Pago entre monedas (verificado 17 oct):** el bus cobra en COP (`incomingAmount`) y la quote se crea en la wallet del pasajero, cuyo proveedor calcula el `debitAmount` en SU moneda con su tasa (`turista1` CAD: 1,44 CAD → 3.200 COP). Súbase no maneja tasas. El tope del pase va en la moneda del pasajero (`GET /api/wallet` sugiere topes por moneda). Se guarda lo debitado en `viajes.debito_*` (migración 0002).
+- **Confirmación del pago por el incoming payment** (`receivedAmount ≥ incomingAmount` o `completed`), no por `sentAmount === debitAmount`: en pagos dentro del mismo Rafiki se debita `debitAmount` menos comisiones (`rafiki …/outgoing/lifecycle.ts`), así que esa igualdad puede no cumplirse.
 - **Por verificar contra la Test Wallet:** la spec también permite `outgoingPayment.create` con `{ walletAddress, incomingPayment, debitAmount }` (sin quote). No depender de eso hasta probarlo.
 
 ---

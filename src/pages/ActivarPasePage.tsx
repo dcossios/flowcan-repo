@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
@@ -7,11 +7,14 @@ import { Bajada, ETIQUETA, PanelCrema, Titulo } from '../components/Sistema';
 import {
   crearPase,
   ErrorCode,
+  fetchWallet,
   getFriendlyErrorMessage,
   savePendingPaseContext,
   setUiPreviewMode,
+  SubaseApiError,
+  WalletInfo,
 } from '../lib/api';
-import { normalizeWalletAddress } from '../lib/format';
+import { formatCOP, normalizeWalletAddress } from '../lib/format';
 
 const TOPES_DISPONIBLES = [
   { valor: 10000, etiqueta: '$10.000', sugerido: false },
@@ -25,10 +28,14 @@ const PREFIJO = 'https://ilp.interledger-test.dev/';
 const PREFIJO_VISIBLE = '$ilp.interledger-test.dev/';
 const esDireccionCompleta = (v: string) => /^\$|^https?:\/\/|\//i.test(v.trim());
 
+// Billeteras reales de la Test Wallet para la demo: una en pesos y otra en dólares canadienses
 const BILLETERAS_DEMO = [
-  { label: 'pasajero', nombre: 'pasajero' },
-  { label: 'turista (USD)', nombre: 'turista' },
+  { label: 'pasajero (COP)', nombre: 'test_platzi1' },
+  { label: 'turista (CAD)', nombre: 'turista1' },
 ];
+
+// Topes en pesos con su formato; en otra moneda, el código y el número entero ("CAD 10"), que cabe a 320 px
+const etiquetaTope = (valor: number, moneda: string) => (moneda === 'COP' ? formatCOP(valor) : `${moneda} ${valor}`);
 
 function nombreGuardado(): string {
   const guardada = localStorage.getItem('subase_last_wallet') || '';
@@ -48,6 +55,42 @@ export const ActivarPasePage: React.FC = () => {
 
   const completa = esDireccionCompleta(billetera);
 
+  // Al escribir, se busca la billetera: de quién es y en qué moneda paga. Los topes se ofrecen en esa moneda,
+  // porque el tope lo aplica la billetera del pasajero (un turista en CAD no puede tener un tope de 20.000).
+  const [wallet, setWallet] = useState<WalletInfo | null>(null);
+  const [buscando, setBuscando] = useState(false);
+  const [walletNoExiste, setWalletNoExiste] = useState(false);
+
+  useEffect(() => {
+    const nombre = billetera.trim();
+    setWallet(null);
+    setWalletNoExiste(false);
+    if (nombre.length < 2) return;
+    let activo = true;
+    const t = window.setTimeout(async () => {
+      setBuscando(true);
+      try {
+        const w = await fetchWallet(nombre);
+        if (!activo) return;
+        setWallet(w);
+        setTopeDiario((prev) => (w.topes.includes(prev) ? prev : w.topeSugerido));
+      } catch (err) {
+        if (activo && err instanceof SubaseApiError && err.code === 'DATOS_INVALIDOS') setWalletNoExiste(true);
+      } finally {
+        if (activo) setBuscando(false);
+      }
+    }, 500);
+    return () => {
+      activo = false;
+      window.clearTimeout(t);
+    };
+  }, [billetera]);
+
+  const moneda = wallet?.moneda ?? 'COP';
+  const topes = wallet
+    ? wallet.topes.map((valor) => ({ valor, etiqueta: etiquetaTope(valor, moneda), sugerido: valor === wallet.topeSugerido }))
+    : TOPES_DISPONIBLES;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
@@ -57,7 +100,11 @@ export const ActivarPasePage: React.FC = () => {
       setErrorInfo({ code: 'DATOS_INVALIDOS', message: 'Escriba el nombre de su billetera.' });
       return;
     }
-    const normalized = normalizeWalletAddress(completa ? nombre : PREFIJO + nombre);
+    if (walletNoExiste) {
+      setErrorInfo({ code: 'DATOS_INVALIDOS', message: 'No encontramos esa billetera. Revise el nombre.' });
+      return;
+    }
+    const normalized = wallet?.direccion ?? normalizeWalletAddress(completa ? nombre : PREFIJO + nombre);
 
     setSubmitting(true);
     setErrorInfo(null);
@@ -148,7 +195,23 @@ export const ActivarPasePage: React.FC = () => {
             className="block w-full min-h-8 bg-transparent font-mono text-[17px] text-[#1E2230] placeholder:text-[#3A3F4E]/50 focus:outline-none"
           />
         </div>
-        <p id="wallet-address-help" className="text-[14px] font-normal text-[#3A3F4E] mt-2 leading-snug">
+        <div aria-live="polite" className="mt-2 min-h-[20px] text-[14px] leading-snug">
+          {buscando && <p className="text-[#3A3F4E]">Buscando su billetera…</p>}
+          {!buscando && wallet && (
+            <p className="text-[#1E2230]">
+              <span className="font-semibold">✓ Billetera de {wallet.nombre || billetera.trim()}</span> · paga en {wallet.moneda}
+              {wallet.moneda !== 'COP' && (
+                <span className="block text-[#3A3F4E] mt-0.5">
+                  El bus cobra en pesos y su billetera lo convierte a {wallet.moneda} en cada pago.
+                </span>
+              )}
+            </p>
+          )}
+          {!buscando && walletNoExiste && (
+            <p className="font-medium text-[#B8403A]">No encontramos esa billetera. Revise el nombre.</p>
+          )}
+        </div>
+        <p id="wallet-address-help" className="text-[14px] font-normal text-[#3A3F4E] mt-1 leading-snug">
           Si su billetera es de otro proveedor, pegue la dirección completa.
         </p>
         <div className="mt-1 flex items-center flex-wrap gap-x-1 text-[14px] text-[#3A3F4E]">
@@ -166,9 +229,11 @@ export const ActivarPasePage: React.FC = () => {
         </div>
 
         <p className="mt-6 text-[17px] font-semibold">Tope diario</p>
-        <p className="text-[14px] text-[#3A3F4E] mt-1">Lo máximo que se puede cobrar en un día. Se renueva a medianoche.</p>
+        <p className="text-[14px] text-[#3A3F4E] mt-1">
+          Lo máximo que se puede cobrar en un día{moneda !== 'COP' ? `, en ${moneda}` : ''}. Se renueva a medianoche.
+        </p>
         <div className="grid grid-cols-3 gap-2 mt-3" role="radiogroup" aria-label="Tope diario">
-          {TOPES_DISPONIBLES.map((item) => {
+          {topes.map((item) => {
             const activo = topeDiario === item.valor;
             return (
               <button

@@ -8,6 +8,13 @@ const VENTANA_DUPLICADO_MS = 2 * 60_000
 const CASHBACK = 0.02 // simulado: se calcula y se muestra, no se paga
 export const VIGENCIA_PASE_DIAS = 30
 
+/** Vehículo aunque esté inactivo (para mostrar recibos viejos). */
+export async function vehiculoCualquiera(id: string): Promise<Vehiculo> {
+  const v = ok(await db().from('vehiculos').select('*').eq('id', id).maybeSingle(), 'vehiculo') as Vehiculo | null
+  if (!v) throw new ErrorApi('NO_ENCONTRADO', 'Ese vehículo no existe.')
+  return v
+}
+
 export async function vehiculoPorId(id: string): Promise<Vehiculo> {
   const v = ok(await db().from('vehiculos').select('*').eq('id', id).maybeSingle(), 'vehiculo') as Vehiculo | null
   if (!v || !v.activo) throw new ErrorApi('NO_ENCONTRADO', 'Ese vehículo no existe o no está activo.')
@@ -31,8 +38,9 @@ function inicioDiaColombia(): string {
 }
 
 /**
- * Disponible hoy en pesos. Fuente: Open Payments (getGrantSpentAmounts).
- * Si la wallet no responde, se calcula con los viajes pagados de hoy en nuestra base.
+ * Disponible hoy, en la MONEDA DEL PASE (la de la wallet del pasajero: COP, CAD, USD…).
+ * Fuente: Open Payments (getGrantSpentAmounts, en la moneda del pasajero).
+ * Si la wallet no responde, se suma lo debitado hoy según nuestra base.
  */
 export async function disponibleHoy(pase: Pase): Promise<number> {
   let gastado: number
@@ -41,18 +49,47 @@ export async function disponibleHoy(pase: Pase): Promise<number> {
   } catch (e) {
     if (e instanceof ErrorApi && e.code === 'PASE_VENCIDO') throw e
     const filas = ok(
-      await db().from('viajes').select('monto').eq('pase_id', pase.id).eq('estado', 'pagado').gte('creado_en', inicioDiaColombia()),
+      await db()
+        .from('viajes')
+        .select('monto, asset_code, debito_valor, debito_moneda')
+        .eq('pase_id', pase.id)
+        .eq('estado', 'pagado')
+        .gte('creado_en', inicioDiaColombia()),
       'gastado hoy (respaldo)'
-    ) as { monto: number }[]
-    gastado = filas.reduce((s, f) => s + Number(f.monto), 0)
+    ) as Pick<Viaje, 'monto' | 'asset_code' | 'debito_valor' | 'debito_moneda'>[]
+    gastado = filas.reduce((s, f) => {
+      if (f.debito_valor !== null && f.debito_moneda === pase.asset_code) return s + Number(f.debito_valor)
+      if (f.debito_valor === null && f.asset_code === pase.asset_code) return s + Number(f.monto)
+      return s
+    }, 0)
   }
   return aPesos(Math.max(0, pase.tope_diario - gastado), pase.asset_scale)
 }
 
-export function recibo(v: Viaje, veh: Pick<Vehiculo, 'id' | 'nombre' | 'ruta'>, disponible: number, duplicado = false) {
+/** Lo que pagó el pasajero, en su moneda. Viajes anteriores a la migración 0002: igual a lo que recibió el bus. */
+export function pagado(v: Pick<Viaje, 'monto' | 'asset_code' | 'asset_scale' | 'debito_valor' | 'debito_moneda' | 'debito_escala'>) {
+  return v.debito_valor !== null && v.debito_moneda && v.debito_escala !== null
+    ? { montoPagado: aPesos(v.debito_valor, v.debito_escala), monedaPagada: v.debito_moneda }
+    : { montoPagado: aPesos(v.monto, v.asset_scale), monedaPagada: v.asset_code }
+}
+
+/**
+ * Recibo del pasajero. `monto`/`moneda`: lo que recibió el bus (COP). `montoPagado`/`monedaPagada`: lo que
+ * se le debitó al pasajero en su moneda. `disponibleHoy` va en `monedaPase`.
+ */
+export function recibo(
+  v: Viaje,
+  veh: Pick<Vehiculo, 'id' | 'nombre' | 'ruta'>,
+  disponible: number,
+  monedaPase: string,
+  duplicado = false
+) {
   return {
     viajeId: v.id,
     monto: aPesos(v.monto, v.asset_scale),
+    moneda: v.asset_code,
+    ...pagado(v),
+    monedaPase,
     cashback: aPesos(v.cashback, v.asset_scale),
     vehiculo: { id: veh.id, nombre: veh.nombre, ruta: veh.ruta },
     fecha: v.creado_en,
@@ -87,13 +124,13 @@ export async function cobrarViaje(pase: Pase, vehiculoId: string) {
     'viaje reciente'
   ) as Viaje | null
   if (reciente) {
-    throw new ErrorApi('PAGO_DUPLICADO', undefined, { recibo: recibo(reciente, vehiculo, await disponibleHoy(pase), true) })
+    throw new ErrorApi('PAGO_DUPLICADO', undefined, {
+      recibo: recibo(reciente, vehiculo, await disponibleHoy(pase), pase.asset_code, true)
+    })
   }
 
-  if (vehiculo.asset_code !== pase.asset_code) {
-    // TODO verificar: entre monedas distintas la quote convierte, pero el tope y el monto del recibo quedarían en monedas diferentes.
-    throw new ErrorApi('DATOS_INVALIDOS', 'Por ahora el pase y el vehículo deben estar en la misma moneda.')
-  }
+  // Pase y vehículo pueden estar en monedas distintas: el bus cobra su tarifa en COP y la quote, creada en la
+  // wallet del pasajero, calcula cuánto debitarle en su moneda (CAD, USD, GBP…). Ver crearPago en op.ts.
 
   const accessToken = await asegurarToken(pase)
   const turno = await turnoAbierto(vehiculo.id)
@@ -122,9 +159,17 @@ export async function cobrarViaje(pase: Pase, vehiculoId: string) {
     viaje = await actualizarViaje(viajeId, {
       incoming_payment_id: pago.incomingPaymentId,
       quote_id: pago.quoteId,
-      outgoing_payment_id: pago.outgoingPaymentId
+      outgoing_payment_id: pago.outgoingPaymentId,
+      debito_valor: pago.debito.valor,
+      debito_moneda: pago.debito.moneda,
+      debito_escala: pago.debito.escala
     })
-    const r = await esperarConfirmacion(pago.outgoingPaymentId, accessToken)
+    const r = await esperarConfirmacion({
+      outgoingPaymentId: pago.outgoingPaymentId,
+      incomingPaymentId: pago.incomingPaymentId,
+      walletFlota: vehiculo.wallet_address,
+      accessToken
+    })
     if (r.estado !== 'pendiente') {
       viaje = await actualizarViaje(viajeId, { estado: r.estado, error_code: r.errorCode ?? null })
     }
@@ -136,13 +181,21 @@ export async function cobrarViaje(pase: Pase, vehiculoId: string) {
     throw e
   }
 
-  return recibo(viaje, vehiculo, await disponibleHoy(pase))
+  return recibo(viaje, vehiculo, await disponibleHoy(pase), pase.asset_code)
 }
 
 /** Si un viaje quedó `pendiente` (la wallet tardó más de 15 s), vuelve a consultar el pago. */
-export async function reconciliar(viaje: Viaje, pase: Pase): Promise<Viaje> {
-  if (viaje.estado !== 'pendiente' || !viaje.outgoing_payment_id) return viaje
-  const r = await esperarConfirmacion(viaje.outgoing_payment_id, await asegurarToken(pase), 0)
+export async function reconciliar(viaje: Viaje, pase: Pase, walletFlota: string): Promise<Viaje> {
+  if (viaje.estado !== 'pendiente' || !viaje.outgoing_payment_id || !viaje.incoming_payment_id) return viaje
+  const r = await esperarConfirmacion(
+    {
+      outgoingPaymentId: viaje.outgoing_payment_id,
+      incomingPaymentId: viaje.incoming_payment_id,
+      walletFlota,
+      accessToken: await asegurarToken(pase)
+    },
+    0
+  )
   if (r.estado === 'pendiente') return viaje
   return actualizarViaje(viaje.id, { estado: r.estado, error_code: r.errorCode ?? null })
 }

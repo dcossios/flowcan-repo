@@ -1,6 +1,6 @@
 import React from 'react';
 import { coloresDeRuta, partirNombre, rutaConFlechas } from '../lib/rutas';
-import { formatCOP } from '../lib/format';
+import { formatCOP, formatMoneda } from '../lib/format';
 
 /*
 SISTEMA DE DISEÑO SÚBASE — elegido por Andrés sobre el inicio del pasajero (prompts/prompt115.md)
@@ -82,12 +82,14 @@ export const Ruta: React.FC<{ ruta: string; className?: string }> = ({ ruta, cla
 
 /** Pasaje: la palabra arriba y el monto en un cuadro tinta, hermano del cuadro con el número de ruta (prompt117).
  *  `grande` es para el monto que protagoniza la pantalla y se lee de lejos (el recaudo del conductor). */
-export const Pasaje: React.FC<{ monto: number; etiqueta?: string; grande?: boolean; className?: string }> = ({
-  monto,
-  etiqueta = 'Pasaje',
-  grande = false,
-  className = '',
-}) => (
+export const Pasaje: React.FC<{
+  monto: number;
+  /** COP por defecto. Otra moneda (CAD, USD…) se muestra con su código. */
+  moneda?: string | null;
+  etiqueta?: string;
+  grande?: boolean;
+  className?: string;
+}> = ({ monto, moneda, etiqueta = 'Pasaje', grande = false, className = '' }) => (
   <div className={className}>
     <p className="text-[14px] font-medium text-[#3A3F4E]">{etiqueta}</p>
     <p
@@ -99,7 +101,7 @@ export const Pasaje: React.FC<{ monto: number; etiqueta?: string; grande?: boole
           grande ? 'text-[44px] min-[400px]:text-[52px]' : 'text-[30px]'
         } font-semibold leading-none tabular-nums tracking-[-0.01em] text-white`}
       >
-        {formatCOP(monto)}
+        {formatMoneda(monto, moneda)}
       </span>
     </p>
   </div>
@@ -146,8 +148,28 @@ export const Alcance: React.FC<{
   vehiculoId?: string;
   /** Fuera del cobro (Mi pase) no hay un bus a la vista: se dice de qué pasaje se habla. */
   conTarifa?: boolean;
+  /** Moneda del pase (disponible y tope). La tarifa del bus siempre va en COP. */
+  moneda?: string | null;
   className?: string;
-}> = ({ disponible, tope, tarifa, vehiculoId, conTarifa = false, className = '' }) => {
+}> = ({ disponible, tope, tarifa, vehiculoId, conTarifa = false, moneda, className = '' }) => {
+  // Pase en otra moneda (p. ej. CAD): no se pueden contar pasajes sin una tasa de cambio, y la tasa la pone la
+  // billetera del pasajero en cada pago. Se dice cuánto le queda en su moneda y que el bus cobra en pesos.
+  if (moneda && moneda !== 'COP') {
+    return (
+      <div className={className}>
+        <p className="text-[16px] leading-snug text-[#3A3F4E]">
+          Hoy le quedan{' '}
+          <span className="font-semibold text-[#1E2230] tabular-nums whitespace-nowrap">{formatMoneda(disponible, moneda)}</span>{' '}
+          de su tope. El bus cobra{' '}
+          <span className="tabular-nums whitespace-nowrap">{formatCOP(tarifa)}</span> y su billetera lo paga en {moneda} al
+          cambio del día.
+        </p>
+        <p className="mt-1.5 text-[14px] text-[#3A3F4E] tabular-nums">
+          Tope diario {formatMoneda(tope, moneda)} · se renueva a medianoche
+        </p>
+      </div>
+    );
+  }
   const quedan = tarifa > 0 ? Math.max(0, Math.floor(disponible / tarifa)) : 0;
   const total = tarifa > 0 ? Math.max(quedan, Math.floor(tope / tarifa)) : 0;
   const usados = total - quedan;

@@ -1,0 +1,1 @@
+Como podemos implementar la conversion de monedas? Y ademas como podriamos facilitar que una persona comun y corriente (No tan digitalizada ni tecnologica) cargue la wallet de una manera simple y siga el flujo sin complicaciones.

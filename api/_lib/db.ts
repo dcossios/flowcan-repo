@@ -61,6 +61,10 @@ export interface Viaje {
   incoming_payment_id: string | null
   quote_id: string | null
   outgoing_payment_id: string | null
+  /** Lo que pagó el pasajero en SU moneda (migración 0002). null en viajes viejos = misma moneda que `monto`. */
+  debito_valor: number | null
+  debito_moneda: string | null
+  debito_escala: number | null
   creado_en: string
 }
 

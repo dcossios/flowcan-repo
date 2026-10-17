@@ -55,7 +55,14 @@ export default manejador({
     const tope = aPesos(activado.tope_diario, activado.asset_scale)
     return {
       paseToken: token,
-      pase: { id: activado.id, walletAddress: activado.wallet_address, topeDiario: tope, disponibleHoy: tope, venceEn: venceEn(activado) }
+      pase: {
+        id: activado.id,
+        walletAddress: activado.wallet_address,
+        topeDiario: tope,
+        disponibleHoy: tope,
+        moneda: activado.asset_code,
+        venceEn: venceEn(activado)
+      }
     }
   }
 })

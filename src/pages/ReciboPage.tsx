@@ -6,7 +6,7 @@ import { ComoUsamosOpenPayments } from '../components/PasoLinea';
 import { Bajada, FichaEstado, Fila, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
 import { nombreDesdeId } from '../lib/rutas';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
-import { formatCOP, formatFechaHora } from '../lib/format';
+import { formatCOP, formatFechaHora, formatMoneda } from '../lib/format';
 
 // Hora en vivo junto a «Pagado»: prueba de que la pantalla no es una captura vieja, que es lo que mira el conductor.
 const HoraEnVivo: React.FC = () => {
@@ -151,7 +151,12 @@ export const ReciboPage: React.FC = () => {
                 </Bajada>
               )}
               {vehiculoRuta && <Ruta ruta={vehiculoRuta} className="mt-3" />}
-              <Pasaje monto={recibo.monto} etiqueta={estado === 'pagado' ? 'Pagó' : 'Pasaje'} className="mt-4" />
+              <Pasaje
+                monto={recibo.montoPagado ?? recibo.monto}
+                moneda={recibo.monedaPagada}
+                etiqueta={estado === 'pagado' ? 'Pagó' : 'Pasaje'}
+                className="mt-4"
+              />
             </PanelCrema>
 
             {estado === 'pagado' && (
@@ -163,7 +168,11 @@ export const ReciboPage: React.FC = () => {
             <div className="mt-4 border-t border-[rgba(195,197,198,0.2)]">
               <Fila etiqueta="Fecha del pago">{formatFechaHora(recibo.fecha)}</Fila>
               <Fila etiqueta="Tiquete N.º">{recibo.viajeId}</Fila>
-              <Fila etiqueta="Le queda del tope hoy">{formatCOP(recibo.disponibleHoy)}</Fila>
+              {/* Pagó en otra moneda: el bus recibió la tarifa exacta en pesos (la conversión la hizo su billetera) */}
+              {recibo.monedaPagada && recibo.monedaPagada !== (recibo.moneda ?? 'COP') && (
+                <Fila etiqueta="El bus recibió">{formatCOP(recibo.monto)}</Fila>
+              )}
+              <Fila etiqueta="Le queda del tope hoy">{formatMoneda(recibo.disponibleHoy, recibo.monedaPase)}</Fila>
               <Fila etiqueta="Cashback (simulado)">+{formatCOP(recibo.cashback)}</Fila>
             </div>
 

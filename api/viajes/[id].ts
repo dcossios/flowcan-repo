@@ -3,7 +3,7 @@ import { paseRequerido } from '../_lib/auth.js'
 import { db, ok, type Viaje } from '../_lib/db.js'
 import { ErrorApi } from '../_lib/errores.js'
 import { manejador, param } from '../_lib/http.js'
-import { disponibleHoy, recibo, reconciliar, vehiculoPorId } from '../_lib/viajes.js'
+import { disponibleHoy, recibo, reconciliar, vehiculoCualquiera } from '../_lib/viajes.js'
 
 export default manejador({
   GET: async (req) => {
@@ -15,8 +15,8 @@ export default manejador({
       'viaje'
     ) as Viaje | null
     if (!viaje) throw new ErrorApi('NO_ENCONTRADO', 'No encontramos ese recibo.')
-    viaje = await reconciliar(viaje, pase)
-    const v = await vehiculoPorId(viaje.vehiculo_id)
-    return recibo(viaje, v, await disponibleHoy(pase))
+    const v = await vehiculoCualquiera(viaje.vehiculo_id)
+    viaje = await reconciliar(viaje, pase, v.wallet_address)
+    return recibo(viaje, v, await disponibleHoy(pase), pase.asset_code)
   }
 })

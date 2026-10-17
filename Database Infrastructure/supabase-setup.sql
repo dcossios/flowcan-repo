@@ -86,6 +86,9 @@ create table public.viajes (
   incoming_payment_id text,
   quote_id text,
   outgoing_payment_id text,
+  debito_valor bigint null check (debito_valor is null or debito_valor > 0), -- lo que pagó el pasajero en su moneda (migración 0002)
+  debito_moneda text null,
+  debito_escala smallint null,
   creado_en timestamptz not null default now(),
   actualizado_en timestamptz not null default now()
 );

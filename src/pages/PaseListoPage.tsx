@@ -12,7 +12,7 @@ import {
   getPendingPaseContext,
   setPaseToken,
 } from '../lib/api';
-import { formatCOP, formatFechaHora } from '../lib/format';
+import { formatFechaHora, formatMoneda } from '../lib/format';
 import { playPaymentChime } from '../lib/sound';
 
 export const PaseListoPage: React.FC = () => {
@@ -129,12 +129,12 @@ export const PaseListoPage: React.FC = () => {
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-[14px] font-normal text-[#C3C5C6]">Le queda del tope hoy</span>
               <span className="text-[32px] font-semibold text-white leading-none tabular-nums">
-                {formatCOP(confirmado.pase.disponibleHoy)}
+                {formatMoneda(confirmado.pase.disponibleHoy, confirmado.pase.moneda)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-4 mt-4">
               <span className="text-[14px] font-normal text-[#C3C5C6]">Tope diario</span>
-              <span className="text-[16px] font-medium text-white">{formatCOP(confirmado.pase.topeDiario)}</span>
+              <span className="text-[16px] font-medium text-white">{formatMoneda(confirmado.pase.topeDiario, confirmado.pase.moneda)}</span>
             </div>
             {confirmado.pase.venceEn && (
               <div className="flex items-baseline justify-between gap-4 mt-4">

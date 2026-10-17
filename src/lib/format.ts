@@ -11,6 +11,25 @@ export function formatCOP(amount: number | undefined | null): string {
 }
 
 /**
+ * Monto en cualquier moneda. COP se ve como siempre ("$3.200"); las demás con su código y decimales
+ * ("CAD 1,44", "USD 10,00") para que no se confundan con pesos.
+ */
+export function formatMoneda(amount: number | undefined | null, moneda?: string | null): string {
+  if (!moneda || moneda === 'COP') return formatCOP(amount);
+  const n = amount === undefined || amount === null || Number.isNaN(Number(amount)) ? 0 : Number(amount);
+  try {
+    const decimales = new Intl.NumberFormat('es-CO', { style: 'currency', currency: moneda }).resolvedOptions()
+      .maximumFractionDigits;
+    return `${moneda} ${new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: decimales,
+      maximumFractionDigits: decimales,
+    }).format(n)}`;
+  } catch {
+    return `${moneda} ${n}`;
+  }
+}
+
+/**
  * Normaliza un Payment Pointer ($ilp.interledger-test.dev/...)
  * a formato URL de Open Payments (https://ilp.interledger-test.dev/...).
  */

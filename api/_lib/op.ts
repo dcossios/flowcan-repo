@@ -239,11 +239,17 @@ export interface PagoCreado {
   incomingPaymentId: string
   quoteId: string
   outgoingPaymentId: string
+  /** Lo que se le debitará al pasajero en SU moneda (debitAmount de la quote). Puede ser CAD, USD, etc. */
+  debito: { valor: number; moneda: string; escala: number }
 }
 
 /**
  * incoming payment (wallet de la flota, con metadata) → quote (wallet del pasajero, method 'ilp')
  * → outgoing payment con el token del pase. No espera la liquidación: ver esperarConfirmacion.
+ *
+ * Pago entre monedas: el incoming payment fija lo que RECIBE el bus (tarifa en COP). La quote se crea en la
+ * wallet del pasajero y su proveedor calcula el debitAmount en la moneda del pasajero con su tasa de cambio
+ * (verificado en la Test Wallet: 3.200 COP ← 1,44 CAD). Súbase no maneja tasas.
  */
 export async function crearPago(a: {
   pase: Pase
@@ -290,26 +296,71 @@ export async function crearPago(a: {
     )
   )
 
-  return { incomingPaymentId: incoming.id, quoteId: quote.id, outgoingPaymentId: saliente.id }
+  return {
+    incomingPaymentId: incoming.id,
+    quoteId: quote.id,
+    outgoingPaymentId: saliente.id,
+    debito: {
+      valor: Number(quote.debitAmount.value),
+      moneda: quote.debitAmount.assetCode,
+      escala: quote.debitAmount.assetScale
+    }
+  }
 }
 
 /**
- * Consulta el outgoing payment hasta que se liquide. En la Test Wallet tardó ~3 s.
+ * Espera a que el pago se liquide (en la Test Wallet tarda ~3-6 s).
+ * Se confirma del lado del BUS: el incoming payment recibió la tarifa completa. No se usa
+ * `sentAmount === debitAmount` del outgoing: en pagos dentro del mismo Rafiki se debita
+ * debitAmount MENOS comisiones (rafiki outgoing/lifecycle.ts), así que con conversión de moneda
+ * o comisiones esa igualdad puede no cumplirse nunca.
  * `failed` sin nada enviado se trata como saldo insuficiente (TODO verificar con una wallet sin saldo).
  */
 export async function esperarConfirmacion(
-  outgoingPaymentId: string,
-  accessToken: string,
+  a: { outgoingPaymentId: string; incomingPaymentId: string; walletFlota: string; accessToken: string },
   maxMs = 15_000
 ): Promise<{ estado: 'pagado' | 'fallido' | 'pendiente'; errorCode?: 'SALDO_INSUFICIENTE' | 'OP_ERROR' }> {
+  const flota = await obtenerWallet(a.walletFlota)
   const fin = Date.now() + maxMs
   for (;;) {
-    const p = await op('outgoingPayment.get', (c) => c.outgoingPayment.get({ url: outgoingPaymentId, accessToken }))
-    if (p.failed) return { estado: 'fallido', errorCode: p.sentAmount.value === '0' ? 'SALDO_INSUFICIENTE' : 'OP_ERROR' }
-    if (p.sentAmount.value === p.debitAmount.value) return { estado: 'pagado' }
+    const entrante = await conGrant(flota.authServer, 'incoming-payment', (accessToken) =>
+      op('incomingPayment.get', (c) => c.incomingPayment.get({ url: a.incomingPaymentId, accessToken }))
+    )
+    const esperado = BigInt(entrante.incomingAmount?.value ?? '0')
+    if (entrante.completed || (esperado > 0n && BigInt(entrante.receivedAmount.value) >= esperado)) {
+      return { estado: 'pagado' }
+    }
+    const saliente = await op('outgoingPayment.get', (c) =>
+      c.outgoingPayment.get({ url: a.outgoingPaymentId, accessToken: a.accessToken })
+    )
+    if (saliente.failed) {
+      return { estado: 'fallido', errorCode: saliente.sentAmount.value === '0' ? 'SALDO_INSUFICIENTE' : 'OP_ERROR' }
+    }
     if (Date.now() > fin) return { estado: 'pendiente' }
     await new Promise((r) => setTimeout(r, 700))
   }
+}
+
+// ---------- Billetera del pasajero: moneda y topes sugeridos ----------
+
+/** Topes diarios sugeridos (en unidades de la moneda, no mínimas). El del medio es el sugerido. */
+export function topesPara(moneda: string): number[] {
+  const tabla: Record<string, number[]> = {
+    COP: [10_000, 20_000, 30_000],
+    MXN: [50, 100, 200],
+    BRL: [10, 20, 50],
+    ZAR: [50, 100, 200],
+    JPY: [500, 1_000, 2_000]
+  }
+  return tabla[moneda] ?? [5, 10, 20] // USD, CAD, EUR, GBP, …
+}
+
+/** "turista1", "$ilp.interledger-test.dev/turista1" o la URL completa → URL https de la Test Wallet. */
+export function direccionWallet(entrada: string): string {
+  const t = entrada.trim()
+  if (/^https?:\/\//.test(t) || t.startsWith('$')) return normalizarWallet(t)
+  if (t.includes('/')) return `https://${t}`
+  return `https://ilp.interledger-test.dev/${t}`
 }
 
 /** Lo debitado en el intervalo actual del pase (unidades mínimas). De aquí sale "disponible hoy". */

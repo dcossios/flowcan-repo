@@ -1,13 +1,17 @@
-// GET  /api/viajes  (Bearer) → mis viajes: [{ viajeId, monto, cashback, estado, fecha, vehiculo: { id, nombre, ruta } }]
+// GET  /api/viajes  (Bearer) → mis viajes: [{ viajeId, monto, moneda, montoPagado, monedaPagada, cashback, estado, fecha, vehiculo }]
+//      monto/moneda = lo que recibió el bus (COP); montoPagado/monedaPagada = lo que pagó el pasajero en su moneda
 // POST /api/viajes  (Bearer) { vehiculoId } → recibo { viajeId, monto, cashback, vehiculo, fecha, estado, disponibleHoy }
 import { paseRequerido } from '../_lib/auth.js'
 import { db, ok, type Vehiculo, type Viaje } from '../_lib/db.js'
 import { ErrorApi } from '../_lib/errores.js'
 import { body, manejador } from '../_lib/http.js'
 import { aPesos } from '../_lib/op.js'
-import { cobrarViaje } from '../_lib/viajes.js'
+import { cobrarViaje, pagado } from '../_lib/viajes.js'
 
-type FilaViaje = Pick<Viaje, 'id' | 'monto' | 'cashback' | 'asset_scale' | 'estado' | 'creado_en'> & {
+type FilaViaje = Pick<
+  Viaje,
+  'id' | 'monto' | 'cashback' | 'asset_code' | 'asset_scale' | 'estado' | 'creado_en' | 'debito_valor' | 'debito_moneda' | 'debito_escala'
+> & {
   vehiculos: Pick<Vehiculo, 'id' | 'nombre' | 'ruta'> | null
 }
 
@@ -17,7 +21,7 @@ export default manejador({
     const filas = ok(
       await db()
         .from('viajes')
-        .select('id, monto, cashback, asset_scale, estado, creado_en, vehiculos(id, nombre, ruta)')
+        .select('id, monto, cashback, asset_code, asset_scale, estado, creado_en, debito_valor, debito_moneda, debito_escala, vehiculos(id, nombre, ruta)')
         .eq('pase_id', pase.id)
         .order('creado_en', { ascending: false })
         .limit(50),
@@ -26,6 +30,8 @@ export default manejador({
     return filas.map((f) => ({
       viajeId: f.id,
       monto: aPesos(f.monto, f.asset_scale),
+      moneda: f.asset_code,
+      ...pagado(f),
       cashback: aPesos(f.cashback, f.asset_scale),
       estado: f.estado,
       fecha: f.creado_en,
