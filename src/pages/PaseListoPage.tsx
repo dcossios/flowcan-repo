@@ -127,7 +127,7 @@ export const PaseListoPage: React.FC = () => {
           <div className="mt-6 flex-1 flex flex-col">
             <hr className="subase-filete mb-6" />
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-[14px] font-normal text-[#C3C5C6]">Disponible hoy</span>
+              <span className="text-[14px] font-normal text-[#C3C5C6]">Le queda del tope hoy</span>
               <span className="text-[32px] font-semibold text-white leading-none tabular-nums">
                 {formatCOP(confirmado.pase.disponibleHoy)}
               </span>

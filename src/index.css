@@ -226,3 +226,23 @@ details[open] > summary::after { content: "–"; }
 .subase-btn-tinta:hover {
   background: #2c3142;
 }
+
+/* Botón de pago del cobro (prompt145). Blanco sobre #EE5A52 da 3,4 : 1, suficiente para texto grande en
+   negrita (WCAG AA ≥ 3 : 1); el coral es el rojo del Bus 01 del sistema. */
+.subase-btn-pago {
+  background: #EE5A52;
+  color: #FFFFFF;
+  min-height: 64px;
+  border-radius: 32px;
+  font-weight: 600;
+  font-size: 19px;
+  justify-content: center;
+  gap: 10px;
+}
+.subase-btn-pago:hover {
+  background: #E04B43;
+}
+.subase-btn-pago:focus-visible {
+  outline: 2px solid #F0E9D6;
+  outline-offset: 3px;
+}

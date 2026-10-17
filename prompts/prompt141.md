@@ -1,0 +1,1 @@
+la registradora pero me gustaria que estuviera integrada con el texto, no que se vea como algo ahi aparte, si no que haga parte del conjunto de elementos que le brindan la experiencia visual al usuario

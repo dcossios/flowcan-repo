@@ -105,7 +105,7 @@ export const MiPasePage: React.FC = () => {
           <Titulo>Mi pase</Titulo>
           {!loading && !errorInfo && !sinPase && pase && (
             <>
-              <Pasaje monto={pase.disponibleHoy} etiqueta="Disponible hoy" className="mt-4" />
+              <Pasaje monto={pase.disponibleHoy} etiqueta="Le queda del tope hoy" className="mt-4" />
               {/* Lo mismo que en el cobro: pasajes que alcanzan, un cuadro por pasaje (prompt129). La barra «Usado
                   hoy» se llenaba con lo disponible y, sin gastar nada, salía llena */}
               {ultimo && ultimo.tarifa > 0 ? (
@@ -113,6 +113,7 @@ export const MiPasePage: React.FC = () => {
                   disponible={pase.disponibleHoy}
                   tope={pase.topeDiario}
                   tarifa={ultimo.tarifa}
+                  vehiculoId={ultimo.id}
                   conTarifa
                   className="mt-5"
                 />

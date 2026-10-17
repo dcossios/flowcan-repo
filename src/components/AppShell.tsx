@@ -15,6 +15,8 @@ interface AppShellProps {
   /** Campo de la pantalla. Crema: el negro queda solo en el encabezado y la barra de acción. Lo usa el cobro, donde
       bajo el panel crema no hay contenido y el negro subía como un bloque vacío hasta media pantalla (prompt127). */
   fondo?: 'negro' | 'crema';
+  /** Sustituye el texto «Vista Previa UI» en la barra azul de desarrollo. El botón «Usar API real» se queda. */
+  previa?: React.ReactNode;
 }
 
 const MENSAJES_USTED: Record<ErrorCode, string> = {
@@ -42,6 +44,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   ancho = 'normal',
   rol = 'pasajero',
   fondo = 'negro',
+  previa,
 }) => {
   const location = useLocation();
   const [previewMode, setPreviewMode] = useState<boolean>(() => isUiPreviewMode());
@@ -102,7 +105,7 @@ export const AppShell: React.FC<AppShellProps> = ({
 
         {isDev && previewMode && (
           <div className={`bg-[#113462] border-t border-white/20 px-5 text-[15px] text-white flex items-center justify-between gap-3 ${contenedorAncho} mx-auto min-h-11`}>
-            <span className="font-normal text-white">Vista Previa UI</span>
+            {previa ?? <span className="font-normal text-white">Vista Previa UI</span>}
             <button
               type="button"
               onClick={togglePreview}

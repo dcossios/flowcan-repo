@@ -1,0 +1,3 @@
+esta ilustracion de esta pantalla tambien hay que regenerarla y poner otro edificio, el edificio de ruta N
+
+[Imagen adjunta: captura de Safari en flowcan-repo.vercel.app, inicio del pasajero sin bus reciente: «Pague el bus con su celular · Escanee el QR del bus · Apunte la cámara al código pegado en el vehículo», con la escena de Ayacucho (edificio amarillo y gris, andenes, bandas coral y verde, cuadrícula amarilla, buseta coral con «SÚBASE» en el costado y el tranvía cortado por el borde) en un panel de 592 px al centro, negro a los lados; abajo el pie «Su plata va directo de su billetera a la del bus…».]

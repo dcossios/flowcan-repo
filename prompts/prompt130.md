@@ -1,0 +1,1 @@
+ahora vamos a rediseñar "hoy te alcanza para 5 pasajes" y la barra de cuadritos funcional pero con 0 personalidad que tiene. hay algo importante a tener en cuenta y es que en colombia hay un porcentaje importante que tiende a recargar solo el pasaje que va a gastar en el dia, o dos dias,

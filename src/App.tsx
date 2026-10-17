@@ -42,7 +42,7 @@ const InicioPage: React.FC = () => {
       <AppShell>
         <div className="flex-1 flex flex-col">
           {/* Texto compacto: la escena se encuadra justo debajo y deja a la vista el cruce de las líneas */}
-          <PanelEscena letrero="Súbase">
+          <PanelEscena letrero="Súbase" escena="rutan">
             <p className={`${ETIQUETA} text-[#3A3F4E]`}>Pague el bus con su celular</p>
             <Titulo className="mt-2.5">Escanee el QR del bus</Titulo>
             <p className="text-[16px] leading-normal text-[#3A3F4E] mt-2">Apunte la cámara al código pegado en el vehículo.</p>

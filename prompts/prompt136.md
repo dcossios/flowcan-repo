@@ -1,0 +1,3 @@
+ese estilo grafico que hiciste con las lineas no es el que estamos manejando, en la seguna imagen puedes ver el estilo grafico de lieas que estamos manejando
+
+[Imágenes adjuntas: 1) captura de la app de escritorio con la propuesta «mapa» del cobro (líneas planas A, B, T y la ruta roja con paradas Laureles, Centro y Poblado sobre el campo crema); 2) la portada SVG «Terminal del Bus 01» (docs/prototipo-portada.html): bandas anchas paralelas azul y roja con curva amplia sobre la calle azul noche, buseta roja isométrica con letrero, Metro blanco con franja azul, cebra, hotel con mural y palmas, botón blanco «Empezar turno».]

@@ -2,6 +2,9 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import ayacuchoBase from '../assets/escenas/ayacucho-base.webp'; // sin el edificio vecino
 import ayacuchoIsla from '../assets/escenas/ayacucho-isla.webp';
 import ayacuchoDerecha from '../assets/escenas/ayacucho-derecha.webp';
+import rutanBase from '../assets/escenas/rutan-base.webp'; // Ruta N, alineada con la calle de Ayacucho
+import rutanIsla from '../assets/escenas/rutan-isla.webp';
+import rutanDerecha from '../assets/escenas/rutan-derecha.webp';
 import { coloresDeRuta, type ColoresRuta } from '../lib/rutas';
 
 /*
@@ -21,9 +24,14 @@ const NOCHE = '#1E2230';
 const ACERA = '#E6DCD3'; // acera de la ilustración (muestreada)
 const TRANVIA = '#159B4C'; // Línea T del Metro de Medellín (ficha de Wikipedia)
 const AMARILLO = '#F3C85E'; // cuadrícula de la imagen original de Flow (muestreado)
-// El techo más alto de la ilustración (sin el edificio vecino de la izquierda, el del Tranvía de Ayacucho): el
-// encuadre lo deja siempre bajo el texto.
-const TECHO = 395;
+// Escenas del panel, todas en 768 × 1376 y con la misma calle. «techo» es el techo más alto de la ilustración: el
+// encuadre lo deja siempre bajo el texto. Ayacucho (sin el edificio vecino de la izquierda): medido 391, se deja 395.
+// Ruta N: la torre llega a 225 (medido igual), con el mismo margen queda 229.
+const ESCENAS = {
+  ayacucho: { base: ayacuchoBase, isla: ayacuchoIsla, derecha: ayacuchoDerecha, techo: 395 },
+  rutan: { base: rutanBase, isla: rutanIsla, derecha: rutanDerecha, techo: 229 },
+};
+export type NombreEscena = keyof typeof ESCENAS;
 // Escala de la escena frente al texto, elegida por Andrés (variante D, prompts/prompt118.md): los edificios se
 // achican anclados abajo a la derecha y el suelo sigue hacia la izquierda.
 const ESCALA = 0.78;
@@ -191,7 +199,7 @@ function bloque(p: Pose, b: Bloque): string {
 }
 
 
-// Buseta en bloque a la escala de la fachada (la puerta de la esquina mide unos 65 px): letrero de la ruta en el costado.
+// Buseta en bloque a la escala de la fachada (la puerta de la esquina mide unos 65 px).
 const BL = 220;
 const BW = 62;
 const BH = 72;
@@ -204,8 +212,8 @@ const buseta = (ruta: ColoresRuta, letrero: string): Bloque => ({
   cuerpo: ruta.oscuro,
   sombraCaras: 0.85,
   costado: (c) => {
-    let s = `<polygon points="${c.rect(0.06, 0.94, 52, 66)}" fill="#F4EFE6"/>`; // letrero de ruta
-    if (letrero) s += c.texto(62.5, letrero.toUpperCase(), Math.min(12, (0.8 * BL) / Math.max(1, letrero.length * 0.62)));
+    // Sin letrero ni texto en el costado: Andrés pidió los buses sin texto (prompt137)
+    let s = '';
     for (let i = 0; i < 6; i++) s += `<polygon points="${c.rect(0.08 + i * 0.135, 0.18 + i * 0.135, 27, 47)}" fill="#DDEFF7"/>`;
     s += `<polygon points="${c.rueda(0.16, 11, BL)}" fill="#1E2230"/><polygon points="${c.rueda(0.84, 11, BL)}" fill="#1E2230"/>`;
     return s;
@@ -325,7 +333,12 @@ function sueloAbajo() {
   );
 }
 
-const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre }> = ({ ruta, letrero, encuadre }) => {
+const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre; imagenes: (typeof ESCENAS)[NombreEscena] }> = ({
+  ruta,
+  letrero,
+  encuadre,
+  imagenes,
+}) => {
   const busAtras = useRef<SVGGElement>(null);
   const tranvia = useRef<SVGGElement>(null);
   const busAdelante = useRef<SVGGElement>(null);
@@ -368,11 +381,11 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre 
       <polygon points={rectSuelo(-ANCHO_LINEA_TRANVIA / 2, ANCHO_LINEA_TRANVIA / 2, -1200, 1200)} fill={TRANVIA} />
       <polygon points={rectSuelo(-1200, 1200, -ANCHO_LINEA_BUS / 2, ANCHO_LINEA_BUS / 2)} fill={ruta.color} />
       <Cuadricula />
-      <image href={ayacuchoBase} x={0} y={0} width={ANCHO} height={ALTO} />
+      <image href={imagenes.base} x={0} y={0} width={ANCHO} height={ALTO} />
       <g ref={busAtras} />
-      <image href={ayacuchoIsla} x={0} y={955} width={260} height={421} />
+      <image href={imagenes.isla} x={0} y={955} width={260} height={421} />
       <g ref={tranvia} />
-      <image href={ayacuchoDerecha} x={628} y={1140} width={140} height={236} />
+      <image href={imagenes.derecha} x={628} y={1140} width={140} height={236} />
       <g ref={busAdelante} />
       {/* Manzana de abajo, alineada con la acera derecha y con el borde del cruce (la de Flow se metía 30 px en la calle) */}
       <polygon points={manzana(1, 1, RADIO_ACERA).acera} fill={ACERA} />
@@ -393,9 +406,13 @@ export const PanelEscena: React.FC<{
   letrero?: string;
   /** Llena el alto disponible (flex-1): la escena sigue hacia abajo hasta el borde, como en la portada. */
   llenar?: boolean;
+  /** Ilustración de fondo: Ayacucho por defecto; Ruta N en el inicio sin bus reciente. */
+  escena?: NombreEscena;
   children: React.ReactNode;
-}> = ({ vehiculoId, letrero = '', llenar = false, children }) => {
+}> = ({ vehiculoId, letrero = '', llenar = false, escena = 'ayacucho', children }) => {
   const ruta = coloresDeRuta(vehiculoId);
+  const imagenes = ESCENAS[escena];
+  const techo = imagenes.techo;
   const panel = useRef<HTMLElement>(null);
   const texto = useRef<HTMLDivElement>(null);
   const anchoVista = ANCHO / ESCALA;
@@ -406,7 +423,7 @@ export const PanelEscena: React.FC<{
       if (!panel.current || !texto.current) return;
       const k = panel.current.clientWidth / anchoVista; // px de pantalla por unidad de la imagen
       const bajoTexto = texto.current.offsetTop + texto.current.offsetHeight + 14;
-      const y = Math.min(0, TECHO - bajoTexto / k);
+      const y = Math.min(0, techo - bajoTexto / k);
       const alto = llenar ? Math.max(ALTO - y, panel.current.clientHeight / k) : ALTO - y;
       setVista((v) => (Math.abs(v.y - y) < 0.5 && Math.abs(v.alto - alto) < 0.5 ? v : { y, alto }));
     };
@@ -415,7 +432,7 @@ export const PanelEscena: React.FC<{
     if (panel.current) ro.observe(panel.current);
     if (texto.current) ro.observe(texto.current);
     return () => ro.disconnect();
-  }, [anchoVista, llenar]);
+  }, [anchoVista, llenar, techo]);
 
   return (
     <section
@@ -426,7 +443,12 @@ export const PanelEscena: React.FC<{
         aspectRatio: llenar ? undefined : `${anchoVista.toFixed(1)} / ${vista.alto.toFixed(1)}`,
       }}
     >
-      <Escena ruta={ruta} letrero={letrero} encuadre={{ x: ANCHO - anchoVista, y: vista.y, ancho: anchoVista, alto: vista.alto }} />
+      <Escena
+        ruta={ruta}
+        letrero={letrero}
+        imagenes={imagenes}
+        encuadre={{ x: ANCHO - anchoVista, y: vista.y, ancho: anchoVista, alto: vista.alto }}
+      />
       <div ref={texto} className="relative z-10 px-5 pt-6">
         {children}
       </div>

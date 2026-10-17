@@ -1,0 +1,1 @@
+muestrme las capturas

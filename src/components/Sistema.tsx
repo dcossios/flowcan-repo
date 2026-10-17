@@ -24,10 +24,18 @@ export const ETIQUETA = 'text-[12px] font-medium uppercase tracking-[0.12em]';
 
 /** Panel crema a todo el ancho, arriba de la pantalla, con el texto en tinta. En pantallas anchas el crema sigue
  *  hasta los bordes (una franja, no una tarjeta flotando sobre el negro); el texto se queda en la columna. */
-export const PanelCrema: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
+export const PanelCrema: React.FC<{ children: React.ReactNode; className?: string; sinFondo?: boolean }> = ({
+  children,
+  className = '',
+  sinFondo = false,
+}) => (
   <section
     className={`-mx-5 -mt-6 px-5 pt-6 pb-7 text-[#1E2230] ${className}`}
-    style={{ backgroundColor: CREMA, boxShadow: `0 0 0 100vmax ${CREMA}`, clipPath: 'inset(0 -100vmax)' }}
+    style={
+      sinFondo
+        ? undefined
+        : { backgroundColor: CREMA, boxShadow: `0 0 0 100vmax ${CREMA}`, clipPath: 'inset(0 -100vmax)' }
+    }
   >
     {children}
   </section>
@@ -125,52 +133,83 @@ export const FichaEstado: React.FC<{
   );
 };
 
-/** Cuántos pasajes de este bus le alcanzan hoy, sobre el crema: responde «¿me alcanza?» antes de tocar «Pagar».
- *  Se cuenta en pasajes y no en pesos, como DiDi cuenta viajes junto a la plata. Un cuadro por pasaje, como
- *  una tarjeta perforada: lleno si todavía alcanza, en blanco si ya se gastó hoy. Una barra que se vacía, recién
- *  renovada, no tenía fondo a la vista y se leía como una raya (prompt124). */
+/** Lo que el pase deja pagar hoy, sobre el crema, como la línea del bus: una estación por pasaje (Mini Metro, igual que
+ *  la escena). Llenas las ya pagadas, en blanco las que quedan, y la siguiente con un halo del color de la ruta.
+ *  Dice «puede pagar» y no «le alcanza»: el tope es un permiso, no plata. Open Payments no deja ver el saldo de la
+ *  billetera, y mucha gente en Colombia recarga solo el pasaje del día o de dos días (prompt130). La línea de cuánto
+ *  recargar se quitó a pedido de Andrés (prompt140). */
 export const Alcance: React.FC<{
   disponible: number;
   tope: number;
   tarifa: number;
+  /** Para el color de la línea. */
+  vehiculoId?: string;
   /** Fuera del cobro (Mi pase) no hay un bus a la vista: se dice de qué pasaje se habla. */
   conTarifa?: boolean;
   className?: string;
-}> = ({ disponible, tope, tarifa, conTarifa = false, className = '' }) => {
+}> = ({ disponible, tope, tarifa, vehiculoId, conTarifa = false, className = '' }) => {
   const quedan = tarifa > 0 ? Math.max(0, Math.floor(disponible / tarifa)) : 0;
   const total = tarifa > 0 ? Math.max(quedan, Math.floor(tope / tarifa)) : 0;
-  // Con topes muy altos frente a la tarifa los cuadros dejan de contarse de un vistazo: ahí basta el número
-  const dibujar = total > 0 && total <= 12;
+  const usados = total - quedan;
+  const { color } = coloresDeRuta(vehiculoId);
+  // Más de 10 estaciones ya no se cuentan de un vistazo: ahí basta el número
+  const dibujar = total > 1 && total <= 10;
+  const R = 8.5;
+  const PAD = 14;
+  const paso = total > 1 ? Math.min(46, (300 - 2 * PAD) / (total - 1)) : 0;
+  const ancho = PAD * 2 + paso * (total - 1);
+  const ALTO = 36;
+  const y = ALTO / 2;
+  const plural = (n: number) => (n === 1 ? 'pasaje' : 'pasajes');
   return (
     <div className={className}>
       <p className="text-[16px] leading-snug text-[#3A3F4E]">
         {quedan > 0 ? (
           <>
-            Hoy le alcanza para{' '}
-            <span className="font-semibold text-[#1E2230] tabular-nums">
-              {quedan} {quedan === 1 ? 'pasaje' : 'pasajes'}
+            Hoy, con su pase, puede pagar{' '}
+            <span className="font-semibold text-[#1E2230] tabular-nums whitespace-nowrap">
+              {quedan} {plural(quedan)}
+              {usados > 0 ? ' más' : ''}
             </span>
             {conTarifa && <span className="tabular-nums"> de {formatCOP(tarifa)}</span>}
           </>
         ) : (
           <>
-            Hoy ya no le alcanza: le quedan{' '}
-            <span className="font-semibold text-[#1E2230] tabular-nums">{formatCOP(disponible)}</span>
+            <span className="font-semibold text-[#1E2230]">Hoy ya usó todo su pase</span>
+            {disponible > 0 && <span className="tabular-nums"> · le quedan {formatCOP(disponible)} del tope</span>}
           </>
         )}
       </p>
       {dibujar && (
-        <div aria-hidden="true" className="mt-2.5 flex flex-wrap gap-[5px]">
-          {Array.from({ length: total }, (_, i) => (
-            <span
-              key={i}
-              className="w-[18px] h-[18px] rounded-[2px]"
-              style={i < quedan ? { backgroundColor: TINTA } : { border: '1.5px solid #A79C86' }}
-            />
-          ))}
-        </div>
+        <svg
+          aria-hidden="true"
+          width={ancho}
+          height={ALTO}
+          viewBox={`0 0 ${ancho} ${ALTO}`}
+          className="block mt-2 -ml-[4px] max-w-[calc(100%+4px)] h-auto"
+        >
+          <line x1={PAD} y1={y} x2={ancho - PAD} y2={y} stroke={color} strokeWidth={7} strokeLinecap="round" />
+          {Array.from({ length: total }, (_, i) => {
+            const x = PAD + i * paso;
+            const pagado = i < usados;
+            const siguiente = i === usados;
+            return (
+              <g key={i}>
+                {siguiente && <circle className="subase-latido" cx={x} cy={y} r={R + 6} fill={color} opacity={0.35} />}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={R}
+                  fill={pagado ? TINTA : '#FFFFFF'}
+                  stroke={TINTA}
+                  strokeWidth={3}
+                />
+              </g>
+            );
+          })}
+        </svg>
       )}
-      <p className="mt-2 text-[14px] text-[#3A3F4E] tabular-nums">
+      <p className="mt-1.5 text-[14px] text-[#3A3F4E] tabular-nums">
         Tope diario {formatCOP(tope)} · se renueva a medianoche
       </p>
     </div>

@@ -163,7 +163,7 @@ export const ReciboPage: React.FC = () => {
             <div className="mt-4 border-t border-[rgba(195,197,198,0.2)]">
               <Fila etiqueta="Fecha del pago">{formatFechaHora(recibo.fecha)}</Fila>
               <Fila etiqueta="Tiquete N.º">{recibo.viajeId}</Fila>
-              <Fila etiqueta="Disponible hoy">{formatCOP(recibo.disponibleHoy)}</Fila>
+              <Fila etiqueta="Le queda del tope hoy">{formatCOP(recibo.disponibleHoy)}</Fila>
               <Fila etiqueta="Cashback (simulado)">+{formatCOP(recibo.cashback)}</Fila>
             </div>
 

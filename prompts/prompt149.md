@@ -1,0 +1,3 @@
+que tal si volteas una de las paradas, le pone sla linea, el bu, para hacer algo asi como en la imagen para la otra pantalla de pago, pero que no quede la ilustracion abajo del texto
+
+[Imagen adjunta: maqueta del cobro con pase (cuadro «01», «Poblado → Centro → Laureles», «Pasaje $3.200», «Hoy, con su pase, puede pagar 5 pasajes más», la línea de estaciones y «Tope diario $20.000 · se renueva…») sobre una ilustración isométrica de un paradero con techo, banca, mapa, caneca, señal azul de bus, palmas y plantas, una calle gris en diagonal y una buseta blanca y roja llegando por la derecha; el texto «se renueva» queda tapado por el techo del paradero; abajo «Su pase: pasajero · Cambiar» y el botón blanco «Pagar $3.200 →».]
