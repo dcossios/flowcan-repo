@@ -19,7 +19,7 @@ import {
   VehiculoInfo,
 } from '../lib/api';
 import { formatCOP } from '../lib/format';
-import { playPaymentChime, unlockAudio } from '../lib/sound';
+import { unlockAudio } from '../lib/sound';
 import { guardarUltimoVehiculo } from '../lib/ultimoVehiculo';
 
 function extraerReciboDuplicado(details: unknown): ReciboViaje | null {
@@ -101,13 +101,14 @@ export const VehiculoCobroPage: React.FC = () => {
 
   const handlePagar = async () => {
     if (!vehiculo || paying) return;
+    // El toque en «Pagar» desbloquea el audio en iPhone; el sonido suena después, en el recibo, cuando el pago
+    // queda aprobado (no al responder el servidor: el pago podía seguir «Confirmando…»).
     unlockAudio();
     setPaying(true);
     setErrorInfo(null);
 
     try {
       const recibo = await pagarViaje(vehiculo.id);
-      playPaymentChime();
       navigate(`/recibo/${encodeURIComponent(recibo.viajeId)}`, {
         state: { recibo, vehiculo },
       });

@@ -7,6 +7,7 @@ import { Bajada, FichaEstado, Fila, IdentidadVehiculo, PanelCrema, Pasaje, Ruta,
 import { nombreDesdeId } from '../lib/rutas';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
 import { formatCOP, formatFechaHora, formatMoneda } from '../lib/format';
+import { marcarReciboSonado, reciboYaSono, sonarPagoAprobado } from '../lib/sound';
 
 // Hora en vivo junto a «Pagado»: prueba de que la pantalla no es una captura vieja, que es lo que mira el conductor.
 const HoraEnVivo: React.FC = () => {
@@ -89,6 +90,22 @@ export const ReciboPage: React.FC = () => {
     }, 3000);
     return () => window.clearInterval(id);
   }, [recibo, estado]);
+
+  // Campanitas de pago aprobado: una sola vez por viaje, cuando el recibo dice «Pagado» y además viene del pago
+  // que se acaba de hacer o se vio pasar de «Confirmando…» a «Pagado» aquí. No al abrir un recibo viejo desde
+  // «Mi pase» ni con el recibo de un pago duplicado.
+  const vieneDelPago = Boolean(stateRecibo && !stateRecibo.duplicado);
+  const [vioPendiente, setVioPendiente] = useState(false);
+  useEffect(() => {
+    if (estado === 'pendiente') setVioPendiente(true);
+  }, [estado]);
+  useEffect(() => {
+    if (!recibo || estado !== 'pagado' || recibo.duplicado) return;
+    if (!vieneDelPago && !vioPendiente) return;
+    if (reciboYaSono(recibo.viajeId)) return;
+    marcarReciboSonado(recibo.viajeId);
+    sonarPagoAprobado();
+  }, [recibo, estado, vieneDelPago, vioPendiente]);
 
   const vehiculoId =
     recibo && typeof recibo.vehiculo === 'object'

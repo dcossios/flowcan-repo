@@ -1,0 +1,1 @@
+Para el pasajero quiero que miremos si podemos implementar un sonido cuando realice la transacción, como el sonido que suena cuando hago un pago con Apple Pay. Quiero que suene lo mismo cuando haga la transacción y aparezca el recibo. /plan

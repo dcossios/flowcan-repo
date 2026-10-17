@@ -1,4 +1,4 @@
-// Sonido de confirmación para la terminal del conductor (/conductor/:vehiculoId)
+// Sonidos de Súbase: pitido del conductor (/conductor/:vehiculoId) y campanitas de pago aprobado del pasajero
 // Usa Web Audio API para no depender de archivos externos que bloqueen o fallen en red móvil.
 
 let audioCtx: AudioContext | null = null;
@@ -69,6 +69,77 @@ export function playPaymentChime(): void {
     osc2.stop(now + 0.46);
   } catch {
     // Ignorar si el navegador bloqueó el audio sin interacción previa
+  }
+}
+
+/**
+ * Sonido del pasajero cuando el pago queda aprobado: dos campanitas ascendentes (Mi 6 → La 6), cada una con
+ * armónicos suaves. Original de Súbase, en la línea de los sonidos de pago aprobado (no usa ningún archivo de
+ * terceros). Mismos parámetros que la muestra aprobada (subase-pago-aprobado.wav, prompt180). Distinto del
+ * pitido del conductor para que en el bus se sepa qué celular sonó. En Android también vibra.
+ */
+export function sonarPagoAprobado(): void {
+  try {
+    navigator.vibrate?.([14, 50, 22]);
+  } catch {
+    // Safari no tiene vibración web
+  }
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const t0 = ctx.currentTime + 0.02;
+    const salida = ctx.createGain();
+    salida.gain.value = 0.5;
+    salida.connect(ctx.destination);
+    const notas = [
+      { t: 0, f: 1318.51, caida: 0.11, vol: 0.55 }, // Mi 6
+      { t: 0.12, f: 1760, caida: 0.22, vol: 0.6 }, // La 6
+    ];
+    const armonicos: Array<[number, number]> = [
+      [1, 1],
+      [2, 0.22],
+      [3, 0.06],
+    ];
+    for (const n of notas) {
+      for (const [m, peso] of armonicos) {
+        const inicio = t0 + n.t;
+        // Caída de cada armónico: los agudos se apagan antes (como una campana)
+        const tau = 1 / (1 / n.caida + (m - 1) * 6);
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(n.f * m, inicio);
+        g.gain.setValueAtTime(0, inicio);
+        g.gain.linearRampToValueAtTime(n.vol * peso, inicio + 0.004); // 4 ms de ataque: sin clic
+        g.gain.setTargetAtTime(0, inicio + 0.004, tau);
+        osc.connect(g);
+        g.connect(salida);
+        osc.start(inicio);
+        osc.stop(inicio + Math.min(0.75, tau * 7));
+      }
+    }
+  } catch {
+    // Ignorar si el navegador bloqueó el audio sin interacción previa
+  }
+}
+
+// Un recibo suena una sola vez: no al volver a abrirlo desde «Mi pase» ni al recargar.
+const SONADOS_KEY = 'subase_recibos_sonados';
+
+export function reciboYaSono(viajeId: string): boolean {
+  try {
+    return (JSON.parse(localStorage.getItem(SONADOS_KEY) || '[]') as string[]).includes(viajeId);
+  } catch {
+    return false;
+  }
+}
+
+export function marcarReciboSonado(viajeId: string): void {
+  try {
+    const lista = JSON.parse(localStorage.getItem(SONADOS_KEY) || '[]') as string[];
+    localStorage.setItem(SONADOS_KEY, JSON.stringify([viajeId, ...lista.filter((v) => v !== viajeId)].slice(0, 30)));
+  } catch {
+    // sin localStorage: puede volver a sonar, no es grave
   }
 }
 
