@@ -1,0 +1,520 @@
+<!doctype html>
+<!--
+REFERENCIA: portada de Mini Metro + Mini Motorways (Dinosaur Polo Club): dos campos de color partidos en
+            diagonal, plano cercano con pocas piezas grandes cortadas por el borde, bandas anchas paralelas con
+            curvas amplias, vehículos como bloques sólidos con sombra suave, título en negrita sobre el campo.
+SENTIDO:    fragmento real: la banda de Súbase corre paralela al Metro (línea A, azul) y al Río Medellín. Casas paisas de
+            ladera pegadas: primer piso pintado, ladrillo a la vista, tanque negro, varillas en obra negra, balcón
+            con materas y la tienda de barrio (pitch: «recarga en la tienda del barrio»). Escala: 10 u = 1 m.
+TIPOGRAFÍA: Gabarito 700 para el título sobre el campo; Poppins para el texto.
+PALETA:     crema #F1E9DC (arena de la marca, aclarado) · azul noche #1E2230 · río #8CC7D6 · Metro línea A #0077C8
+            · rojo Bus 01 #EE5A52 · verde Bus 02 #3FB27F · ladrillo #D9774E.
+RIESGO:     las bandas y la buseta se cortan contra el borde; la diagonal parte la pantalla.
+-->
+<html lang="es-CO">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Súbase · Portada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gabarito:wght@500..800&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --crema:#F1E9DC; --noche:#1E2230; --tinta:#1E2230; --blanco:#fff; --dato:#C9CCCE; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #141414; color: #ECEDEE; font-family: 'Poppins', system-ui, sans-serif; }
+  .hoja { padding: 26px 16px 60px; max-width: 1100px; margin: 0 auto; }
+  .original { display: block; width: 100%; height: auto; }
+  .boceto { margin: 8px 16px 0; color: var(--dato); }
+  .boceto summary { cursor: pointer; font-size: 14px; margin-bottom: 16px; }
+  .hoja > h1 { font: 700 32px 'Gabarito', sans-serif; color: #fff; letter-spacing: -0.01em; }
+  .hoja > p { color: var(--dato); margin-top: 8px; max-width: 80ch; font-size: 15px; line-height: 1.55; }
+  .fila { display: flex; flex-wrap: wrap; gap: 28px; margin-top: 22px; }
+  figcaption { color: var(--dato); font-size: 14px; margin-bottom: 8px; }
+  .tel { position: relative; width: 375px; height: 780px; overflow: hidden; background: var(--noche); }
+  .tel svg.arte { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .barra { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center; padding: 14px 24px; min-height: 60px; background: #000; }
+  .barra b { font-weight: 300; font-size: 21px; letter-spacing: .06em; color: #fff; }
+  .barra span { color: var(--dato); font-size: 15px; }
+  .texto { position: relative; z-index: 2; padding: 28px 24px 0; color: var(--tinta); }
+  .ficha { display: inline-flex; align-items: center; height: 28px; padding: 0 12px; border-radius: 14px; color: #fff; font: 500 14px 'Poppins', sans-serif; }
+  .titulo { font: 700 42px/1.0 'Gabarito', sans-serif; letter-spacing: -0.02em; margin-top: 14px; }
+  .bajada { font-size: 16px; line-height: 1.5; margin-top: 12px; max-width: 26ch; color: #3A3F4E; }
+  .accion { position: absolute; z-index: 2; left: 24px; right: 24px; bottom: 28px; }
+  .boton { width: 100%; min-height: 58px; border: 0; border-radius: 29px; background: #fff; color: var(--tinta); font: 500 17px 'Poppins', sans-serif; padding: 0 24px; display: flex; justify-content: space-between; align-items: center; }
+  .accion p { color: var(--dato); font-size: 15px; margin-bottom: 12px; }
+  @media (prefers-reduced-motion: reduce) { .mov { animation: none !important; } }
+  .mov { animation: avanza 7s ease-in-out infinite alternate; }
+  @keyframes avanza { from { transform: translate(0, 0); } to { transform: translate(-36px, 21px); } }
+</style>
+</head>
+<body>
+<main class="hoja">
+  <h1>Portada al estilo Mini Metro</h1>
+  <p>Dos campos de color partidos en diagonal y una esquina real de El Poblado en primer plano: el hotel con el mural (vectorizado en Illustrator desde la imagen de Flow), las palmas, la terraza, peatones y motos. Las bandas son el Metro (azul Línea A) y la ruta de Súbase.</p>
+  <div class="fila">
+    <figure><figcaption>Conductor · «Empezar turno»</figcaption><div class="tel" data-color="#EE5A52" data-oscuro="#B8403A" data-letrero="POBLADO · CENTRO · LAURELES">
+      <div class="barra"><b>SÚBASE</b><span>Medellín</span></div>
+      <div class="texto"><span class="ficha" style="background:#EE5A52">Bus 01</span><h2 class="titulo">Terminal del<br>Bus 01</h2><p class="bajada">Toque para empezar. Cada pago va a sonar y se va a anunciar en voz alta.</p></div>
+      <div class="accion"><button class="boton" type="button">Empezar turno <span aria-hidden="true">→</span></button></div>
+    </div></figure>
+    <figure><figcaption>Pasajero · inicio «/»</figcaption><div class="tel" data-color="#3FB27F" data-oscuro="#2F865F" data-letrero="ROBLEDO · CENTRO">
+      <div class="barra"><b>SÚBASE</b><span>Medellín</span></div>
+      <div class="texto"><span class="ficha" style="background:#2F865F">Bus 02</span><h2 class="titulo">Pagar<br>otra vez</h2><p class="bajada">Robledo – Centro · $3.200<br>Su pase tiene $16.800 disponibles hoy.</p></div>
+      <div class="accion"><button class="boton" type="button">Ir a pagar <span aria-hidden="true">→</span></button></div>
+    </div></figure>
+  </div>
+</main>
+<script src="mural-calco.js"></script>
+<script>
+  const C = Math.cos(Math.PI / 6), S = 0.5;
+  const iso = (x, y, z = 0) => [(x - y) * C, (x + y) * S - z];
+  const P = (pts) => pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' ');
+  const pol = (pts, fill, extra = '') => `<polygon points="${P(pts)}" fill="${fill}" ${extra}/>`;
+  const SUELO = `matrix(${C},${S},${-C},${S},0,0)`;
+  function shade(hex, f = 0.8) { const n = parseInt(hex.slice(1), 16); const g = (v) => Math.round(v * f); return '#' + [g(n >> 16), g((n >> 8) & 255), g(n & 255)].map((v) => v.toString(16).padStart(2, '0')).join(''); }
+  // Caras visibles: frente = plano y+d (mira abajo a la izquierda), lado = plano x+w (abajo a la derecha)
+  const frente = (x, y, d, x0, x1, z0, z1) => [iso(x0, y + d, z0), iso(x1, y + d, z0), iso(x1, y + d, z1), iso(x0, y + d, z1)];
+  const lado = (x, w, y0, y1, z0, z1) => [iso(x + w, y0, z0), iso(x + w, y1, z0), iso(x + w, y1, z1), iso(x + w, y0, z1)];
+  function caja(x, y, w, d, h, c, z0 = 0) {
+    return pol(frente(x, y, d, x, x + w, z0, z0 + h), c[1]) + pol(lado(x, w, y, y + d, z0, z0 + h), c[2]) + pol([iso(x, y, z0 + h), iso(x + w, y, z0 + h), iso(x + w, y + d, z0 + h), iso(x, y + d, z0 + h)], c[0]);
+  }
+  function sombra(x, y, w, d, h, color) {
+    return pol([iso(x + w, y, 0), iso(x + w + h * 0.9, y + h * 0.3, 0), iso(x + w + h * 0.9, y + d + h * 0.3, 0), iso(x + h * 0.2, y + d + h * 0.3, 0), iso(x, y + d, 0)], color);
+  }
+  function curva(p, r) {
+    let d = `M ${p[0][0]} ${p[0][1]}`;
+    for (let i = 1; i < p.length - 1; i++) {
+      const [x0, y0] = p[i - 1], [x1, y1] = p[i], [x2, y2] = p[i + 1];
+      const l1 = Math.hypot(x1 - x0, y1 - y0), l2 = Math.hypot(x2 - x1, y2 - y1), rr = Math.min(r, l1 / 2, l2 / 2);
+      d += ` L ${x1 - ((x1 - x0) / l1) * rr} ${y1 - ((y1 - y0) / l1) * rr} Q ${x1} ${y1} ${x1 + ((x2 - x1) / l2) * rr} ${y1 + ((y2 - y1) / l2) * rr}`;
+    }
+    return d + ` L ${p[p.length - 1][0]} ${p[p.length - 1][1]}`;
+  }
+  // Texto pegado a una cara: frente (eje x) o lado (eje y, leído de adelante hacia atrás)
+  const textoFrente = (x, y, z, t, size, color) => { const [ox, oy] = iso(x, y, z); return `<text transform="matrix(${C},${S},0,1,${ox},${oy})" font-family="Gabarito" font-weight="700" font-size="${size}" fill="${color}">${t}</text>`; };
+  const textoLado = (x, y, z, t, size, color) => { const [ox, oy] = iso(x, y, z); return `<text transform="matrix(${C},${-S},0,1,${ox},${oy})" font-family="Gabarito" font-weight="700" font-size="${size}" fill="${color}">${t}</text>`; };
+
+  // ---------- Escena esquina El Poblado / Provenza ----------
+  const PISO = 26;
+
+  function cebra() {
+    let s = '';
+    const x0 = 694, x1 = 742;
+    for (let i = 0; i < 5; i++) {
+      const yA = 444 + i * 11.5, yB = yA + 6.2;
+      s += pol([iso(x0, yA, 0), iso(x1, yA, 0), iso(x1, yB, 0), iso(x0, yB, 0)], '#F1E9DC');
+    }
+    return s;
+  }
+
+  function acera() {
+    const xL = 522, xR = 688, yT = 355, yB = 490, h = 3.5, r1 = 28, r2 = 22;
+    const perim = [[xL, yT]];
+    // Esquina redondeada izquierda (xL, yB)
+    for (let i = 0; i <= 8; i++) {
+      const a = Math.PI - (i / 8) * (Math.PI / 2);
+      perim.push([xL + r1 + r1 * Math.cos(a), yB - r1 + r1 * Math.sin(a)]);
+    }
+    // Esquina redondeada inferior (xR, yB)
+    for (let i = 0; i <= 8; i++) {
+      const a = Math.PI / 2 - (i / 8) * (Math.PI / 2);
+      perim.push([xR - r2 + r2 * Math.cos(a), yB - r2 + r2 * Math.sin(a)]);
+    }
+    perim.push([xR, yT]);
+
+    let s = '';
+    for (let i = 0; i < perim.length - 1; i++) {
+      const [x0, y0] = perim[i], [x1, y1] = perim[i + 1];
+      const cBorde = i < 8 ? '#C2BEB5' : i < 16 ? '#B9B5AC' : '#9E9A91';
+      s += pol([iso(x0, y0, 0), iso(x1, y1, 0), iso(x1, y1, h), iso(x0, y0, h)], cBorde);
+    }
+    s += pol(perim.map(([px, py]) => iso(px, py, h)), '#D9D6CF');
+
+    // Jardineras de pasto (#5FA35A) sobre la acera
+    const prados = [
+      [527, 448, 22, 22],
+      [554, 434, 18, 18],
+      [590, 460, 22, 20],
+      [620, 456, 40, 22],
+      [660, 424, 20, 20],
+    ];
+    for (const [gx, gy, gw, gd] of prados) {
+      s += pol([iso(gx, gy, h), iso(gx + gw, gy, h), iso(gx + gw, gy + gd, h), iso(gx, gy + gd, h)], '#5FA35A');
+    }
+    return s;
+  }
+
+  // Proyecta el calco sin deformarlo: misma escala en ancho y alto, centrado en vertical.
+  // ancla 'fin' pega el extremo del ancho a la esquina (la cabeza del colibrí); 'inicio' pega el perfil.
+  function grupoCalco(pieza, origen, dirU, ancho, alto, ancla) {
+    const { box, paths } = MURAL_CALCO[pieza];
+    const [sx0, , , sy1] = box;
+    const artW = box[2] - box[0];
+    const artH = box[3] - box[1];
+    const s = Math.min(ancho / artW, alto / artH);
+    const useW = artW * s;
+    const du = ancla === 'fin' ? ancho - useW : 0;
+    const dv = (alto - artH * s) / 2;
+    const [ox, oy, oz] = origen;
+    const [ux, uy] = dirU;
+    const bl = iso(ox + ux * du, oy + uy * du, oz + dv);
+    const bx = iso(ox + ux * du + ux * s, oy + uy * du + uy * s, oz + dv);
+    const by = iso(ox + ux * du, oy + uy * du, oz + dv - s);
+    const eu = [bx[0] - bl[0], bx[1] - bl[1]];
+    const ev = [by[0] - bl[0], by[1] - bl[1]];
+    const e = bl[0] - eu[0] * sx0 - ev[0] * sy1;
+    const f = bl[1] - eu[1] * sx0 - ev[1] * sy1;
+    const n = (v) => v.toFixed(4);
+    let g = `<g transform="matrix(${n(eu[0])},${n(eu[1])},${n(ev[0])},${n(ev[1])},${n(e)},${n(f)})">`;
+    for (const [fill, d] of paths) g += `<path fill="${fill}" d="${d}"/>`;
+    return g + '</g>';
+  }
+
+  function muralLado(xCorner, yCorner, zBase, altoMural) {
+    let s = '';
+    const wFrente = 44, wLado = 42;
+    const xF0 = xCorner - wFrente;
+
+    // El hueco del calco sigue siendo mural, no pared verde oliva
+    s += pol(frente(xF0, 0, yCorner, xF0, xCorner, zBase, zBase + altoMural), '#779890');
+    s += pol(lado(xCorner, 0, yCorner - wLado, yCorner, zBase, zBase + altoMural), '#4D7E81');
+    s += grupoCalco('colibri', [xF0, yCorner, zBase], [1, 0], wFrente, altoMural, 'fin');
+    s += grupoCalco('mujer', [xCorner, yCorner, zBase], [0, -1], wLado, altoMural, 'inicio');
+    return s;
+  }
+
+  function hotel() {
+    const z0 = 3.5;
+    const hCafe = 28;
+    const hHotel = 4 * PISO; // 4 pisos superiores + 1er piso comercial = 5 pisos
+    const z1 = z0 + hCafe;
+    const zTop = z1 + hHotel;
+    const hRemate = 6.5;
+
+    // Geometría en «L» desplazada hacia adelante para dejar libres el Metro y la buseta
+    const x0 = 556, xMid = 596, x1 = 636;
+    const y0 = 342, yMid = 382, y1 = 436;
+
+    let s = '';
+
+    // Base oscura del primer piso (interior del café)
+    s += pol(frente(x0, 0, y1, x0, x1, z0, z1), '#1B1F28');
+    s += pol(lado(x1, 0, y0, y1, z0, z1), '#151820');
+
+    // Paredes del hotel en verde oliva: frontal #93A05B, lateral #7C8A4A
+    s += pol(lado(x0, 0, yMid, y1, z1, zTop), '#869352');
+    s += pol(frente(x0, 0, yMid, x0, xMid, z1, zTop), '#869352');
+    s += pol(lado(xMid, 0, y0, yMid, z1, zTop), '#7C8A4A');
+    s += pol(frente(x0, 0, y1, x0, x1, z1, zTop), '#93A05B');
+    s += pol(lado(x1, 0, y0, y1, z1, zTop), '#7C8A4A');
+
+    // Mural en la esquina
+    s += muralLado(x1, y1, z1, hHotel);
+
+    // Ventanas verde azulado (#2F4F4F) con marco claro (#E8E4DA)
+    for (let p = 0; p < 4; p++) {
+      const zv0 = z1 + p * PISO + 5, zv1 = zv0 + 15;
+      s += pol(frente(x0, 0, y1, 564, 588, zv0 - 1.2, zv1 + 1.2), '#E8E4DA');
+      s += pol(frente(x0, 0, y1, 565.5, 575.2, zv0, zv1), '#2F4F4F');
+      s += pol(frente(x0, 0, y1, 576.8, 586.5, zv0, zv1), '#2F4F4F');
+
+      for (const rx of [562, 572, 582]) {
+        s += pol(frente(x0, 0, y1, rx, rx + 4.5, z1 + p * PISO + 1.2, z1 + p * PISO + 2.6), '#4B593B');
+      }
+
+      for (const [ya, yb] of [[372, 390], [348, 366]]) {
+        s += pol(lado(x1, 0, ya, yb, zv0 - 1.2, zv1 + 1.2), '#E8E4DA');
+        const ym = (ya + yb) / 2;
+        s += pol(lado(x1, 0, ya + 1.2, ym - 0.7, zv0, zv1), '#2F4F4F');
+        s += pol(lado(x1, 0, ym + 0.7, yb - 1.2, zv0, zv1), '#2F4F4F');
+      }
+    }
+
+    // Techo en «L» (#A7B26C)
+    const ptsTecho = [
+      iso(x0, y1, zTop),
+      iso(x1, y1, zTop),
+      iso(x1, y0, zTop),
+      iso(xMid, y0, zTop),
+      iso(xMid, yMid, zTop),
+      iso(x0, yMid, zTop),
+    ];
+    s += pol(ptsTecho, '#A7B26C');
+
+    // Remate perimetral en «L» (#556B45 y #6A7E53)
+    const zR = zTop + hRemate;
+    s += pol(frente(x0, 0, y1, x0, x1, zTop, zR), '#6A7E53');
+    s += pol(lado(x1, 0, y0, y1, zTop, zR), '#556B45');
+    const g = 5;
+    const ptsRemateExt = [
+      iso(x0, y1, zR),
+      iso(x1, y1, zR),
+      iso(x1, y0, zR),
+      iso(xMid, y0, zR),
+      iso(xMid, yMid, zR),
+      iso(x0, yMid, zR),
+    ];
+    const ptsRemateInt = [
+      iso(x0 + g, y1 - g, zR),
+      iso(x1 - g, y1 - g, zR),
+      iso(x1 - g, y0 + g, zR),
+      iso(xMid + g, y0 + g, zR),
+      iso(xMid + g, yMid + g, zR),
+      iso(x0 + g, yMid + g, zR),
+    ];
+    s += pol(ptsRemateExt, '#556B45');
+    s += pol(ptsRemateInt, '#8F9C58');
+
+    // Bajante vertical con abrazadera y codo superior
+    const xb = 595;
+    s += pol(frente(x0, 0, y1 + 0.8, xb, xb + 3.8, z1, zR + 3), '#4E5E42');
+    s += pol(frente(x0, 0, y1 + 0.8, xb - 0.4, xb + 4.2, zR - 2, zR - 0.5), '#D9D6CF');
+    const [bx, by] = iso(xb + 1.9, y1, zR + 3);
+    s += `<circle cx="${bx}" cy="${by}" r="2.8" fill="#3B4731"/>`;
+
+    // Letrero «HOTEL» frontal
+    const zL0 = zTop + 2, zL1 = zL0 + 14;
+    s += pol(frente(x0, 0, y1 + 0.6, 557, 592, zL0, zL1), '#2B3326');
+    s += pol(frente(x0, 0, y1 + 0.9, 558.2, 590.8, zL0 + 1.2, zL1 - 1.2), '#F7F5F0');
+    s += textoFrente(560.5, y1 + 1.1, zL0 + 3.4, 'HOTEL', 9.4, '#1E2230');
+
+    // Letrero «HOTEL» lateral
+    s += pol(lado(x1 + 0.6, 0, 358, 392, zL0, zL1), '#2B3326');
+    s += pol(lado(x1 + 0.9, 0, 359.2, 390.8, zL0 + 1.2, zL1 - 1.2), '#F7F5F0');
+    s += textoLado(x1 + 1.1, 388.5, zL0 + 3.4, 'HOTEL', 9.4, '#1E2230');
+
+    return s;
+  }
+
+  function mesaSillas(x, y, z0 = 3.5) {
+    let s = '';
+    s += caja(x - 4.5, y + 1, 3.5, 3.5, 4.5, ['#8C5D3C', '#7A5235', '#5E3E27'], z0);
+    s += caja(x + 6, y + 1, 3.5, 3.5, 4.5, ['#8C5D3C', '#7A5235', '#5E3E27'], z0);
+    s += caja(x + 1.5, y + 1.5, 2, 2, 5.5, ['#4A3525', '#3B2A1D', '#2E2016'], z0);
+    s += caja(x - 0.5, y - 0.5, 6, 6, 1.4, ['#B07C52', '#8A5A35', '#6E472A'], z0 + 5.5);
+    return s;
+  }
+
+  function cafe() {
+    const z0 = 3.5;
+    let s = '';
+
+    // Pabellón con marquesina verde agua (#3E8C86) a la izquierda del hotel (x = 536..584, y = 404..444)
+    const px0 = 536, px1 = 584, py0 = 404, py1 = 444, pz1 = z0 + 24, pz2 = z0 + 44;
+    s += caja(px0 + 2, py0 + 2, px1 - px0 - 4, py1 - py0 - 4, 22, ['#2C342B', '#232924', '#1B201C'], z0);
+    for (const [cx, cy] of [[px0, py1 - 3], [px1 - 3, py1 - 3], [px0, py0]]) {
+      s += caja(cx, cy, 3, 3, pz2 - z0, ['#556B45', '#465436', '#36422A'], z0);
+    }
+    s += caja(px0 - 1, py0 - 1, px1 - px0 + 2, py1 - py0 + 2, 5, ['#5DA7A0', '#3E8C86', '#2E6E69'], pz2);
+
+    // Toldo a rayas rojo (#E8483C) y blanco (#F4EFE6) en la esquina izquierda
+    const nRayas = 7, pasoR = (py1 - py0 - 4) / nRayas;
+    for (let k = 0; k < nRayas; k++) {
+      const ya = py0 + 2 + k * pasoR, yb = ya + pasoR;
+      const colR = k % 2 === 0 ? '#E8483C' : '#F4EFE6';
+      s += pol([
+        iso(px0, ya, pz1 + 1),
+        iso(px0, yb, pz1 + 1),
+        iso(px0 - 9, yb, pz1 - 5),
+        iso(px0 - 9, ya, pz1 - 5),
+      ], colR);
+    }
+    for (const jy of [py0 + 3, py0 + 21]) {
+      s += caja(px0 - 5, jy, 4.5, 13, 5, ['#C9C5BC', '#B9B5AC', '#9E9A91'], z0);
+      s += caja(px0 - 4.5, jy + 1, 3.5, 11, 3.5, ['#6BBF59', '#4E9A49', '#3E7D4F'], z0 + 5);
+    }
+
+    // Marquesina del café en el primer piso del hotel
+    s += caja(584, 434, 64, 16, 4.5, ['#383D48', '#282C34', '#1F2229'], z0 + 23);
+    s += caja(634, 366, 16, 68, 4.5, ['#383D48', '#282C34', '#1F2229'], z0 + 23);
+    s += pol(frente(584, 0, 450, 584, 648, z0 + 23, z0 + 24.5), '#3E8C86');
+    s += pol(lado(650, 0, 366, 450, z0 + 23, z0 + 24.5), '#3E8C86');
+
+    // Kiosco de madera (#8A5A35)
+    s += caja(568, 444, 18, 9, 13, ['#A87449', '#8A5A35', '#6B4426'], z0);
+
+    // 7 mesas con sillas (#7A5235)
+    for (const [mx, my] of [
+      [568, 458],
+      [585, 458],
+      [602, 456],
+      [620, 448],
+      [642, 438],
+      [652, 418],
+      [654, 398],
+    ]) {
+      s += mesaSillas(mx, my, z0);
+    }
+
+    return s;
+  }
+
+  function palma(x, y, alto, escalaCopa = 1) {
+    const z0 = 3.5;
+    let s = '';
+    const rBase = 2.8 * escalaCopa, rTop = 1.7 * escalaCopa;
+    const [bx, by] = iso(x, y, z0);
+    const [tx, ty] = iso(x, y, z0 + alto);
+
+    s += `<ellipse cx="${bx + 4}" cy="${by + 2}" rx="${8 * escalaCopa}" ry="${4.5 * escalaCopa}" fill="rgba(0,0,0,.18)"/>`;
+    s += pol([[bx - rBase, by], [bx + rBase, by], [tx + rTop, ty], [tx - rTop, ty]], '#8A5A35');
+    s += pol([[bx, by], [bx + rBase, by], [tx + rTop, ty], [tx, ty]], '#6E4628');
+
+    let anillos = '';
+    for (let z = 10; z < alto - 4; z += 9) {
+      const f = z / alto;
+      const rw = rBase * (1 - f) + rTop * f;
+      const cy = by - z;
+      anillos += `M ${(bx - rw).toFixed(1)} ${cy.toFixed(1)} L ${(bx + rw).toFixed(1)} ${cy.toFixed(1)} `;
+    }
+    s += `<path d="${anillos}" stroke="#59371E" stroke-width="1" fill="none"/>`;
+
+    const nHojas = 14;
+    for (let i = 0; i < nHojas; i++) {
+      const ang = (i / nHojas) * Math.PI * 2 + 0.18;
+      const largo = (i % 2 === 0 ? 30 : 25) * escalaCopa;
+      const caida = Math.sin(ang) > 0 ? 6 * escalaCopa : 2 * escalaCopa;
+      const ex = tx + Math.cos(ang) * largo;
+      const ey = ty + Math.sin(ang) * largo * 0.72 + caida;
+      const nx = -Math.sin(ang) * 4.2 * escalaCopa;
+      const ny = Math.cos(ang) * 3.2 * escalaCopa;
+      const mx1 = tx + Math.cos(ang) * largo * 0.48 + nx;
+      const my1 = ty + Math.sin(ang) * largo * 0.34 - 3 * escalaCopa + ny;
+      const mx2 = tx + Math.cos(ang) * largo * 0.48 - nx;
+      const my2 = ty + Math.sin(ang) * largo * 0.34 - 3 * escalaCopa - ny;
+      const colorHoja = i % 2 === 0 ? '#3E8E4F' : '#6BBF59';
+      s += pol([[tx, ty], [mx1, my1], [ex, ey], [mx2, my2]], colorHoja);
+    }
+    return s;
+  }
+
+  function arbol(x, y, altoTronco = 20, radio = 13) {
+    const z0 = 3.5;
+    const [bx, by] = iso(x, y, z0);
+    const [tx, ty] = iso(x, y, z0 + altoTronco);
+    let s = `<ellipse cx="${bx + 3}" cy="${by + 1.5}" rx="${radio * 0.75}" ry="${radio * 0.42}" fill="rgba(0,0,0,.18)"/>`;
+    s += `<rect x="${(bx - 1.8).toFixed(1)}" y="${ty.toFixed(1)}" width="3.6" height="${altoTronco}" fill="#6E4628"/>`;
+    s += `<circle cx="${(tx + 2).toFixed(1)}" cy="${(ty - radio * 0.45).toFixed(1)}" r="${radio}" fill="#3D7F3A"/>`;
+    s += `<circle cx="${(tx - 1.5).toFixed(1)}" cy="${(ty - radio * 0.6).toFixed(1)}" r="${(radio * 0.92).toFixed(1)}" fill="#4E9A49"/>`;
+    return s;
+  }
+
+  function arbusto(x, y, r = 9) {
+    const [bx, by] = iso(x, y, 3.5);
+    return `<ellipse cx="${bx}" cy="${by - r * 0.45}" rx="${r}" ry="${r * 0.72}" fill="#3D7F3A"/><ellipse cx="${bx - 1.5}" cy="${by - r * 0.55}" rx="${r * 0.82}" ry="${r * 0.62}" fill="#4E9A49"/>`;
+  }
+
+  function persona(x, y, camisa, pantalon = '#35527A', paso = 1, mochila = false) {
+    const z0 = 3.5;
+    const [px, py] = iso(x, y, z0);
+    let s = `<ellipse cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" rx="3.2" ry="1.8" fill="rgba(0,0,0,.22)"/>`;
+    s += `<line x1="${(px - 0.8).toFixed(1)}" y1="${(py - 7).toFixed(1)}" x2="${(px - 2.2 * paso).toFixed(1)}" y2="${py.toFixed(1)}" stroke="${pantalon}" stroke-width="2.1" stroke-linecap="round"/>`;
+    s += `<line x1="${(px + 0.8).toFixed(1)}" y1="${(py - 7).toFixed(1)}" x2="${(px + 2.2 * paso).toFixed(1)}" y2="${(py - 0.8).toFixed(1)}" stroke="${shade(pantalon, 0.82)}" stroke-width="2.1" stroke-linecap="round"/>`;
+    if (mochila) {
+      s += `<rect x="${(px - 3.6).toFixed(1)}" y="${(py - 13).toFixed(1)}" width="3" height="5.2" rx="1" fill="#4A3525"/>`;
+    }
+    s += `<rect x="${(px - 2.3).toFixed(1)}" y="${(py - 13.5).toFixed(1)}" width="4.6" height="6.8" rx="1.4" fill="${camisa}"/>`;
+    s += `<circle cx="${px.toFixed(1)}" cy="${(py - 15.6).toFixed(1)}" r="2.1" fill="#E3A27A"/>`;
+    s += `<path d="M ${(px - 2.1).toFixed(1)} ${(py - 15.8).toFixed(1)} A 2.1 2.1 0 0 1 ${(px + 2.1).toFixed(1)} ${(py - 15.8).toFixed(1)} Z" fill="#2A2421"/>`;
+    return s;
+  }
+
+  function moto(x, y, eje = 'x', chaqueta = '#3A4454') {
+    const [mx, my] = iso(x, y, 0);
+    const dirX = eje === 'x' ? 1 : -1;
+    let s = `<ellipse cx="${mx.toFixed(1)}" cy="${(my + 1.5).toFixed(1)}" rx="9.5" ry="4.5" fill="rgba(0,0,0,.32)"/>`;
+    const w1x = mx - dirX * 5.8, w1y = my - 2.8;
+    const w2x = mx + dirX * 5.8, w2y = my + 2.8;
+    s += `<ellipse cx="${w1x.toFixed(1)}" cy="${w1y.toFixed(1)}" rx="3.2" ry="3.8" fill="#111318" stroke="#68707E" stroke-width="1"/>`;
+    s += `<ellipse cx="${w2x.toFixed(1)}" cy="${w2y.toFixed(1)}" rx="3.2" ry="3.8" fill="#111318" stroke="#68707E" stroke-width="1"/>`;
+    s += pol([
+      [w1x, w1y - 2],
+      [mx, my - 5],
+      [w2x, w2y - 3.5],
+      [w2x - dirX * 1.5, w2y],
+      [w1x, w1y + 1],
+    ], '#2E3543');
+    s += `<circle cx="${(w2x + dirX * 1.2).toFixed(1)}" cy="${(w2y - 4.2).toFixed(1)}" r="1.5" fill="#FFE08A"/>`;
+    s += `<line x1="${(mx - dirX * 1).toFixed(1)}" y1="${(my - 6).toFixed(1)}" x2="${(mx + dirX * 1.8).toFixed(1)}" y2="${(my - 1).toFixed(1)}" stroke="#2B4263" stroke-width="2.4" stroke-linecap="round"/>`;
+    s += `<rect x="${(mx - 2.6).toFixed(1)}" y="${(my - 13).toFixed(1)}" width="5.2" height="7" rx="1.6" fill="${chaqueta}"/>`;
+    s += `<circle cx="${(mx + dirX * 0.6).toFixed(1)}" cy="${(my - 15.5).toFixed(1)}" r="3" fill="#E8483C"/>`;
+    s += `<rect x="${(mx + (dirX > 0 ? 0.6 : -3.2)).toFixed(1)}" y="${(my - 16.2).toFixed(1)}" width="2.6" height="1.6" rx="0.5" fill="#1E2230"/>`;
+    return s;
+  }
+
+  // ---------- Buseta de Súbase ----------
+  function buseta(x, y, color, oscuro, letrero) {
+    const w = 26, d = 84, h = 32;
+    let s = sombra(x, y, w, d, h, 'rgba(0,0,0,.18)') + caja(x, y, w, d, h, [color, oscuro, shade(oscuro, 0.85)]);
+    s += pol(lado(x, w, y + 6, y + d - 16, 24, 30), '#F4EFE6') + textoLado(x + w, y + d - 18, 25.6, letrero, 4.6, '#1E2230');          // letrero de ruta en el costado
+    for (let a = 8; a < d - 20; a += 13) s += pol(lado(x, w, y + a, y + a + 10, 13, 22), '#DDEFF7');                                     // ventanas
+    s += pol(frente(x, y, d, x + 2, x + w - 2, 13, 29), '#2B3240');                                                                       // parabrisas
+    s += pol(frente(x, y, d, x + 3, x + 7, 4, 7), '#FFE08A') + pol(frente(x, y, d, x + w - 7, x + w - 3, 4, 7), '#FFE08A');              // farolas
+    for (const yc of [y + 14, y + d - 16]) {                                                                                              // llantas
+      const pts = []; for (let t = 0; t < Math.PI * 2; t += Math.PI / 10) pts.push(iso(x + w + 0.3, yc + 6 * Math.cos(t), 4 + 6 * Math.sin(t)));
+      s += pol(pts, '#1E2230');
+    }
+    return s;
+  }
+
+  function arte(color, oscuro, letrero) {
+    let s = '';
+    const X0 = 420;   // frontera de los campos sobre el eje isométrico, por fuera de todas las bandas: cada línea vive sobre un solo fondo
+    s += `<rect x="-400" y="-200" width="1000" height="1200" fill="#F1E9DC"/>`;
+    s += `<g transform="${SUELO}"><rect x="${X0}" y="-3000" width="4000" height="6000" fill="#1E2230"/>`;
+    s += `<path d="M 300 770 L 1400 770" fill="none" stroke="#8CC7D6" stroke-width="64"/>`;                              // Río Medellín
+    // Bandas concéntricas: misma separación (51) en los dos tramos y radio exterior = interior + 51
+    const SEP = 51, R = 90;
+    const bus = curva([[487, 40], [487, 533], [1400, 533]], R), metro = curva([[487 - SEP, 40], [487 - SEP, 533 + SEP], [1400, 533 + SEP]], R + SEP);
+    s += `<path d="${metro}" fill="none" stroke="#0077C8" stroke-width="22"/>`;   // línea A, azul; sin sombra: sobre la noche no se ve y en el crema engordaba la banda
+    s += `<path d="${bus}" fill="none" stroke="${color}" stroke-width="34"/>`;
+    s += `</g>`;
+    // Tren del Metro entrando por el borde
+    for (const y of [150, 214]) {
+      s += sombra(424, y, 24, 58, 22, 'rgba(0,0,0,.12)') + caja(424, y, 24, 58, 22, ['#F4F5F7', '#D3D6DB', '#E8EEF2']);
+      s += pol(lado(424, 24, y + 4, y + 54, 5.5, 8.5), '#0077C8');
+      s += pol(lado(424, 24, y + 6, y + 52, 11, 17), '#3A4454');
+    }
+    // La buseta va antes que el bloque urbano (x + y menor)
+    s += `<g class="mov">${buseta(474, 420, color, oscuro, letrero)}</g>`;
+
+    // Cebra peatonal y acera elevada en el codo de las bandas
+    s += cebra();
+    s += acera();
+    s += sombra(556, 382, 86, 68, 65, 'rgba(0,0,0,.22)');
+
+    // Hotel en «L» con mural y café en el primer piso
+    s += hotel();
+    s += cafe();
+
+    // Elementos sobre la acera y la vía ordenados por profundidad (x + y menor primero)
+    const elementos = [
+      { d: 530 + 428, svg: persona(530, 428, '#E05347', '#35527A', 1, false) },
+      { d: 562 + 442, svg: palma(562, 442, 74, 0.85) },
+      { d: 538 + 458, svg: palma(538, 458, 175, 1.32) },
+      { d: 554 + 462, svg: persona(554, 462, '#F4EFE6', '#4A74A8', -1, true) },
+      { d: 582 + 474, svg: persona(582, 474, '#3B82C4', '#2E3440', 1, false) },
+      { d: 622 + 448, svg: palma(622, 448, 78, 0.85) },
+      { d: 601 + 468, svg: palma(601, 468, 84, 0.88) },
+      { d: 595 + 474, svg: arbusto(595, 474, 9) },
+      { d: 668 + 432, svg: palma(668, 432, 88, 0.88) },
+      { d: 632 + 466, svg: arbol(632, 466, 20, 12.5) },
+      { d: 676 + 442, svg: persona(676, 442, '#4FA39B', '#C84B43', -1, true) },
+      { d: 618 + 480, svg: persona(618, 480, '#D94B43', '#35527A', 1, false) },
+      { d: 650 + 466, svg: arbol(650, 466, 22, 12) },
+      { d: 666 + 462, svg: persona(666, 462, '#F2C14E', '#4A74A8', -1, false) },
+      { d: 590 + 503, svg: moto(590, 503, 'x', '#3A4454') },
+      { d: 722 + 498, svg: moto(722, 498, 'y', '#F2C14E') },
+    ];
+    elementos.sort((a, b) => a.d - b.d);
+    for (const el of elementos) s += el.svg;
+
+    return s;
+  }
+  document.querySelectorAll('.tel').forEach((t) => {
+    t.insertAdjacentHTML('afterbegin', `<svg class="arte" viewBox="-40 60 290 603" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${arte(t.dataset.color, t.dataset.oscuro, t.dataset.letrero)}</svg>`);
+  });
+</script>
+</body>
+</html>

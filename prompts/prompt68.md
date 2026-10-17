@@ -1,0 +1,1 @@
+Para los textos tambien usa como referencia minimotorsway y minimetro way, ten cuidado con la gerarquia de los textos, que todo no este gritando al mismo tiempo, que no este tan palido, cuida la composicion, la funcionalidad, la estetica

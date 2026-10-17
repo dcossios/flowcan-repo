@@ -4,6 +4,7 @@
 - Claude (Claude Code, modelo Claude Opus 5.5)
 - Google Antigravity (CLI `agy`): Gemini 4 Argon (Medium) hasta `prompts/prompt30.md` (el alias configurado «Gemini 3.5 Flash (High)» resolvía a ese modelo); Gemini 4 Argon (High) desde `prompts/prompt34.md`
 - Grok (xAI)
+- Google Flow: imagen de referencia de la portada (escena de El Poblado con hotel, mural, palmas y café), hecha por Andrés con el prompt de `prompts/prompt78.md`
 - Diffusion Studio (`dapi media listen`), solo para transcribir una nota de voz del equipo (`prompts/prompt27.md`; en `prompts/prompt28.md` se pidió usar Google Speech-to-Text, que no se usó)
 
 ## Where and How We Used AI
@@ -56,6 +57,12 @@
 - Se usó Claude Code para reemplazar en Vercel (Production) `OP_PRIVATE_KEY_B64`, `OP_KEY_ID` y `OP_CLIENT_WALLET_ADDRESS` desde la llave local sin mostrarla, redesplegar y verificar en la base y en los logs de producción el pago real hecho desde un celular (`prompts/prompt58.md`, `prompts/prompt59.md`).
 - Se usó Claude Code para diagnosticar el scroll «pegado» en el celular y corregirlo: `overflow-x-hidden` → `overflow-x-clip` y `min-h-dvh` → `min-h-svh` en `src/components/AppShell.tsx` (el contenedor tenía scroll propio y rompía el header sticky), grano de fondo en su propia capa de GPU (`src/index.css`), bloqueo del scroll de fondo bajo las capas a pantalla completa del conductor (`src/pages/ConductorPage.tsx`) y pie de página sin el texto del pasajero en las vistas de conductor y empresa. Se verificó con `agent-browser` emulando un iPhone 14 en todas las páginas (`prompts/prompt60.md`).
 - Se usó Claude Code para hacer commit y push a `main` (`prompts/prompt61.md`).
+
+### 7. Dirección de arte - Portada estilo Mini Metro (`/docs/prototipo-portada.html`)
+- Se usó Claude Code para definir la dirección visual tomando como referencia las portadas de Mini Metro y Mini Motorways (Dinosaur Polo Club): campos de color, bandas concéntricas, bloques isométricos y casas paisas de ladera; y para prototiparla en SVG generado con JS (`prompts/prompt63.md` a `prompts/prompt75.md`). Las versiones descartadas (buseta rotulada, señalética de metro, ciudad completa en miniatura) no están en el repo.
+- Andrés hizo en Google Flow una variación de la escena (hotel con mural, palmas, café, peatones y motos). Se usó Google Antigravity (Gemini 4 Argon, High) para replicarla en SVG dentro del prototipo, con el encargo completo en `prompts/prompt77.md` (`prompts/prompt76.md`). Argon incrustó la imagen de Flow como raster y escondió su versión en código; Claude Code lo revirtió (la página usa solo el SVG), ajustó el encuadre, hizo visible la buseta y aplicó el azul Línea A del Metro (Wikipedia) y el verde del Bus 02 validado para daltonismo (`prompts/prompt78.md` a `prompts/prompt82.md`).
+- El mural (mujer y colibrí) se vectorizó con Calco de imagen de Adobe Illustrator, que no es IA generativa, a partir de la imagen de Flow. Claude Code lo automatizó con ExtendScript: recorte, enderezado de la isometría, reducción de colores y calco (`docs/mural-calco.js`).
+- El calco del mural lo hizo Illustrator 2025 (Calco de imagen) a partir del recorte de Flow (`prompts/prompt80.md`). Se usó Grok para proyectar esos trazos planos, sin deformarlos, sobre las dos caras de la esquina del hotel (`/docs/mural-calco.js`, `grupoCalco` en `/docs/prototipo-portada.html`), para pintar la banda y el filete de los trenes con el azul de la línea A del Metro de Medellín y para pasar el Bus 02 a verde `#3FB27F`, de modo que no se confunda con esa línea (`prompts/prompt81.md`, `prompts/prompt83.md`).
 
 ## What We Did Ourselves
 - Archivos hechos con poca o ninguna IA: `Guide to Open Payments_Spanish.md`, `Súbase — Pitch Open Payments Hackathon.pdf`, `Guia_de_Marca_SUBASE.pdf`.
