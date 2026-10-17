@@ -1,0 +1,1 @@
+[Mensaje sin texto. Imagen adjunta: captura del editor de Google Flow con la n.º 2 de v4 ya editada (sin buseta, tranvía, carril rojo ni cuadrícula), con dos marcas a mano: una línea roja en diagonal desde el centro del borde inferior hacia la derecha, subiendo paralela a los rieles hasta el borde derecho, y un círculo verde abajo al centro.]

@@ -1,0 +1,1 @@
+Sí, prueba primero el encuadre cercano: escena más grande y cortada por los bordes, tranvía y buseta protagonistas con el letrero de la ruta, y bandas anchas. Después vemos si hace falta regenerar en Flow.

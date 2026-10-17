@@ -1,96 +1,86 @@
-import React, { useEffect, useRef } from 'react';
-import ayacucho from '../assets/escenas/ayacucho.webp';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import ayacuchoBase from '../assets/escenas/ayacucho-base.webp';
+import ayacuchoIsla from '../assets/escenas/ayacucho-isla.webp';
+import ayacuchoDerecha from '../assets/escenas/ayacucho-derecha.webp';
 
 /*
- * Escena del inicio del pasajero: un solo SVG en capas, en el sistema de coordenadas de la ilustración (768 × 1376):
- *   1. Los dos campos (crema y noche) y las líneas: la ruta del bus en L alrededor de la esquina izquierda (pasa por
- *      detrás del edificio) y el tranvía recto por el costado derecho, como en la avenida Ayacucho real.
- *   2. Los vehículos que van por detrás del edificio.
- *   3. La ilustración de Flow (Tranvía de Ayacucho, solo la manzana) con el fondo vuelto transparente.
- *   4. Los vehículos que van por delante. Se calculan cuadro a cuadro sobre su línea para que doblen la esquina.
+ * Escena del inicio del pasajero: la esquina del Tranvía de Ayacucho (ilustración de Flow con las calles vueltas
+ * transparentes) y, en SVG, las calles en azul noche, la línea del tranvía, la de la buseta, la cuadrícula amarilla
+ * del cruce y los dos vehículos. Todo va en las coordenadas de la imagen (768 × 1376).
+ *
+ * Capas, de atrás hacia adelante: noche, líneas y cuadrícula → imagen base → buseta antes del cruce → isla izquierda →
+ * tranvía → acera derecha → buseta después del cruce → acera de abajo → cable. Así cada vehículo pasa por detrás de lo
+ * que en la esquina real le queda adelante.
  */
 
 const ANCHO = 768;
 const ALTO = 1376;
-const CREMA = '#F0E7D6'; // crema exacto de la ilustración (muestreado)
+const CREMA = '#F0E9D6'; // crema exacto de la ilustración (muestreado)
 const NOCHE = '#1E2230';
+const ACERA = '#E6DCD3'; // acera de la ilustración (muestreada)
 const TRANVIA = '#159B4C'; // Línea T del Metro de Medellín (ficha de Wikipedia)
+const AMARILLO = '#F3C85E'; // cuadrícula de la imagen original de Flow (muestreado)
+const TECHO = 341; // el techo más alto de la ilustración: el encuadre lo deja siempre bajo el texto
 
-// Encuadre: la escena se aleja (ESCALA) anclada a la derecha, para que quepa el tranvía por el costado derecho del
-// edificio. El panel conserva la proporción de la imagen; el título sigue sobre el crema de arriba.
-const ESCALA = 1.16;
-const VB_W = ANCHO * ESCALA;
-const VB_H = ALTO * ESCALA;
-const VB_X = ANCHO - VB_W;
-const VB_Y = -125; // baja la escena: a 320 px el techo queda por debajo de la bajada; el cruce sigue a la vista
-
-// Ejes del suelo medidos en la ilustración. Origen: la esquina izquierda del andén.
-// u corre por el andén del frente (y = 0,5512 x + 1052,8; 28,86°); v corre por el andén derecho (30,0°) hacia el
-// espectador. La manzana ocupa 0 < u < 462 y v < 0; el andén derecho está en u = 462.
-const U: [number, number] = [0.8758, 0.4828];
-const V: [number, number] = [-0.866, 0.5];
-const O: [number, number] = [155, 1138.2];
-const SUELO = `matrix(${U[0]},${U[1]},${V[0]},${V[1]},${O[0]},${O[1]})`;
-const ANDEN_DERECHO = 462;
+// Ejes del suelo medidos en la ilustración. O es el centro del cruce. U sigue la calle de la buseta (abajo a la
+// derecha, 29,07°) y V la del tranvía (abajo a la izquierda, 28,78°). El cruce va de u = ±122,5 y v = ±96,2.
+const O: [number, number] = [444, 1236.5];
+const U: [number, number] = [0.874, 0.4858];
+const V: [number, number] = [-0.8765, 0.4815];
+const CRUCE_U = 122.5;
+const CRUCE_V = 96.2;
 
 const proj = (u: number, v: number, z = 0): [number, number] => [O[0] + U[0] * u + V[0] * v, O[1] + U[1] * u + V[1] * v - z];
 const puntos = (pts: [number, number][]) => pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+const rectSuelo = (u0: number, u1: number, v0: number, v1: number) => puntos([proj(u0, v0), proj(u1, v0), proj(u1, v1), proj(u0, v1)]);
 
-// Frontera de los campos sobre el eje v: crema arriba a la izquierda (el título), noche hacia abajo a la derecha.
-// Pasa por debajo del texto en todos los anchos (a 320 px, ~40 px bajo la bajada) y por fuera de las dos líneas.
-const FRONTERA_U = -220;
+// Líneas centradas en sus calles: el tranvía a lo largo de V, la buseta a lo largo de U.
+const ANCHO_LINEA_TRANVIA = 120;
+const ANCHO_LINEA_BUS = 96;
 
-interface Pose {
-  u: number;
-  v: number;
-  hu: number;
-  hv: number;
+/* Cuadrícula amarilla medida en la imagen original de Flow: rombo del cruce con contorno de 5,5 px, verticales de
+   6,5 px cada 56,9 px desde x = 309,9 y horizontales de 4 px cada 34,4 px desde y = 1159. */
+const ROMBO: [number, number][] = [
+  [252, 1223],
+  [422, 1131],
+  [636, 1250],
+  [466, 1342],
+];
+const Cuadricula: React.FC = () => {
+  const interior = ROMBO.map(([x, y]) => [O[0] + (x - O[0]) * 0.97, O[1] + (y - O[1]) * 0.97] as [number, number]);
+  const verticales = Array.from({ length: 6 }, (_, k) => 309.9 + 56.9 * k);
+  const horizontales = Array.from({ length: 6 }, (_, k) => 1159 + 34.4 * k);
+  return (
+    <g stroke={AMARILLO} fill="none">
+      <clipPath id="subase-rombo">
+        <polygon points={puntos(ROMBO)} />
+      </clipPath>
+      <g clipPath="url(#subase-rombo)">
+        {verticales.map((x) => (
+          <line key={`v${x}`} x1={x} y1={1100} x2={x} y2={1380} strokeWidth={6.5} />
+        ))}
+        {horizontales.map((y) => (
+          <line key={`h${y}`} x1={230} y1={y} x2={660} y2={y} strokeWidth={4} />
+        ))}
+      </g>
+      <polygon points={puntos(interior)} strokeWidth={5.5} strokeLinejoin="miter" />
+    </g>
+  );
+};
+
+// Acera de abajo, alineada con la acera derecha y con el borde del cruce (la de Flow se metía 30 px en la calle).
+const RADIO_ACERA = 26;
+function aceraAbajo(): string {
+  const cu = CRUCE_U + RADIO_ACERA;
+  const cv = CRUCE_V + RADIO_ACERA;
+  const pts: [number, number][] = [proj(CRUCE_U, 900)];
+  for (let i = 0; i <= 8; i++) {
+    const t = Math.PI + (Math.PI / 2) * (i / 8);
+    pts.push(proj(cu + RADIO_ACERA * Math.cos(t), cv + RADIO_ACERA * Math.sin(t)));
+  }
+  pts.push(proj(900, CRUCE_V), proj(900, 900));
+  return puntos(pts);
 }
-
-interface Linea {
-  trazo: string;
-  total: number;
-  pose: (s: number) => Pose;
-  /** Distancia hasta la que la pieza va por detrás del edificio. */
-  detras: number;
-}
-
-/** Línea en L: baja por la izquierda de la manzana (detrás del edificio), dobla en la esquina y sigue el andén. */
-function lineaEnL(g: number, r: number, vIni: number, uFin: number): Linea {
-  const l1 = g - r - vIni;
-  const la = (r * Math.PI) / 2;
-  const l2 = uFin + g - r;
-  return {
-    trazo: `M ${-g} ${vIni} L ${-g} ${g - r} A ${r} ${r} 0 0 0 ${-g + r} ${g} L ${uFin} ${g}`,
-    total: l1 + la + l2,
-    detras: l1 + la / 2,
-    pose: (s) => {
-      if (s < l1) return { u: -g, v: vIni + s, hu: 0, hv: 1 };
-      if (s < l1 + la) {
-        const phi = Math.PI - (s - l1) / r;
-        return { u: -g + r + r * Math.cos(phi), v: g - r + r * Math.sin(phi), hu: Math.sin(phi), hv: -Math.cos(phi) };
-      }
-      return { u: -g + r + (s - l1 - la), v: g, hu: 1, hv: 0 };
-    },
-  };
-}
-
-/** Línea recta a lo largo de v (paralela al andén derecho), siempre por delante del edificio. */
-function lineaRecta(u: number, vIni: number, vFin: number): Linea {
-  return {
-    trazo: `M ${u} ${vIni} L ${u} ${vFin}`,
-    total: vFin - vIni,
-    detras: -1,
-    pose: (s) => ({ u, v: vIni + s, hu: 0, hv: 1 }),
-  };
-}
-
-// Bus: L concéntrica a la esquina izquierda, a 96 del andén. Tranvía: recto a 36 del andén derecho.
-// Los extremos quedan justo fuera de la vista (detrás del edificio o fuera de cuadro) para no dejar ratos vacíos.
-const LINEA_BUS = lineaEnL(96, 110, -320, 920);
-const LINEA_TRANVIA = lineaRecta(ANDEN_DERECHO + 36, -420, 560);
-const ANCHO_BUS = 44;
-const ANCHO_TRANVIA = 30;
 
 function mezclar(a: string, b: string, k: number): string {
   const ca = parseInt(a.slice(1), 16);
@@ -99,11 +89,21 @@ function mezclar(a: string, b: string, k: number): string {
   return `#${c(16)}${c(8)}${c(0)}`;
 }
 const oscurecer = (hex: string, f: number) => mezclar(hex, '#000000', 1 - f);
+const escaparXml = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+interface Pose {
+  u: number;
+  v: number;
+  hu: number;
+  hv: number;
+}
 
 // Una cara vertical: t la recorre de un borde al otro; z es la altura.
 interface Cara {
   rect: (t0: number, t1: number, z0: number, z1: number) => string;
   rueda: (t: number, radio: number, largo: number) => string;
+  texto: (z: number, contenido: string, tam: number) => string;
   frente: boolean;
 }
 
@@ -118,7 +118,7 @@ interface Bloque {
   extremo?: (c: Cara) => string;
 }
 
-/** Bloque orientado según el rumbo: dibuja el techo y las caras verticales que miran al espectador. */
+/** Bloque orientado según el rumbo: sombra plana, caras verticales que miran al espectador y techo. */
 function bloque(p: Pose, b: Bloque): string {
   const nu = -p.hv;
   const nv = p.hu;
@@ -130,13 +130,18 @@ function bloque(p: Pose, b: Bloque): string {
   const FR = esq(1, -1);
   const BL = esq(-1, 1);
   const BR = esq(-1, -1);
+
+  // Sombra plana hacia abajo a la derecha (luz desde arriba a la izquierda): la huella estirada a lo largo de +U.
+  const us = [FL, FR, BL, BR].map((q) => q[0]);
+  const vs = [FL, FR, BL, BR].map((q) => q[1]);
+  let s = `<polygon points="${rectSuelo(Math.min(...us), Math.max(...us) + b.alto * 0.45, Math.min(...vs), Math.max(...vs))}" fill="rgba(0,0,0,.28)"/>`;
+
   const caras: { a: [number, number]; b: [number, number]; n: [number, number]; tipo: 'frente' | 'cola' | 'costado' }[] = [
     { a: FR, b: FL, n: [p.hu, p.hv], tipo: 'frente' },
     { a: BL, b: BR, n: [-p.hu, -p.hv], tipo: 'cola' },
     { a: FL, b: BL, n: [nu, nv], tipo: 'costado' },
     { a: BR, b: FR, n: [-nu, -nv], tipo: 'costado' },
   ];
-  let s = '';
   for (const cara of caras) {
     if (cara.n[0] + cara.n[1] <= 0.001) continue; // mira hacia atrás: no se ve
     const pt = (t: number, z: number) =>
@@ -150,6 +155,16 @@ function bloque(p: Pose, b: Bloque): string {
         const pts: [number, number][] = [];
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 10) pts.push(pt(t + (radio / largo) * Math.cos(a), radio + radio * Math.sin(a)));
         return puntos(pts);
+      },
+      // Texto pegado a la cara, leído de izquierda a derecha en pantalla.
+      texto: (z, contenido, tam) => {
+        let [x0, y0] = pt(0, z);
+        let [x1, y1] = pt(1, z);
+        if (x1 < x0) [x0, y0, x1, y1] = [x1, y1, x0, y0];
+        const largo = Math.hypot(x1 - x0, y1 - y0);
+        const ux = (x1 - x0) / largo;
+        const uy = (y1 - y0) / largo;
+        return `<text transform="matrix(${ux.toFixed(4)},${uy.toFixed(4)},0,1,${((x0 + x1) / 2).toFixed(1)},${((y0 + y1) / 2).toFixed(1)})" text-anchor="middle" font-size="${tam.toFixed(1)}" font-weight="600" letter-spacing="0.4" fill="#1E2230">${escaparXml(contenido)}</text>`;
       },
       frente: cara.tipo === 'frente',
     };
@@ -175,134 +190,183 @@ function coloresDeRuta(vehiculoId?: string): ColoresRuta {
   return (vehiculoId && RUTAS[vehiculoId]) || RUTA_BASE;
 }
 
-const buseta = (ruta: ColoresRuta): Bloque => ({
-  largo: 120,
-  ancho: 34,
-  alto: 40,
+// Buseta en bloque a la escala de la fachada (la puerta de la esquina mide unos 65 px): letrero de la ruta en el costado.
+const BL = 220;
+const BW = 62;
+const BH = 72;
+
+const buseta = (ruta: ColoresRuta, letrero: string): Bloque => ({
+  largo: BL,
+  ancho: BW,
+  alto: BH,
   techo: ruta.color,
   cuerpo: ruta.oscuro,
   sombraCaras: 0.85,
   costado: (c) => {
-    let s = `<polygon points="${c.rect(0.08, 0.92, 31, 37)}" fill="#F4EFE6"/>`; // letrero de ruta
-    for (let i = 0; i < 5; i++) s += `<polygon points="${c.rect(0.1 + i * 0.16, 0.21 + i * 0.16, 17, 29)}" fill="#DDEFF7"/>`;
-    s += `<polygon points="${c.rueda(0.17, 7, 120)}" fill="#1E2230"/><polygon points="${c.rueda(0.83, 7, 120)}" fill="#1E2230"/>`;
+    let s = `<polygon points="${c.rect(0.06, 0.94, 52, 66)}" fill="#F4EFE6"/>`; // letrero de ruta
+    if (letrero) s += c.texto(62.5, letrero.toUpperCase(), Math.min(12, (0.8 * BL) / Math.max(1, letrero.length * 0.62)));
+    for (let i = 0; i < 6; i++) s += `<polygon points="${c.rect(0.08 + i * 0.135, 0.18 + i * 0.135, 27, 47)}" fill="#DDEFF7"/>`;
+    s += `<polygon points="${c.rueda(0.16, 11, BL)}" fill="#1E2230"/><polygon points="${c.rueda(0.84, 11, BL)}" fill="#1E2230"/>`;
     return s;
   },
   extremo: (c) =>
     c.frente
-      ? `<polygon points="${c.rect(0.06, 0.94, 17, 37)}" fill="#2B3240"/>` +
-        `<polygon points="${c.rect(0.09, 0.24, 5, 9)}" fill="#FFE08A"/><polygon points="${c.rect(0.76, 0.91, 5, 9)}" fill="#FFE08A"/>`
+      ? `<polygon points="${c.rect(0.06, 0.94, 27, 63)}" fill="#2B3240"/>` +
+        `<polygon points="${c.rect(0.09, 0.24, 8, 15)}" fill="#FFE08A"/><polygon points="${c.rect(0.76, 0.91, 8, 15)}" fill="#FFE08A"/>`
       : '',
 });
 
-// Tranvía Translohr articulado (blanco con franja verde, como en la foto): tres módulos que siguen la línea.
-const MODULO = 42;
-const JUNTA = 5;
+// Tranvía Translohr articulado (blanco con franja verde, como en la foto): tres módulos.
+const MODULO = 86;
+const JUNTA = 7;
+const LARGO_TRANVIA = 3 * MODULO + 2 * JUNTA;
 const moduloTranvia = (cabina: 'frente' | 'cola' | null): Bloque => ({
   largo: MODULO,
-  ancho: 26,
-  alto: 38,
+  ancho: 66,
+  alto: 74,
   techo: '#F4F5F7',
   cuerpo: '#E6EBEF',
   sombraCaras: 0.9,
   costado: (c) =>
-    `<polygon points="${c.rect(0.1, 0.9, 17, 31)}" fill="#3A4454"/><polygon points="${c.rect(0, 1, 6, 11)}" fill="${TRANVIA}"/>`,
+    `<polygon points="${c.rect(0.08, 0.92, 30, 58)}" fill="#3A4454"/><polygon points="${c.rect(0, 1, 10, 20)}" fill="${TRANVIA}"/>`,
   extremo: (c) =>
-    `<polygon points="${c.rect(0, 1, 6, 11)}" fill="${TRANVIA}"/>` +
+    `<polygon points="${c.rect(0, 1, 10, 20)}" fill="${TRANVIA}"/>` +
     // Cabina con parabrisas solo en las dos puntas del tranvía, no en las juntas entre módulos
-    ((cabina === 'frente') === c.frente && cabina ? `<polygon points="${c.rect(0.08, 0.92, 16, 33)}" fill="#2B3240"/>` : ''),
+    ((cabina === 'frente') === c.frente && cabina ? `<polygon points="${c.rect(0.08, 0.92, 28, 64)}" fill="#2B3240"/>` : ''),
 });
 
-// Velocidades en unidades de suelo por segundo. Los dos comparten un ciclo de 18 s y el tranvía va desfasado: la
-// buseta ocupa el cruce hacia los 10,4–12,2 s y el tranvía hacia 0,8–3,8 s, así nunca se encuentran en el cruce.
-const VEL_BUS = 85;
-const VEL_TRANVIA = 62;
-const CICLO = 18;
-const DESFASE_TRANVIA = 7.17;
+// Recorridos de fuera de cuadro a fuera de cuadro y ciclo común de 16 s. La buseta ocupa el cruce hacia los 3,3–7,7 s
+// y el tranvía, con 8 s de desfase, hacia los 10,9–16,2 s: nunca se encuentran en la cuadrícula.
+const BUS_U0 = -660;
+const BUS_U1 = 560;
+const TRANVIA_V0 = -420;
+const TRANVIA_V1 = 730;
+const VEL_BUS = 120;
+const VEL_TRANVIA = 100;
+const CICLO = 16;
+const DESFASE_TRANVIA = 8;
+const ciclo = (t: number) => ((t % CICLO) + CICLO) % CICLO;
 
-/** Dibuja los vehículos en el instante t (s): cada pieza va a la capa de fondo mientras está detrás del edificio. */
-function cuadro(t: number, ruta: ColoresRuta): { fondo: string; frente: string } {
-  const piezas: { capa: 'fondo' | 'frente'; prof: number; svg: string }[] = [];
-  const poner = (l: Linea, s: number, b: Bloque) => {
-    if (s < 0 || s > l.total) return;
-    const p = l.pose(s);
-    piezas.push({ capa: s < l.detras ? 'fondo' : 'frente', prof: p.u + p.v, svg: bloque(p, b) });
-  };
-
-  // Buseta: baja por detrás del edificio, dobla la esquina y sale por abajo a la derecha.
-  poner(LINEA_BUS, VEL_BUS * (t % CICLO), buseta(ruta));
-
-  // Tranvía: baja por el costado derecho del edificio hacia el espectador y cruza la línea del bus.
-  const cabeza = VEL_TRANVIA * ((t + DESFASE_TRANVIA) % CICLO);
-  const cabinas = ['frente', null, 'cola'] as const;
-  for (let i = 0; i < 3; i++) poner(LINEA_TRANVIA, cabeza - i * (MODULO + JUNTA) - MODULO / 2, moduloTranvia(cabinas[i]));
-
-  piezas.sort((a, b) => a.prof - b.prof);
-  return {
-    fondo: piezas.filter((p) => p.capa === 'fondo').map((p) => p.svg).join(''),
-    frente: piezas.filter((p) => p.capa === 'frente').map((p) => p.svg).join(''),
-  };
+interface Cuadro {
+  busAtras: string;
+  tranvia: string;
+  busAdelante: string;
 }
 
-const Escena: React.FC<{ ruta: ColoresRuta }> = ({ ruta }) => {
-  const capaFondo = useRef<SVGGElement>(null);
-  const capaFrente = useRef<SVGGElement>(null);
+function vehiculos(tBus: number, tTranvia: number, ruta: ColoresRuta, letrero: string): Cuadro {
+  const cuadro: Cuadro = { busAtras: '', tranvia: '', busAdelante: '' };
+
+  const u = BUS_U0 + VEL_BUS * ciclo(tBus);
+  if (u <= BUS_U1) {
+    const svg = bloque({ u, v: 0, hu: 1, hv: 0 }, buseta(ruta, letrero));
+    // Antes del centro del cruce la tapa la isla izquierda; después, solo la acera de abajo.
+    if (u < 0) cuadro.busAtras = svg;
+    else cuadro.busAdelante = svg;
+  }
+
+  const cabeza = TRANVIA_V0 + VEL_TRANVIA * ciclo(tTranvia - DESFASE_TRANVIA);
+  if (cabeza - LARGO_TRANVIA <= TRANVIA_V1) {
+    const cabinas = ['cola', null, 'frente'] as const; // de atrás hacia adelante, para dibujar primero lo más lejano
+    for (let i = 0; i < 3; i++) {
+      const v = cabeza - LARGO_TRANVIA + MODULO / 2 + i * (MODULO + JUNTA);
+      cuadro.tranvia += bloque({ u: 0, v, hu: 0, hv: 1 }, moduloTranvia(cabinas[i]));
+    }
+  }
+  return cuadro;
+}
+
+const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; viewBoxY: number }> = ({ ruta, letrero, viewBoxY }) => {
+  const busAtras = useRef<SVGGElement>(null);
+  const tranvia = useRef<SVGGElement>(null);
+  const busAdelante = useRef<SVGGElement>(null);
 
   useEffect(() => {
-    const pintar = (t: number) => {
-      const { fondo, frente } = cuadro(t, ruta);
-      if (capaFondo.current) capaFondo.current.innerHTML = fondo;
-      if (capaFrente.current) capaFrente.current.innerHTML = frente;
+    const pintar = (tBus: number, tTranvia: number) => {
+      const c = vehiculos(tBus, tTranvia, ruta, letrero);
+      if (busAtras.current) busAtras.current.innerHTML = c.busAtras;
+      if (tranvia.current) tranvia.current.innerHTML = c.tranvia;
+      if (busAdelante.current) busAdelante.current.innerHTML = c.busAdelante;
     };
-    const quieto = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (quieto) {
-      pintar(3.5); // los dos a la vista: la buseta doblando la esquina y el tranvía recién pasado el cruce
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      pintar(3, 9.8); // quietos y a la vista: la buseta llegando al cruce y el tranvía entrando por la derecha
       return;
     }
     let id = 0;
     const inicio = performance.now();
     const paso = (ahora: number) => {
-      pintar((ahora - inicio) / 1000);
+      const t = (ahora - inicio) / 1000;
+      pintar(t, t);
       id = requestAnimationFrame(paso);
     };
     id = requestAnimationFrame(paso);
     return () => cancelAnimationFrame(id);
-  }, [ruta]);
+  }, [ruta, letrero]);
 
-  const noche = puntos([proj(FRONTERA_U, -3000), proj(3000, -3000), proj(3000, 3000), proj(FRONTERA_U, 3000)]);
+  const alto = ALTO - viewBoxY;
 
   return (
     <svg
       className="absolute inset-0 w-full h-full"
-      viewBox={`${VB_X} ${VB_Y} ${VB_W} ${VB_H}`}
-      preserveAspectRatio="xMaxYMax slice"
+      viewBox={`0 ${viewBoxY.toFixed(1)} ${ANCHO} ${alto.toFixed(1)}`}
+      preserveAspectRatio="xMidYMin slice"
       aria-hidden="true"
     >
-      <polygon points={noche} fill={NOCHE} />
-      <g transform={SUELO} fill="none">
-        <path d={LINEA_TRANVIA.trazo} stroke={TRANVIA} strokeWidth={ANCHO_TRANVIA} />
-        <path d={LINEA_BUS.trazo} stroke={ruta.color} strokeWidth={ANCHO_BUS} />
-      </g>
-      <g ref={capaFondo} />
-      <image href={ayacucho} x={0} y={0} width={ANCHO} height={ALTO} />
-      <g ref={capaFrente} />
+      <rect x={0} y={0} width={ANCHO} height={ALTO} fill={NOCHE} />
+      <polygon points={rectSuelo(-ANCHO_LINEA_TRANVIA / 2, ANCHO_LINEA_TRANVIA / 2, -1200, 1200)} fill={TRANVIA} />
+      <polygon points={rectSuelo(-1200, 1200, -ANCHO_LINEA_BUS / 2, ANCHO_LINEA_BUS / 2)} fill={ruta.color} />
+      <Cuadricula />
+      <image href={ayacuchoBase} x={0} y={0} width={ANCHO} height={ALTO} />
+      <g ref={busAtras} />
+      <image href={ayacuchoIsla} x={0} y={955} width={260} height={421} />
+      <g ref={tranvia} />
+      <image href={ayacuchoDerecha} x={628} y={1140} width={140} height={236} />
+      <g ref={busAdelante} />
+      <polygon points={aceraAbajo()} fill={ACERA} />
+      {/* Cable que cruza la calle hasta el semáforo de la esquina (la calle de la imagen se volvió transparente) */}
+      <line x1={0} y1={1250.4} x2={420} y2={1038.8} stroke="#2A2F29" strokeWidth={1.6} />
     </svg>
   );
 };
 
 /**
- * Panel a todo el ancho con la escena; el texto (children) va en tinta oscura sobre el campo crema de arriba,
- * que la ilustración deja vacío para el título.
+ * Panel a todo el ancho con la escena; el texto (children) va en tinta oscura sobre el campo crema de arriba.
+ * El encuadre se ajusta al alto real del texto para que el techo nunca lo toque, y el panel crece lo necesario para
+ * mostrar la escena completa, cuadrícula incluida.
  */
-export const PanelEscena: React.FC<{ vehiculoId?: string; children: React.ReactNode }> = ({ vehiculoId, children }) => {
+export const PanelEscena: React.FC<{ vehiculoId?: string; letrero?: string; children: React.ReactNode }> = ({
+  vehiculoId,
+  letrero = '',
+  children,
+}) => {
   const ruta = coloresDeRuta(vehiculoId);
+  const panel = useRef<HTMLElement>(null);
+  const texto = useRef<HTMLDivElement>(null);
+  const [viewBoxY, setViewBoxY] = useState(-80);
+
+  useLayoutEffect(() => {
+    const medir = () => {
+      if (!panel.current || !texto.current) return;
+      const k = panel.current.clientWidth / ANCHO; // px de pantalla por unidad de la imagen
+      const bajoTexto = texto.current.offsetTop + texto.current.offsetHeight + 14;
+      setViewBoxY(Math.min(0, TECHO - bajoTexto / k));
+    };
+    medir();
+    const ro = new ResizeObserver(medir);
+    if (panel.current) ro.observe(panel.current);
+    if (texto.current) ro.observe(texto.current);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <section
-      className="relative -mx-5 -mt-6 overflow-hidden aspect-[768/1376] text-[#1E2230]"
-      style={{ backgroundColor: CREMA }}
+      ref={panel}
+      className="relative -mx-5 -mt-6 overflow-hidden text-[#1E2230]"
+      style={{ backgroundColor: CREMA, aspectRatio: `${ANCHO} / ${(ALTO - viewBoxY).toFixed(1)}` }}
     >
-      <Escena ruta={ruta} />
-      <div className="relative z-10 px-5 pt-6">{children}</div>
+      <Escena ruta={ruta} letrero={letrero} viewBoxY={viewBoxY} />
+      <div ref={texto} className="relative z-10 px-5 pt-6">
+        {children}
+      </div>
     </section>
   );
 };

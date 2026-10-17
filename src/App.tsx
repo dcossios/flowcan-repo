@@ -30,11 +30,12 @@ const InicioPage: React.FC = () => {
     return (
       <AppShell>
         <div className="flex-1 flex flex-col">
-          <PanelEscena>
-            <h1 className="text-[32px] font-light leading-tight">Escanee el QR del bus para pagar.</h1>
+          {/* Texto compacto: la escena se encuadra justo debajo y deja a la vista el cruce de las líneas */}
+          <PanelEscena letrero="Súbase">
+            <h1 className="text-[28px] min-[360px]:text-[32px] font-light leading-tight">Escanee el QR del bus para pagar.</h1>
             <RayaRuta />
-            <p className="text-[15px] font-normal text-[#4A4F5C] mt-4 leading-relaxed max-w-[26ch]">
-              Abra la cámara de su celular, apunte al código del vehículo y confirme el pasaje.
+            <p className="text-[15px] font-normal text-[#4A4F5C] mt-3 leading-snug">
+              Apunte la cámara de su celular al código del vehículo.
             </p>
           </PanelEscena>
         </div>
@@ -45,15 +46,14 @@ const InicioPage: React.FC = () => {
   return (
     <AppShell vehiculoIdActual={ultimo.id} barraFija>
       <div className="flex-1 flex flex-col">
-        <PanelEscena vehiculoId={ultimo.id}>
-          <h1 className="text-[32px] font-light leading-tight">Pagar otra vez</h1>
+        {/* Texto compacto: la escena se encuadra justo debajo; la ruta también va en el letrero de la buseta */}
+        <PanelEscena vehiculoId={ultimo.id} letrero={ultimo.ruta}>
+          <h1 className="text-[28px] min-[360px]:text-[32px] font-light leading-tight">Pagar otra vez</h1>
           <RayaRuta vehiculoId={ultimo.id} />
-          <p className="text-[15px] font-normal text-[#4A4F5C] mt-4">{ultimo.nombre}</p>
-          <p className="text-[18px] font-normal mt-1 leading-snug max-w-[26ch]">{ultimo.ruta}</p>
-          <p className="text-[15px] font-normal text-[#4A4F5C] mt-4">Pasaje</p>
-          <p className="text-[40px] font-light leading-none tracking-tight tabular-nums mt-1">
-            {formatCOP(ultimo.tarifa)}
+          <p className="text-[15px] font-normal text-[#4A4F5C] mt-3 tabular-nums">
+            {ultimo.nombre} · {formatCOP(ultimo.tarifa)}
           </p>
+          <p className="text-[18px] font-normal mt-0.5 leading-snug">{ultimo.ruta}</p>
         </PanelEscena>
 
         {getPaseToken() && (
