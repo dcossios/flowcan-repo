@@ -11,13 +11,20 @@ export interface ColoresRuta {
 }
 
 const RUTAS: Record<string, ColoresRuta> = {
-  'bus-02': { color: '#3FB27F', oscuro: '#2F865F', texto: '#FFFFFF' },
+  'bus-02': { color: '#3FB27F', oscuro: '#2F865F', texto: '#1E2230' },
   'taxi-01': { color: '#F6C431', oscuro: '#C99A12', texto: '#1E2230' },
 };
 const RUTA_BASE: ColoresRuta = { color: '#EE5A52', oscuro: '#B8403A', texto: '#FFFFFF' };
 
 export function coloresDeRuta(vehiculoId?: string): ColoresRuta {
   return (vehiculoId && RUTAS[vehiculoId]) || RUTA_BASE;
+}
+
+/** Cuadros de ruta con texto < 18,66 px (el 01 coral de 22 px no alcanza AA). */
+export function insigniaChica(vehiculoId?: string): { fondo: string; texto: string } {
+  if (vehiculoId === 'bus-02') return { fondo: '#3FB27F', texto: '#1E2230' };
+  if (vehiculoId?.startsWith('taxi')) return { fondo: '#F6C431', texto: '#1E2230' };
+  return { fondo: '#B8403A', texto: '#FFFFFF' };
 }
 
 // «Bus 01 — Circular Coonatra» → tipo «Bus», número «01» y empresa «Circular Coonatra».

@@ -125,7 +125,12 @@ export const AppShell: React.FC<AppShellProps> = ({
       {/* Pie de la demo (cambiar de vista, Interledger): solo en el inicio y en las vistas de conductor y empresa. En el
           cobro, el pase y el recibo distraía del único paso que el pasajero tiene que dar. */}
       {(rol !== 'pasajero' || location.pathname === '/') && (
-      <footer className={`relative z-10 w-full ${contenedorAncho} mx-auto px-5 pt-2 pb-4`}>
+      // Sobre el crema el pie va en tinta: el gris del negro daba 1,5 : 1 sobre el crema
+      <footer
+        className={`relative z-10 w-full ${contenedorAncho} mx-auto px-5 pt-2 pb-4 ${
+          fondo === 'crema' ? 'subase-pie-crema' : ''
+        }`}
+      >
         {rol === 'pasajero' && (
           <p className="text-[15px] font-normal text-[#C3C5C6] leading-snug">
             Su plata va directo de su billetera a la del bus.

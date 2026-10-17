@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
-import { Bajada, PanelCrema, Titulo } from '../components/Sistema';
+import { Bajada, FichaEstado, PanelCrema, Titulo } from '../components/Sistema';
 import {
   clearPendingPaseContext,
   confirmarPase,
@@ -79,7 +79,7 @@ export const PaseListoPage: React.FC = () => {
   }, [confirmado, destinoVolver, navigate]);
 
   return (
-    <AppShell>
+    <AppShell fondo="crema">
       <div className="flex-1 flex flex-col">
         <PanelCrema>
           {loading && (
@@ -91,12 +91,14 @@ export const PaseListoPage: React.FC = () => {
           )}
           {!loading && errorInfo && (
             <div role="alert">
+              <FichaEstado estado="fallido" className="mb-4" />
               <Titulo>No se pudo confirmar el pase</Titulo>
               <Bajada className="mt-2">{errorInfo.message}</Bajada>
             </div>
           )}
           {!loading && confirmado && (
             <>
+              <FichaEstado estado="pagado" className="mb-4" />
               <Titulo>Pase activo</Titulo>
               <Bajada className="mt-2">Su tope diario ya está autorizado. Lo llevamos al bus para pagar.</Bajada>
             </>
@@ -104,46 +106,54 @@ export const PaseListoPage: React.FC = () => {
         </PanelCrema>
 
         {!loading && errorInfo && (
-          <div className="mt-6 flex-1 flex flex-col">
-            <div className="flex flex-col gap-3">
+          <div className="mt-4 flex-1 flex flex-col">
+            <div className="flex flex-col items-start gap-3">
               <Link
                 to={`/pase/activar?volver=${encodeURIComponent(destinoVolver)}`}
-                className="subase-btn-primary subase-btn-flecha"
+                className="subase-btn-primary subase-btn-tinta subase-btn-flecha"
               >
                 Intentar de nuevo
               </Link>
               <Link
                 to={destinoVolver}
-                className="inline-flex items-center justify-center min-h-11 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
+                className="inline-flex items-center min-h-11 text-[15px] font-medium text-[#1E2230] underline underline-offset-2"
               >
                 Volver al bus
               </Link>
             </div>
-            <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
+            <p className="font-mono text-[13px] font-normal text-[#3A3F4E] mt-8">{errorInfo.code}</p>
           </div>
         )}
 
         {!loading && confirmado && (
-          <div className="mt-6 flex-1 flex flex-col">
-            <hr className="subase-filete mb-6" />
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-[14px] font-normal text-[#C3C5C6]">Le queda del tope hoy</span>
-              <span className="text-[32px] font-semibold text-white leading-none tabular-nums">
-                {formatMoneda(confirmado.pase.disponibleHoy, confirmado.pase.moneda)}
-              </span>
-            </div>
-            <div className="flex items-baseline justify-between gap-4 mt-4">
-              <span className="text-[14px] font-normal text-[#C3C5C6]">Tope diario</span>
-              <span className="text-[16px] font-medium text-white">{formatMoneda(confirmado.pase.topeDiario, confirmado.pase.moneda)}</span>
-            </div>
-            {confirmado.pase.venceEn && (
-              <div className="flex items-baseline justify-between gap-4 mt-4">
-                <span className="text-[14px] font-normal text-[#C3C5C6]">Vigencia</span>
-                <span className="text-[16px] font-medium text-white">{formatFechaHora(confirmado.pase.venceEn)}</span>
+          <div className="mt-2 flex-1 flex flex-col">
+            <div className="border-t border-[rgba(30,34,48,0.16)]">
+              <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(30,34,48,0.16)]">
+                <span className="text-[14px] font-normal text-[#3A3F4E] shrink-0">Le queda del tope hoy</span>
+                <span className="text-[32px] font-semibold text-[#1E2230] leading-none tabular-nums">
+                  {formatMoneda(confirmado.pase.disponibleHoy, confirmado.pase.moneda)}
+                </span>
               </div>
-            )}
+              <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(30,34,48,0.16)]">
+                <span className="text-[14px] font-normal text-[#3A3F4E] shrink-0">Tope diario</span>
+                <span className="text-[16px] font-semibold text-[#1E2230] tabular-nums">
+                  {formatMoneda(confirmado.pase.topeDiario, confirmado.pase.moneda)}
+                </span>
+              </div>
+              {confirmado.pase.venceEn && (
+                <div className="flex items-baseline justify-between gap-4 py-3.5 border-b border-[rgba(30,34,48,0.16)]">
+                  <span className="text-[14px] font-normal text-[#3A3F4E] shrink-0">Vigencia</span>
+                  <span className="text-[16px] font-medium text-[#1E2230] text-right">
+                    {formatFechaHora(confirmado.pase.venceEn)}
+                  </span>
+                </div>
+              )}
+            </div>
 
-            <Link to={destinoVolver} className="subase-btn-primary subase-btn-flecha mt-10">
+            <Link
+              to={destinoVolver}
+              className="subase-btn-primary subase-btn-tinta subase-btn-flecha mt-8"
+            >
               Continuar al bus
             </Link>
           </div>
@@ -152,3 +162,4 @@ export const PaseListoPage: React.FC = () => {
     </AppShell>
   );
 };
+

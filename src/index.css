@@ -228,7 +228,8 @@ details[open] > summary::after { content: "–"; }
 }
 
 /* Barra y botón de pago del cobro (prompt145, prompt168): el botón coral monta mitad sobre el crema y mitad sobre
-   el negro (sin filete superior), como en el diseño de Andrés. Blanco sobre #EE5A52 da 3,4 : 1 (WCAG AA texto grande). */
+   el negro (sin filete superior), como en el diseño de Andrés. El coral es solo para pagar. Texto blanco: sobre
+   #EE5A52 da 3,38 : 1, sobre el mínimo AA de texto grande (3 : 1); el crema daba 2,79 : 1 (prompt184). */
 .subase-fixed-bar-pago {
   border-top: none;
 }
@@ -238,7 +239,7 @@ details[open] > summary::after { content: "–"; }
 }
 .subase-btn-pago {
   background: #EE5A52;
-  color: #F0E9D6;
+  color: #FFFFFF;
   min-height: 64px;
   margin-top: -32px;
   border-radius: 9999px;
@@ -246,6 +247,13 @@ details[open] > summary::after { content: "–"; }
   font-size: 21px;
   justify-content: center;
   gap: 10px;
+  white-space: nowrap;
+}
+/* Bajo 360 px «Activar pase y pagar →» a 21 px se partía en dos renglones */
+@media (max-width: 359px) {
+  .subase-btn-pago {
+    font-size: 19px;
+  }
 }
 .subase-btn-pago:hover {
   background: #E04B43;
@@ -253,4 +261,13 @@ details[open] > summary::after { content: "–"; }
 .subase-btn-pago:focus-visible {
   outline: 2px solid #F0E9D6;
   outline-offset: 3px;
+}
+
+/* Pie de la app sobre el campo crema (conductor y empresa): tinta secundaria en vez del gris pensado para el negro */
+.subase-pie-crema p,
+.subase-pie-crema a {
+  color: #3A3F4E;
+}
+.subase-pie-crema a:hover {
+  color: #1E2230;
 }

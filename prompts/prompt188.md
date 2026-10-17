@@ -1,0 +1,1 @@
+Sí, manda a Antigravity el terminal del conductor (QR como placa sobre crema y el feed como tablero de llegadas) y el QR imprimible (cuadro de ruta, línea de metro con paradas, pasaje en cuadro tinta). Pase listo también si alcanza.

@@ -3,9 +3,9 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { AppShell } from '../components/AppShell';
-import { Bajada, FichaEstado, IdentidadVehiculo, PanelCrema, Pasaje, TINTA, Titulo, CREMA } from '../components/Sistema';
+import { Bajada, CREMA, ETIQUETA, FichaEstado, IdentidadVehiculo, PanelCrema, Pasaje, TINTA, Titulo } from '../components/Sistema';
 import { PanelEscena } from '../components/EscenaInicio';
-import { nombreDesdeId } from '../lib/rutas';
+import { coloresDeRuta, nombreDesdeId } from '../lib/rutas';
 import {
   FeedItem,
   fetchVehiculo,
@@ -16,6 +16,67 @@ import {
 } from '../lib/api';
 import { formatCOP, formatHora, formatHoraCorta } from '../lib/format';
 import { anunciarPago, desbloquearVoz, playPaymentChime, unlockAudio } from '../lib/sound';
+
+// Línea de metro con sus estaciones repartidas a lo ancho
+const LineaParadas: React.FC<{ ruta: string; vehiculoId?: string; className?: string }> = ({
+  ruta,
+  vehiculoId,
+  className = '',
+}) => {
+  const paradas = ruta.split(/\s+[–—·-]\s+/).filter(Boolean);
+  if (paradas.length === 0) return null;
+  const { color } = coloresDeRuta(vehiculoId);
+  const ANCHO = 280;
+  const ALTO = 24;
+  const PAD = 12;
+  const R = 8;
+  const y = ALTO / 2;
+
+  return (
+    <div className={className}>
+      <svg
+        aria-hidden="true"
+        width={ANCHO}
+        height={ALTO}
+        viewBox={`0 0 ${ANCHO} ${ALTO}`}
+        className="block w-full h-auto"
+      >
+        <line x1={PAD} y1={y} x2={ANCHO - PAD} y2={y} stroke={color} strokeWidth={8} strokeLinecap="round" />
+        {paradas.map((_, i) => {
+          const x =
+            paradas.length === 1
+              ? ANCHO / 2
+              : PAD + (i * (ANCHO - 2 * PAD)) / (paradas.length - 1);
+          return <circle key={i} cx={x} cy={y} r={R} fill="#FFFFFF" stroke={TINTA} strokeWidth={3} />;
+        })}
+      </svg>
+      <div
+        className="mt-1.5 grid gap-1.5"
+        style={{ gridTemplateColumns: `repeat(${paradas.length}, minmax(0, 1fr))` }}
+      >
+        {paradas.map((parada, i) => {
+          const esExtremo = i === 0 || i === paradas.length - 1;
+          const alineacion =
+            paradas.length === 1
+              ? 'text-center'
+              : i === 0
+                ? 'text-left'
+                : i === paradas.length - 1
+                  ? 'text-right'
+                  : 'text-center';
+          return (
+            <span
+              key={i}
+              className={`${ETIQUETA} ${esExtremo ? '!font-semibold' : ''} ${alineacion} text-[#1E2230] leading-tight break-words`}
+            >
+              {parada}
+            </span>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export const ConductorPage: React.FC = () => {
   const { vehiculoId = 'bus-01' } = useParams<{ vehiculoId: string }>();
@@ -143,6 +204,8 @@ export const ConductorPage: React.FC = () => {
 
   const nombreVehiculo = vehiculo ? vehiculo.nombre : nombreDesdeId(vehiculoId);
   const numeroVehiculo = nombreVehiculo.split(/\s+[—–-]\s+/)[0];
+  const rutaVehiculo = vehiculo?.ruta || 'Poblado – Centro – Laureles';
+  const tarifaVehiculo = vehiculo ? vehiculo.tarifa : 3200;
   const pagosConfirmados = feed.filter((item) => item.estado === 'pagado');
   const totalRecaudado = pagosConfirmados.reduce((acc, item) => acc + (Number(item.monto) || 0), 0);
   const totalPasajeros = pagosConfirmados.length;
@@ -156,6 +219,8 @@ export const ConductorPage: React.FC = () => {
       vehiculoIdActual={vehiculoId}
       subtitle="El celular del conductor es el terminal."
       rol="conductor"
+      fondo="crema"
+      ancho="amplio"
     >
       {/* Capa inicial para empezar turno y habilitar audio + voz */}
       {/* Las capas a pantalla completa van al body: dentro de <main> quedarían bajo el encabezado */}
@@ -206,7 +271,7 @@ export const ConductorPage: React.FC = () => {
           document.body
         )}
 
-      <div className="space-y-6 font-normal">
+      <div className="w-full max-w-lg mx-auto lg:max-w-none space-y-6 font-normal">
         {/* Lo que el conductor mira de reojo: cuánto lleva, cuántos pasajes y cuándo entró el último. Como las
             ganancias de DiDi Conductor, el monto con los viajes al lado. El pasaje baja, junto al QR */}
         <PanelCrema>
@@ -225,8 +290,8 @@ export const ConductorPage: React.FC = () => {
 
         {/* Aviso si el servidor no responde */}
         {backendOffline && (
-          <div className="subase-card-sand p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <span className="text-[14px] font-normal text-[#C3C5C6]">
+          <div className="py-3 border-y border-[rgba(30,34,48,0.16)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span className="text-[15px] font-normal text-[#3A3F4E]">
               El servidor de Súbase no responde. Intente de nuevo en unos segundos.
             </span>
             {import.meta.env.DEV && (
@@ -236,7 +301,7 @@ export const ConductorPage: React.FC = () => {
                   setUiPreviewMode(true);
                   window.location.reload();
                 }}
-                className="min-h-[48px] px-4 py-2.5 rounded-[12px] bg-[#113462] border border-[#D2B99A] text-white text-[15px] font-normal shrink-0 cursor-pointer"
+                className="subase-btn-primary subase-btn-tinta !w-auto !min-h-11 !px-5 !text-[15px] shrink-0"
               >
                 Vista Previa
               </button>
@@ -244,70 +309,80 @@ export const ConductorPage: React.FC = () => {
           </div>
         )}
 
-        {/* QR con al menos 16px de margen blanco alrededor */}
-        <div className="subase-card p-4 min-[400px]:p-6 text-center">
-          <div className="bg-white p-4 min-[400px]:p-5 rounded-[12px] mx-auto w-full max-w-[280px] aspect-square">
-            <QRCodeSVG
-              value={qrTargetUrl}
-              size={512}
-              style={{ width: '100%', height: '100%' }}
-              level="M"
-              includeMargin={false}
-              bgColor="#FFFFFF"
-              fgColor="#000000"
-            />
+        {/* En escritorio: placa del QR a la izquierda y tablero de llegadas a la derecha */}
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-8 lg:gap-10 items-start">
+          {/* Placa de ruta con el QR sobre el crema */}
+          <div className="w-full max-w-[280px]">
+            <p className={`${ETIQUETA} text-[#3A3F4E]`}>Escanee para pagar</p>
+            <div className="mt-2 bg-white p-4 rounded-[3px] w-full max-w-[280px] aspect-square">
+              <QRCodeSVG
+                value={qrTargetUrl}
+                size={512}
+                style={{ width: '100%', height: '100%' }}
+                level="M"
+                includeMargin={false}
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+              />
+            </div>
+            <LineaParadas ruta={rutaVehiculo} vehiculoId={vehiculoId} className="mt-4" />
+            <Pasaje monto={tarifaVehiculo} moneda={vehiculo?.moneda} className="mt-5" />
           </div>
 
-          <p className="mt-4 text-[17px] font-normal text-white">
-            Escanee para pagar ·{' '}
-            <span className="font-semibold tabular-nums">{vehiculo ? formatCOP(vehiculo.tarifa) : '$3.200'}</span>
-          </p>
-        </div>
+          {/* Tablero de llegadas en tinta */}
+          <div className="w-full rounded-[3px] p-5 text-white" style={{ backgroundColor: TINTA }}>
+            <h2 className={`${ETIQUETA} text-[#C9CCCE]`}>Llegadas del turno</h2>
 
-        {/* Listado de pagos de este turno */}
-        <div className="subase-card p-5">
-          <h2 className="text-[18px] font-normal text-white mb-3">
-            Pagos de este turno
-          </h2>
+            {feed.length === 0 ? (
+              <div className="mt-3 pt-5 pb-2 border-t border-white/12">
+                <p className="text-[16px] font-normal text-[#C9CCCE]">
+                  Aún no hay pagos en este turno.
+                </p>
+              </div>
+            ) : (
+              <ul className="mt-3 divide-y divide-white/12 border-t border-white/12">
+                {feed.map((item) => {
+                  const esPendiente = item.estado === 'pendiente';
+                  const esFallido = item.estado === 'fallido';
+                  const estadoFicha: 'pagado' | 'pendiente' | 'fallido' = esPendiente
+                    ? 'pendiente'
+                    : esFallido
+                      ? 'fallido'
+                      : 'pagado';
 
-          {feed.length === 0 ? (
-            <div className="py-6 text-center border-t subase-divider">
-              <p className="text-[16px] font-normal text-[#C3C5C6]">
-                Aún no hay pagos en este turno.
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-[#C3C5C6]/20 border-t subase-divider">
-              {feed.map((item) => {
-                const esPendiente = item.estado === 'pendiente';
-                const esFallido = item.estado === 'fallido';
-
-                return (
-                  <li
-                    key={item.viajeId}
-                    className={`py-3 px-2 flex items-center justify-between gap-3 text-[16px] font-normal ${
-                      esPendiente || esFallido ? 'text-[#C3C5C6]' : 'text-white'
-                    }`}
-                  >
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span>{formatHora(item.fecha)}</span>
-                      <span className="text-[#C3C5C6]">· N.º {item.viajeId.slice(0, 8)}</span>
-                      {esPendiente && (
-                        <span className="text-[#C3C5C6]">· Confirmando…</span>
-                      )}
-                      {esFallido && (
-                        <span className="text-[#C3C5C6]">· Pago fallido</span>
-                      )}
-                    </div>
-                    <span className="shrink-0">{formatCOP(item.monto)}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
+                  return (
+                    <li
+                      key={item.viajeId}
+                      className="py-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5"
+                    >
+                      <div className="flex flex-wrap items-center gap-2.5 min-w-0">
+                        <FichaEstado estado={estadoFicha} tamano={22} />
+                        <span className="font-mono text-[14px] text-white tabular-nums">
+                          {formatHoraCorta(item.fecha)}
+                        </span>
+                        <span className="font-mono text-[14px] text-[#C9CCCE]">
+                          N.º {item.viajeId.slice(0, 8)}
+                        </span>
+                        {esPendiente && (
+                          <span className="text-[14px] font-normal text-[#C9CCCE]">Confirmando…</span>
+                        )}
+                        {esFallido && (
+                          <span className="text-[14px] font-normal text-[#C9CCCE]">Pago fallido</span>
+                        )}
+                      </div>
+                      <span className="text-[16px] font-semibold tabular-nums text-white shrink-0">
+                        +{formatCOP(item.monto)}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
     </AppShell>
   );
 };
+
 

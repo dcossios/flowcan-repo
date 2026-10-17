@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Bus, CarTaxiFront, Loader2, Plus, QrCode, RefreshCw } from 'lucide-react';
+import { Loader2, QrCode, RefreshCw } from 'lucide-react';
+import { Bajada, ETIQUETA, FichaEstado, PanelCrema, TINTA, Titulo } from './Sistema';
+import { coloresDeRuta, partirNombre } from '../lib/rutas';
 import {
   CambiosVehiculo,
   crearVehiculo,
@@ -13,13 +15,26 @@ import {
 } from '../lib/api';
 import { formatCOP } from '../lib/format';
 
-// 16 px en los campos evita que iOS haga zoom al escribir.
+/*
+REFERENCIA: mapa de Mini Metro + tablero de llegadas de la Terminal del Norte de Medellín
+TIPOGRAFÍA: Poppins 600; ETIQUETA 12 px versalitas; códigos en mono 14 px
+PALETA:     campo crema #F0E9D6 · tinta #1E2230 · color de cada línea · gris #A79C86 en inactivo
+RIESGO:     cada vehículo es una placa de ruta: la línea de metro con paradas nombradas es el dato
+*/
+
+// 16 px en los campos evita que iOS haga zoom al escribir. Bordes de 3 px como en el resto del sistema.
 const campo =
-  'w-full min-h-11 rounded-[12px] bg-black border border-[rgba(195,197,198,0.35)] px-3 text-[16px] font-normal text-white placeholder:text-[#C3C5C6]/60 focus:outline-none focus:border-[#D2B99A]';
-const btnSecundario =
-  'inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.25)] text-[15px] font-normal text-white hover:border-[#D2B99A] cursor-pointer disabled:opacity-50';
-const btnPrincipal =
-  'inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-[12px] bg-white text-[15px] font-medium text-[#1E2230] hover:bg-[#e9e9e9] cursor-pointer disabled:opacity-50';
+  'w-full min-h-11 rounded-[3px] bg-white border-[1.5px] border-[rgba(30,34,48,0.3)] px-3.5 text-[16px] font-normal text-[#1E2230] placeholder:text-[#3A3F4E]/55 focus:outline-none focus:border-[#1E2230]';
+const btnBorde =
+  'inline-flex items-center justify-center gap-2 min-h-11 px-3.5 rounded-[3px] border-[1.5px] border-[#1E2230] text-[15px] font-semibold text-[#1E2230] cursor-pointer disabled:opacity-50';
+const estiloTintaCompacto: React.CSSProperties = {
+  width: 'auto',
+  minHeight: 44,
+  borderRadius: 3,
+  padding: '0 16px',
+  fontWeight: 600,
+  fontSize: 15,
+};
 
 const Campo: React.FC<{ label: string; ayuda?: string; grupo?: boolean; children: React.ReactNode }> = ({
   label,
@@ -31,10 +46,72 @@ const Campo: React.FC<{ label: string; ayuda?: string; grupo?: boolean; children
   const Contenedor = grupo ? 'div' : 'label';
   return (
     <Contenedor className="block">
-      <span className="block text-[14px] font-normal text-[#C3C5C6] mb-1.5">{label}</span>
+      <span className="block text-[15px] font-semibold text-[#1E2230] mb-1.5">{label}</span>
       {children}
-      {ayuda && <span className="block text-[13px] font-normal text-[#C3C5C6]/80 mt-1">{ayuda}</span>}
+      {ayuda && <span className="block text-[14px] font-normal text-[#3A3F4E] mt-1">{ayuda}</span>}
     </Contenedor>
+  );
+};
+
+function insigniaVehiculo(v: Pick<VehiculoGestion, 'id' | 'nombre' | 'tipo'>) {
+  const { tipo, numero, empresa } = partirNombre(v.nombre);
+  const num =
+    numero ||
+    v.id.match(/\d+/)?.[0] ||
+    (v.tipo === 'taxi' ? 'TX' : v.id.slice(0, 2).toUpperCase());
+  const colores = coloresDeRuta(v.tipo === 'taxi' && !v.id.startsWith('taxi-01') ? 'taxi-01' : v.id);
+  const etiquetaTipo = (tipo || (v.tipo === 'taxi' ? 'Taxi' : 'Bus')).toUpperCase();
+  return { num, colores, etiquetaTipo, empresa };
+}
+
+function partirParadas(ruta: string): string[] {
+  return ruta.split(/\s+[–—·-]\s+/).filter(Boolean);
+}
+
+const LineaParadas: React.FC<{ ruta: string; color: string; inactiva?: boolean }> = ({
+  ruta,
+  color,
+  inactiva = false,
+}) => {
+  const paradas = partirParadas(ruta);
+  if (paradas.length === 0) return null;
+  const linea = inactiva ? '#A79C86' : color;
+  const last = paradas.length - 1;
+
+  return (
+    <div className="mt-4">
+      <div className="relative flex">
+        <div
+          aria-hidden="true"
+          className="absolute left-[7px] right-[7px] top-[3px] h-2 pointer-events-none"
+          style={
+            inactiva
+              ? { backgroundImage: 'repeating-linear-gradient(to right, #A79C86 0 8px, transparent 8px 14px)' }
+              : { backgroundColor: linea }
+          }
+        />
+        {paradas.map((nombre, i) => {
+          const extremo = i === 0 || i === last;
+          const align = i === 0 ? 'items-start' : i === last ? 'items-end' : 'items-center';
+          const texto = i === 0 ? 'text-left' : i === last ? 'text-right' : 'text-center';
+          return (
+            <div key={`${nombre}-${i}`} className={`relative z-[1] flex-1 min-w-0 flex flex-col ${align}`}>
+              <span
+                className="block w-[14px] h-[14px] rounded-full bg-white shrink-0"
+                style={{ border: `3px solid ${TINTA}` }}
+              />
+              <span
+                className={`${ETIQUETA} mt-1.5 text-[#1E2230] leading-tight ${texto} ${
+                  extremo ? 'font-semibold' : ''
+                }`}
+              >
+                {nombre}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
@@ -43,9 +120,11 @@ const VACIO: NuevoVehiculo = { id: '', nombre: '', ruta: '', tipo: 'bus', tarifa
 interface Props {
   /** El PIN dejó de ser válido: el panel vuelve a pedirlo. */
   onNoAutorizado: () => void;
+  /** Barra superior de navegación de la empresa dentro del PanelCrema. */
+  barraSuperior?: React.ReactNode;
 }
 
-export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
+export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado, barraSuperior }) => {
   const [lista, setLista] = useState<VehiculoGestion[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [nuevo, setNuevo] = useState<NuevoVehiculo | null>(null);
@@ -140,38 +219,57 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
 
   const activos = lista?.filter((v) => v.activo).length ?? 0;
 
+  const errorConFicha = (msg: string) => (
+    <p role="alert" className="mt-4 flex items-start gap-2.5 text-[16px] text-[#1E2230]">
+      <FichaEstado estado="fallido" tamano={22} />
+      <span>{msg}</span>
+    </p>
+  );
+
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
-          <h1 className="text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white">Vehículos</h1>
-          <div className="subase-sand-rule mt-2.5" />
-          {lista && (
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">
-              {activos} {activos === 1 ? 'activo' : 'activos'} de {lista.length} · todos cobran en la billetera de la
-              flota
-            </p>
+      <PanelCrema>
+        {barraSuperior}
+        <div className="mt-5 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <Titulo>Vehículos de la flota</Titulo>
+            <Bajada className="mt-2">
+              {lista ? (
+                <>
+                  <span className="font-semibold text-[#1E2230] tabular-nums">
+                    {activos} {activos === 1 ? 'activo' : 'activos'} de {lista.length}
+                  </span>{' '}
+                  · todos cobran en{' '}
+                  <span className="font-mono text-[14px] text-[#1E2230]">$ilp.interledger-test.dev/flota1</span>
+                </>
+              ) : (
+                'Gestión de rutas, tarifas y códigos QR de la flota.'
+              )}
+            </Bajada>
+          </div>
+          {!nuevo && (
+            <button
+              type="button"
+              onClick={() => {
+                setErrorForm(null);
+                setEditando(null);
+                setNuevo({ ...VACIO });
+              }}
+              className="subase-btn-primary subase-btn-tinta shrink-0 w-full sm:w-auto"
+              style={estiloTintaCompacto}
+            >
+              + Agregar vehículo
+            </button>
           )}
         </div>
-        {!nuevo && (
-          <button
-            type="button"
-            onClick={() => {
-              setErrorForm(null);
-              setEditando(null);
-              setNuevo({ ...VACIO });
-            }}
-            className={`${btnPrincipal} w-full sm:w-auto`}
-          >
-            <Plus className="w-5 h-5" strokeWidth={1.5} />
-            Agregar vehículo
-          </button>
-        )}
-      </div>
+      </PanelCrema>
 
       {nuevo && (
-        <form onSubmit={guardarNuevo} className="subase-card-sand p-4 sm:p-5 mt-6">
-          <h2 className="text-[18px] font-normal text-white">Nuevo vehículo</h2>
+        <form onSubmit={guardarNuevo} className="mt-6 pt-6 border-t border-[rgba(30,34,48,0.16)]">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[20px] font-semibold text-[#1E2230]">Nuevo vehículo</h2>
+            <span className={`${ETIQUETA} text-[#3A3F4E]`}>Flota 1</span>
+          </div>
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Campo label="Código del QR" ayuda="Letras, números y guiones. Ej.: bus-03">
               <input
@@ -187,27 +285,46 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
             </Campo>
             <Campo label="Tipo" grupo>
               <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Tipo de vehículo">
-                {(['bus', 'taxi'] as const).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    role="radio"
-                    aria-checked={nuevo.tipo === t}
-                    onClick={() => setNuevo({ ...nuevo, tipo: t })}
-                    className={`min-h-11 rounded-[12px] border text-[15px] cursor-pointer ${
-                      nuevo.tipo === t ? 'border-[#D2B99A] text-white' : 'border-[rgba(195,197,198,0.25)] text-[#C3C5C6]'
-                    }`}
-                  >
-                    {t === 'bus' ? 'Bus' : 'Taxi'}
-                  </button>
-                ))}
+                {(['bus', 'taxi'] as const).map((t) => {
+                  const elegido = nuevo.tipo === t;
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      role="radio"
+                      aria-checked={elegido}
+                      onClick={() => setNuevo({ ...nuevo, tipo: t })}
+                      className={`min-h-11 rounded-[3px] border-[1.5px] text-[15px] font-semibold cursor-pointer ${
+                        elegido
+                          ? 'border-[#1E2230] bg-[#1E2230] text-white'
+                          : 'border-[#1E2230] text-[#1E2230] hover:bg-[#1E2230]/10'
+                      }`}
+                    >
+                      {t === 'bus' ? 'Bus' : 'Taxi'}
+                    </button>
+                  );
+                })}
               </div>
             </Campo>
             <Campo label="Nombre">
-              <input className={campo} value={nuevo.nombre} onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })} placeholder="Bus 03 — Circular" required maxLength={80} />
+              <input
+                className={campo}
+                value={nuevo.nombre}
+                onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
+                placeholder="Bus 03 — Circular"
+                required
+                maxLength={80}
+              />
             </Campo>
             <Campo label="Ruta">
-              <input className={campo} value={nuevo.ruta} onChange={(e) => setNuevo({ ...nuevo, ruta: e.target.value })} placeholder="Belén – Centro" required maxLength={80} />
+              <input
+                className={campo}
+                value={nuevo.ruta}
+                onChange={(e) => setNuevo({ ...nuevo, ruta: e.target.value })}
+                placeholder="Belén – Centro"
+                required
+                maxLength={80}
+              />
             </Campo>
             <Campo label="Tarifa (COP)">
               <input
@@ -223,12 +340,17 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
               />
             </Campo>
           </div>
-          {errorForm && <p role="alert" className="text-[15px] text-[#D2B99A] mt-4">{errorForm}</p>}
+          {errorForm && errorConFicha(errorForm)}
           <div className="mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
-            <button type="button" onClick={() => setNuevo(null)} className={btnSecundario}>
+            <button type="button" onClick={() => setNuevo(null)} className={btnBorde}>
               Cancelar
             </button>
-            <button type="submit" disabled={ocupado === 'nuevo'} className={btnPrincipal}>
+            <button
+              type="submit"
+              disabled={ocupado === 'nuevo'}
+              className="subase-btn-primary subase-btn-tinta"
+              style={estiloTintaCompacto}
+            >
               {ocupado === 'nuevo' && <Loader2 className="w-4 h-4 animate-spin" />}
               Crear vehículo
             </button>
@@ -238,14 +360,15 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
 
       {!lista && !error && (
         <div className="flex-1 flex flex-col items-center justify-center py-16">
-          <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
+          <Loader2 className="w-8 h-8 text-[#1E2230] animate-spin" strokeWidth={1.5} />
+          <p className="text-[16px] font-normal text-[#3A3F4E] mt-3">Consultando los vehículos…</p>
         </div>
       )}
 
       {error && (
         <div role="alert" className="mt-6 max-w-lg">
-          <p className="text-[15px] font-normal text-[#C3C5C6]">{error}</p>
-          <button type="button" onClick={cargar} className={`${btnSecundario} mt-4`}>
+          {errorConFicha(error)}
+          <button type="button" onClick={cargar} className={`${btnBorde} mt-4`}>
             <RefreshCw className="w-4 h-4" strokeWidth={1.5} />
             Reintentar
           </button>
@@ -253,43 +376,85 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
       )}
 
       {lista && (
-        <ul className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ul className="mt-2 grid grid-cols-1 lg:grid-cols-2 lg:gap-x-10 border-t border-[rgba(30,34,48,0.16)]">
           {lista.map((v) => {
-            const Icono = v.tipo === 'taxi' ? CarTaxiFront : Bus;
             const enEdicion = editando?.id === v.id;
+            const { num, colores, etiquetaTipo, empresa } = insigniaVehiculo(v);
             return (
-              <li key={v.id} className={`subase-card p-4 sm:p-5 min-w-0 ${v.activo ? '' : 'opacity-70'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Icono className="w-5 h-5 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-                    <span className="text-[17px] font-normal text-white truncate">{v.nombre}</span>
-                  </div>
+              <li
+                key={v.id}
+                className={`py-5 border-b border-[rgba(30,34,48,0.16)] min-w-0 ${v.activo ? '' : 'opacity-60'}`}
+              >
+                <div className="flex items-start gap-3">
                   <span
-                    className={`shrink-0 text-[13px] px-2 py-0.5 rounded-full border ${
-                      v.activo ? 'border-[#D2B99A] text-[#D2B99A]' : 'border-[rgba(195,197,198,0.35)] text-[#C3C5C6]'
-                    }`}
+                    className="inline-flex items-center justify-center min-w-11 h-11 px-2 rounded-[3px] text-[22px] font-semibold tabular-nums leading-none shrink-0"
+                    style={{ backgroundColor: colores.color, color: colores.texto }}
                   >
-                    {v.activo ? 'Activo' : 'Inactivo'}
+                    {num}
                   </span>
+                  <div className="min-w-0 leading-tight flex-1">
+                    <span className={`block ${ETIQUETA} text-[#1E2230]`}>
+                      {etiquetaTipo} {num}
+                    </span>
+                    <span className="block text-[20px] font-semibold text-[#1E2230] mt-0.5 leading-tight">
+                      {empresa || v.nombre}
+                    </span>
+                  </div>
                 </div>
 
                 {enEdicion && editando ? (
                   <form onSubmit={guardarEdicion} className="mt-4 grid grid-cols-1 gap-3">
                     <Campo label="Nombre">
-                      <input className={campo} value={editando.datos.nombre ?? ''} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, nombre: e.target.value } })} required maxLength={80} />
+                      <input
+                        className={campo}
+                        value={editando.datos.nombre ?? ''}
+                        onChange={(e) =>
+                          setEditando({ id: v.id, datos: { ...editando.datos, nombre: e.target.value } })
+                        }
+                        required
+                        maxLength={80}
+                      />
                     </Campo>
                     <Campo label="Ruta">
-                      <input className={campo} value={editando.datos.ruta ?? ''} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, ruta: e.target.value } })} required maxLength={80} />
+                      <input
+                        className={campo}
+                        value={editando.datos.ruta ?? ''}
+                        onChange={(e) =>
+                          setEditando({ id: v.id, datos: { ...editando.datos, ruta: e.target.value } })
+                        }
+                        required
+                        maxLength={80}
+                      />
                     </Campo>
-                    <Campo label="Tarifa (COP)">
-                      <input className={campo} type="number" inputMode="numeric" min={100} max={50000} step={100} value={editando.datos.tarifa ?? 0} onChange={(e) => setEditando({ id: v.id, datos: { ...editando.datos, tarifa: Number(e.target.value) } })} required />
-                    </Campo>
-                    {errorForm && <p role="alert" className="text-[15px] text-[#D2B99A]">{errorForm}</p>}
+                      <Campo label="Tarifa (COP)">
+                        <input
+                          className={campo}
+                          type="number"
+                          inputMode="numeric"
+                          min={100}
+                          max={50000}
+                          step={100}
+                          value={editando.datos.tarifa ?? 0}
+                          onChange={(e) =>
+                            setEditando({
+                              id: v.id,
+                              datos: { ...editando.datos, tarifa: Number(e.target.value) },
+                            })
+                          }
+                          required
+                        />
+                      </Campo>
+                    {errorForm && errorConFicha(errorForm)}
                     <div className="flex flex-col-reverse min-[420px]:flex-row min-[420px]:justify-end gap-3 mt-1">
-                      <button type="button" onClick={() => setEditando(null)} className={btnSecundario}>
+                      <button type="button" onClick={() => setEditando(null)} className={btnBorde}>
                         Cancelar
                       </button>
-                      <button type="submit" disabled={ocupado === v.id} className={btnPrincipal}>
+                      <button
+                        type="submit"
+                        disabled={ocupado === v.id}
+                        className="subase-btn-primary subase-btn-tinta"
+                        style={estiloTintaCompacto}
+                      >
                         {ocupado === v.id && <Loader2 className="w-4 h-4 animate-spin" />}
                         Guardar
                       </button>
@@ -297,60 +462,108 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
                   </form>
                 ) : (
                   <>
-                    <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[15px] font-normal">
-                      <dt className="text-[#C3C5C6]">Código</dt>
-                      <dd className="text-white break-all">{v.id}</dd>
-                      <dt className="text-[#C3C5C6]">Ruta</dt>
-                      <dd className="text-white min-w-0">{v.ruta}</dd>
-                      <dt className="text-[#C3C5C6]">Tarifa</dt>
-                      <dd className="text-white tabular-nums">{formatCOP(v.tarifa)}</dd>
-                    </dl>
+                    <LineaParadas ruta={v.ruta} color={colores.color} inactiva={!v.activo} />
+
+                    <div className="mt-4 flex flex-wrap gap-x-6 gap-y-3">
+                      <div>
+                        <p className={`${ETIQUETA} text-[#3A3F4E]`}>Pasaje</p>
+                        <p
+                          className="inline-flex mt-1 px-2 py-1 rounded-[3px] text-[16px] font-semibold tabular-nums text-white"
+                          style={{ backgroundColor: TINTA }}
+                        >
+                          {formatCOP(v.tarifa)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={`${ETIQUETA} text-[#3A3F4E]`}>Código QR</p>
+                        <p className="font-mono text-[14px] text-[#1E2230] mt-0.5">{v.id}</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-2.5 text-[16px] text-[#1E2230]">
+                      {v.activo ? (
+                        <>
+                          <FichaEstado estado="pagado" tamano={22} />
+                          <span>En ruta</span>
+                        </>
+                      ) : (
+                        <>
+                          <span
+                            aria-hidden="true"
+                            className="inline-flex shrink-0 rounded-[3px]"
+                            style={{ width: 22, height: 22, backgroundColor: '#A79C86' }}
+                          />
+                          <span>Inactivo</span>
+                        </>
+                      )}
+                    </div>
 
                     {confirmarDesactivar === v.id ? (
-                      <div className="mt-4 border-t border-[rgba(195,197,198,0.2)] pt-4">
-                        <p className="text-[15px] text-white leading-relaxed">
+                      <div className="mt-4 pt-4 border-t border-[rgba(30,34,48,0.16)]">
+                        <p className="text-[16px] text-[#1E2230] leading-relaxed">
                           ¿Desactivar {v.nombre}? Su QR deja de cobrar. El historial se conserva.
                         </p>
                         <div className="mt-3 flex flex-col min-[420px]:flex-row gap-3">
-                          <button type="button" onClick={() => cambiarActivo(v, false)} className={`${btnSecundario} border-[#D2B99A]`}>
+                          <button type="button" onClick={() => cambiarActivo(v, false)} className={btnBorde}>
                             Sí, desactivar
                           </button>
-                          <button type="button" onClick={() => setConfirmarDesactivar(null)} className={btnSecundario}>
+                          <button type="button" onClick={() => setConfirmarDesactivar(null)} className={btnBorde}>
                             Cancelar
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="mt-4 grid grid-cols-2 min-[420px]:flex min-[420px]:flex-wrap gap-2">
-                        <Link to={`/qr/${encodeURIComponent(v.id)}`} className={btnSecundario}>
-                          <QrCode className="w-4 h-4" strokeWidth={1.5} />
+                      <div className="mt-4 pt-3 border-t border-[rgba(30,34,48,0.16)] flex flex-wrap gap-2">
+                        <Link
+                          to={`/qr/${encodeURIComponent(v.id)}`}
+                          className="subase-btn-primary subase-btn-tinta"
+                          style={estiloTintaCompacto}
+                        >
+                          <QrCode className="w-4 h-4" strokeWidth={2} />
                           Ver QR
                         </Link>
+                        {v.activo && (
+                          <Link to={`/conductor/${encodeURIComponent(v.id)}`} className={btnBorde}>
+                            Terminal
+                          </Link>
+                        )}
                         <button
                           type="button"
                           onClick={() => {
                             setErrorForm(null);
                             setNuevo(null);
-                            setEditando({ id: v.id, datos: { nombre: v.nombre, ruta: v.ruta, tarifa: v.tarifa } });
+                            setEditando({
+                              id: v.id,
+                              datos: {
+                                nombre: v.nombre,
+                                ruta: v.ruta,
+                                tarifa: v.tarifa,
+                              },
+                            });
                           }}
-                          className={btnSecundario}
+                          className={btnBorde}
                         >
                           Editar
                         </button>
                         {v.activo ? (
-                          <button type="button" disabled={ocupado === v.id} onClick={() => setConfirmarDesactivar(v.id)} className={btnSecundario}>
+                          <button
+                            type="button"
+                            disabled={ocupado === v.id}
+                            onClick={() => setConfirmarDesactivar(v.id)}
+                            className={btnBorde}
+                          >
                             Desactivar
                           </button>
                         ) : (
-                          <button type="button" disabled={ocupado === v.id} onClick={() => cambiarActivo(v, true)} className={btnSecundario}>
+                          <button
+                            type="button"
+                            disabled={ocupado === v.id}
+                            onClick={() => cambiarActivo(v, true)}
+                            className={btnBorde}
+                          >
                             {ocupado === v.id && <Loader2 className="w-4 h-4 animate-spin" />}
                             Activar
                           </button>
-                        )}
-                        {v.activo && (
-                          <Link to={`/conductor/${encodeURIComponent(v.id)}`} className={btnSecundario}>
-                            Terminal
-                          </Link>
                         )}
                       </div>
                     )}

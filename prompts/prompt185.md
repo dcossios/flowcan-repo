@@ -1,0 +1,3 @@
+revisaste estos?
+
+[Imagen adjunta: captura de la app de Antigravity, conversación «UI Design For Screens»: Antigravity dejó capturas de /flota en capturas-flota.md (flota-resumen-1280.png, flota-vehiculos-1280.png, flota-resumen-375.png, flota-vehiculos-375.png) y pregunta si hacer commit; a la derecha, «Flota Vehiculos 1280»: panel crema «Vehículos de la flota · 3 activos de 3», pestañas Resumen/Vehículos y «+ Agregar vehículo»; tres tarjetas negras con filete de color arriba (Bus 01 rojo, Bus 02 verde, Taxi 01 amarillo), cuadro de número de ruta, «ACTIVO» en verde, conductor, pasaje, código QR y botones «Ver QR», «Terminal», «Editar», «Desactivar».]
