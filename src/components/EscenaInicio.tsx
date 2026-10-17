@@ -293,16 +293,73 @@ function vehiculos(tBus: number, tTranvia: number, ruta: ColoresRuta, letrero: s
 function sueloIzquierdo(x0: number) {
   const F = (x: number) => 858 + 0.52 * x; // base de la fachada
   const E = (x: number) => 917.7 + 0.5693 * x; // borde de la acera con la calle
-  const I = (x: number) => 1083 + 0.556 * x; // borde superior de la isla
+  const I = (x: number) => 1080.5 + 0.556 * x; // borde superior de la isla
   const J = (x: number) => 1353.3 - 0.553 * x; // borde de la isla con la calle del tranvía
   const tramo = (a: (x: number) => number, b: (x: number) => number) =>
-    puntos([[x0, a(x0)], [0.5, a(0.5)], [0.5, b(0.5)], [x0, b(x0)]]);
+    puntos([[x0, a(x0)], [2, a(2)], [2, b(2)], [x0, b(x0)]]);
   return (
     <>
       <polygon points={tramo(F, E)} fill={ACERA_SOMBRA} />
+      <polygon points={tramo((x) => E(x) - 3.5, E)} fill="#66615E" />
       <polygon points={tramo(E, () => ALTO)} fill={NOCHE} />
-      <polygon points={tramo(I, J)} fill={ACERA} />
+      <polygon points={tramo(I, J)} fill="#E5DCD1" />
     </>
+  );
+}
+
+/*
+ * Completa a la izquierda de x = 0 los elementos de la isla que la imagen cortaba en el borde:
+ * el andén sin la viñeta de x = 0, la copa de la palma, la jardinera verde y el arbusto redondo con su sombra.
+ */
+function islaIzquierda(x0: number) {
+  const I = (x: number) => 1080.5 + 0.556 * x;
+  const J = (x: number) => 1353.3 - 0.553 * x;
+  const tramo = (a: (x: number) => number, b: (x: number) => number, xDer = 2.5) =>
+    puntos([[x0, a(x0)], [xDer, a(xDer)], [xDer, b(xDer)], [x0, b(x0)]]);
+  return (
+    <g>
+      {/* Cubre la viñeta de 1 px del borde izquierdo del WebP en el andén y continúa los bordillos */}
+      <polygon points={tramo(I, J, 2.5)} fill="#E5DCD1" />
+      <polygon points={tramo(I, (x) => I(x) + 2, 2.5)} fill="#AEA79E" />
+      <polygon points={tramo((x) => J(x) - 2, J, 2.5)} fill="#AEA79E" />
+      {/* Jardinera verde (rectángulo isométrico desde x = 2.5 hacia la izquierda) y sombra del tronco */}
+      <polygon points="2.5,1201.8 2.5,1258.6 -15,1268.5 -65,1240.5" fill="#689C58" />
+      <polyline points="-65,1240.5 -15,1268.5 2.5,1258.6" fill="none" stroke="#568248" strokeWidth={2} />
+      <rect x={-44} y={1215} width={47} height={9.5} rx={4.75} fill="#517444" />
+      {/* Sombra y copa del arbusto redondo cortado en x = 0 */}
+      <ellipse cx={-15.5} cy={1312.5} rx={26} ry={16.5} fill="#88877C" />
+      <ellipse cx={5.5} cy={1296.5} rx={28.5} ry={25.5} fill="#3A6F41" />
+      {/* Pencas izquierdas de la palma, solapadas hasta x = 4..8 hacia el centro de la copa (23, 1029) */}
+      <polygon
+        points="5,981 -6,985 -4,987 -12,989 -9,991 -16,994 5,992"
+        fill="#9DA882"
+      />
+      <polygon
+        points="6,990 -16,994 -12,996 -20,999 -15,1001 -22,1004 -16,1006 -19,1009 6,1010"
+        fill="#73924E"
+      />
+      <path d="M 6 1005 Q -6 1000 -18 998" stroke="#849E54" strokeWidth={1.6} fill="none" />
+      <polygon
+        points="6,1009.5 -19,1009 -15,1011 -24,1014 -19,1016 -26,1019 -20,1021 -25,1024 6,1025"
+        fill="#346C46"
+      />
+      <path d="M 6 1024 Q -8 1022 -22 1022" stroke="#649771" strokeWidth={1.6} fill="none" />
+      <polygon
+        points="6,1024.5 -25,1024 -20,1026 -27,1029 -21,1031 -27,1034 -24,1036 6,1034"
+        fill="#356844"
+      />
+      <polygon
+        points="6,1033.5 -24,1036 -27,1038 -20,1040 -25,1043 -18,1044 -21,1046 6,1045.5"
+        fill="#709354"
+      />
+      <path d="M 6 1034 Q -9 1035 -24 1036" stroke="#80A372" strokeWidth={1.6} fill="none" />
+      <path d="M 5 1044.5 Q -8 1045.5 -19 1046" stroke="#99B685" strokeWidth={1.5} fill="none" />
+      <polygon
+        points="5,1045.5 -21,1046 -16,1048 -22,1052 -16,1054 -20,1058 -13,1059 -16,1063 -8,1064.5 4,1063.5"
+        fill="#356643"
+      />
+      <path d="M 4 1062 Q -5 1063.5 -14 1063" stroke="#79947B" strokeWidth={1.6} fill="none" />
+    </g>
   );
 }
 
@@ -384,14 +441,16 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre;
       <image href={imagenes.base} x={0} y={0} width={ANCHO} height={ALTO} />
       <g ref={busAtras} />
       <image href={imagenes.isla} x={0} y={955} width={260} height={421} />
+      {encuadre.x < 0 && islaIzquierda(encuadre.x - 20)}
       <g ref={tranvia} />
       <image href={imagenes.derecha} x={628} y={1140} width={140} height={236} />
       <g ref={busAdelante} />
       {/* Manzana de abajo, alineada con la acera derecha y con el borde del cruce (la de Flow se metía 30 px en la calle) */}
       <polygon points={manzana(1, 1, RADIO_ACERA).acera} fill={ACERA} />
       <polygon points={manzana(1, 1, RADIO_ACERA).crema} fill={CREMA} />
-      {/* Cable que cruza la calle hasta el semáforo de la esquina (la calle de la imagen se volvió transparente) */}
-      <line x1={0} y1={1250.4} x2={420} y2={1038.8} stroke="#2A2F29" strokeWidth={1.6} />
+      {/* Cable que cruza la calle desde el poste de la isla hasta el semáforo de la esquina y continúa a la izquierda */}
+      <line x1={146} y1={1173} x2={420} y2={1038.8} stroke="#2A2F29" strokeWidth={1.6} />
+      {encuadre.x < 0 && <line x1={-300} y1={1423.5} x2={146} y2={1173} stroke="#2A2F29" strokeWidth={1.6} />}
     </svg>
   );
 };
