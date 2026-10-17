@@ -1,0 +1,1 @@
+Ok, estoy mirando la imagen que tiene varias capturas de pantalla y me estoy dando cuenta de que por lo menos en la primera captura de pantalla, cobro con pase, eh, dice, le quedan 20.000 de 20.000 hoy. Y tiene una línea negra abajo. Yo creo que eso se podría representar de una mejor forma. revisa todo lo relacionado al diseño que nos pueda servir de la app de didi

@@ -9,30 +9,49 @@ const PASOS = [
   { n: 2 as const, titulo: 'Pague con un toque', descripcion: 'En este bus y en los demás.' },
 ];
 
-export const PasoLinea: React.FC<{ paso: 1 | 2 }> = ({ paso }) => (
-  <ol className="flex flex-col gap-3" aria-label={`Paso ${paso} de ${PASOS.length}`}>
-    {PASOS.map((p) => {
-      const actual = p.n === paso;
-      return (
-        <li key={p.n} className="flex items-start gap-3" aria-current={actual ? 'step' : undefined}>
-          <span
-            className={`inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-[3px] text-[16px] font-semibold ${
-              actual ? 'bg-white text-[#1E2230]' : 'border border-[rgba(195,197,198,0.35)] text-[#C3C5C6]'
-            }`}
-          >
-            {p.n}
-          </span>
-          <span className="pt-0.5">
-            <span className={`block text-[16px] font-medium leading-snug ${actual ? 'text-white' : 'text-[#C3C5C6]'}`}>
-              {p.titulo}
+// Colores de los pasos sobre el negro y sobre el crema
+const TONOS = {
+  negro: {
+    actual: 'bg-white text-[#1E2230]',
+    otro: 'border border-[rgba(195,197,198,0.35)] text-[#C3C5C6]',
+    titulo: 'text-white',
+    secundario: 'text-[#C3C5C6]',
+  },
+  crema: {
+    actual: 'bg-[#1E2230] text-white',
+    otro: 'border border-[rgba(30,34,48,0.3)] text-[#3A3F4E]',
+    titulo: 'text-[#1E2230]',
+    secundario: 'text-[#3A3F4E]',
+  },
+};
+
+export const PasoLinea: React.FC<{ paso: 1 | 2; tono?: 'negro' | 'crema' }> = ({ paso, tono = 'negro' }) => {
+  const t = TONOS[tono];
+  return (
+    <ol className="flex flex-col gap-3" aria-label={`Paso ${paso} de ${PASOS.length}`}>
+      {PASOS.map((p) => {
+        const actual = p.n === paso;
+        return (
+          <li key={p.n} className="flex items-start gap-3" aria-current={actual ? 'step' : undefined}>
+            <span
+              className={`inline-flex items-center justify-center w-8 h-8 shrink-0 rounded-[3px] text-[16px] font-semibold ${
+                actual ? t.actual : t.otro
+              }`}
+            >
+              {p.n}
             </span>
-            <span className="block text-[14px] text-[#C3C5C6] leading-snug">{p.descripcion}</span>
-          </span>
-        </li>
-      );
-    })}
-  </ol>
-);
+            <span className="pt-0.5">
+              <span className={`block text-[16px] font-medium leading-snug ${actual ? t.titulo : t.secundario}`}>
+                {p.titulo}
+              </span>
+              <span className={`block text-[14px] leading-snug ${t.secundario}`}>{p.descripcion}</span>
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+};
 
 const TEXTO_OPEN_PAYMENTS =
   'Su pase es un grant de Open Payments para pagos salientes (outgoing-payment) con tope diario (debitAmount + interval). En cada viaje creamos un incoming payment en la billetera del bus, una quote y un outgoing payment bajo su pase, sin pedirle nada más. Súbase nunca guarda su plata.';

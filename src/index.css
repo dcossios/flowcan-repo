@@ -215,3 +215,12 @@ details[open] > summary::after { content: "–"; }
 @media (prefers-reduced-motion: reduce) {
   .subase-latido { animation: none; }
 }
+
+/* Botón principal sobre el crema (fondo crema completo del cobro): el blanco no se separa del crema */
+.subase-btn-tinta {
+  background: #1e2230;
+  color: #ffffff;
+}
+.subase-btn-tinta:hover {
+  background: #2c3142;
+}

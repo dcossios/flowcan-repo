@@ -23,6 +23,17 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+// Un QR dibujado (tres esquinas y algunos módulos), no un ícono de librería
+const IconoQr: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <svg width="34" height="34" viewBox="0 0 21 21" fill="#FFFFFF" aria-hidden="true" className={className}>
+    <path
+      fillRule="evenodd"
+      d="M0 0h7v7H0zM1 1v5h5V1zM14 0h7v7h-7zM15 1v5h5V1zM0 14h7v7H0zM1 15v5h5v-5z"
+    />
+    <path d="M2 2h3v3H2zM16 2h3v3h-3zM2 16h3v3H2zM9 0h2v2H9zM9 4h3v2H9zM8 8h2v3H8zM12 9h3v2h-3zM17 9h2v2h-2zM0 9h2v2H0zM4 9h2v2H4zM9 13h2v3H9zM13 13h3v2h-3zM18 13h3v3h-3zM13 17h2v4h-2zM9 18h2v3H9zM16 18h2v3h-2z" />
+  </svg>
+);
+
 const InicioPage: React.FC = () => {
   const ultimo = leerUltimoVehiculo();
 
@@ -53,10 +64,21 @@ const InicioPage: React.FC = () => {
           <Pasaje monto={ultimo.tarifa} className="mt-4" />
         </PanelEscena>
 
+        {/* La salida para quien hoy va en otro bus: no hay escáner en la app, se usa la cámara del celular */}
+        <div className="mt-6 flex items-start gap-3.5">
+          <IconoQr className="shrink-0 mt-0.5" />
+          <p className="leading-snug">
+            <span className="block text-[16px] font-medium text-white">¿Otro bus? Escanee su QR</span>
+            <span className="block text-[14px] text-[#C3C5C6] mt-0.5">
+              Con la cámara del celular, en el código pegado en el vehículo.
+            </span>
+          </p>
+        </div>
+
         {getPaseToken() && (
           <Link
             to="/mi-pase"
-            className="flex items-center justify-center min-h-11 mt-4 text-[15px] font-normal text-[#C3C5C6] hover:text-white"
+            className="flex items-center min-h-11 mt-3 text-[15px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline"
           >
             Ver mi pase y mis viajes
           </Link>

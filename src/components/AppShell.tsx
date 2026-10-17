@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ErrorCode, isUiPreviewMode, setUiPreviewMode } from '../lib/api';
+import { CREMA } from './Sistema';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -11,6 +12,9 @@ interface AppShellProps {
   ancho?: 'normal' | 'amplio';
   /** Quién usa la vista: el pasajero ve «Mi pase» en el encabezado. */
   rol?: 'pasajero' | 'conductor' | 'empresa';
+  /** Campo de la pantalla. Crema: el negro queda solo en el encabezado y la barra de acción. Lo usa el cobro, donde
+      bajo el panel crema no hay contenido y el negro subía como un bloque vacío hasta media pantalla (prompt127). */
+  fondo?: 'negro' | 'crema';
 }
 
 const MENSAJES_USTED: Record<ErrorCode, string> = {
@@ -37,6 +41,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   barraFija = false,
   ancho = 'normal',
   rol = 'pasajero',
+  fondo = 'negro',
 }) => {
   const location = useLocation();
   const [previewMode, setPreviewMode] = useState<boolean>(() => isUiPreviewMode());
@@ -64,11 +69,12 @@ export const AppShell: React.FC<AppShellProps> = ({
       // overflow-x-clip (no hidden): hidden convierte el div en un contenedor con scroll propio, rompe el header
       // sticky y en Safari de iPhone hace que la página se «pegue» al hacer scroll. svh no cambia cuando la barra
       // de Safari se esconde, así que no hay recálculo de diseño a mitad del gesto.
-      className={`min-h-svh flex flex-col bg-black text-white relative overflow-x-clip ${
-        barraFija === 'alta' ? 'subase-shell-bar-alta' : barraFija ? 'subase-shell-bar' : ''
-      }`}
+      className={`min-h-svh flex flex-col relative overflow-x-clip ${
+        fondo === 'crema' ? 'text-[#1E2230]' : 'bg-black text-white'
+      } ${barraFija === 'alta' ? 'subase-shell-bar-alta' : barraFija ? 'subase-shell-bar' : ''}`}
+      style={fondo === 'crema' ? { backgroundColor: CREMA } : undefined}
     >
-      <div className="subase-estela-bg" aria-hidden="true" />
+      {fondo === 'negro' && <div className="subase-estela-bg" aria-hidden="true" />}
 
       <header className="sticky top-0 z-30 bg-black border-b border-[rgba(195,197,198,0.2)]">
         <div className={`${contenedorAncho} mx-auto px-5 h-14 flex items-center justify-between gap-3`}>

@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { PasoLinea } from '../components/PasoLinea';
-import { Bajada, Disponible, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
+import { Alcance, Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Titulo } from '../components/Sistema';
+import { rutaConFlechas } from '../lib/rutas';
 import {
   clearPaseToken,
   ErrorCode,
@@ -44,6 +45,17 @@ function extraerReciboDuplicado(details: unknown): ReciboViaje | null {
     }
   }
   return null;
+}
+
+// La billetera del pase, corta: «pasajero» en la Test Wallet y «proveedor/nombre» en otra.
+function billeteraCorta(): string {
+  try {
+    const m = (localStorage.getItem('subase_last_wallet') || '').match(/^https?:\/\/([^/]+)\/(.+)$/);
+    if (!m) return '';
+    return m[1] === 'ilp.interledger-test.dev' ? m[2] : `${m[1]}/${m[2]}`;
+  } catch {
+    return '';
+  }
 }
 
 export const VehiculoCobroPage: React.FC = () => {
@@ -131,18 +143,25 @@ export const VehiculoCobroPage: React.FC = () => {
   const paseActivo = Boolean(vehiculo?.paseActivo);
   const disponibleHoy = vehiculo?.disponibleHoy ?? 0;
   const topeDiario = vehiculo?.topeDiario ?? 20000;
+  const billetera = billeteraCorta();
   return (
-    <AppShell vehiculoIdActual={vehiculoId} barraFija={Boolean(!loading && vehiculo)}>
+    <AppShell
+      vehiculoIdActual={vehiculoId}
+      barraFija={!loading && vehiculo ? (paseActivo ? 'alta' : true) : false}
+      fondo="crema"
+    >
       <div className="flex-1 flex flex-col">
         <PanelCrema>
           {vehiculo ? (
             <>
               <IdentidadVehiculo vehiculoId={vehiculo.id} nombre={vehiculo.nombre} />
-              <Titulo className="mt-4">Pague su pasaje</Titulo>
-              <Ruta ruta={vehiculo.ruta} className="mt-1.5" />
-              <Pasaje monto={vehiculo.tarifa} className="mt-4" />
+              {/* La ruta es el titular: confirma «es mi bus». «Pague su pasaje» repetía el botón «Pagar $3.200» */}
+              <Titulo className="mt-4">{rutaConFlechas(vehiculo.ruta)}</Titulo>
+              <Pasaje monto={vehiculo.tarifa} className="mt-5" />
               {/* ¿Me alcanza? Se responde aquí, antes del botón, y no abajo en el negro */}
-              {paseActivo && <Disponible disponible={disponibleHoy} tope={topeDiario} className="mt-4" />}
+              {paseActivo && (
+                <Alcance disponible={disponibleHoy} tope={topeDiario} tarifa={vehiculo.tarifa} className="mt-5" />
+              )}
             </>
           ) : cargaFallida ? (
             <>
@@ -160,7 +179,7 @@ export const VehiculoCobroPage: React.FC = () => {
         {cargaFallida && errorInfo && (
           <div className="mt-6 flex-1 flex flex-col">
             <div className="flex flex-col gap-3">
-              <button type="button" onClick={cargarVehiculo} className="subase-btn-primary">
+              <button type="button" onClick={cargarVehiculo} className="subase-btn-primary subase-btn-tinta">
                 <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
                 Reintentar
               </button>
@@ -171,41 +190,33 @@ export const VehiculoCobroPage: React.FC = () => {
                     setUiPreviewMode(true);
                     cargarVehiculo();
                   }}
-                  className="min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[16px] font-medium text-white cursor-pointer"
+                  className="min-h-11 px-4 rounded-[12px] border border-[rgba(30,34,48,0.3)] text-[16px] font-medium cursor-pointer"
                 >
                   Activar Vista Previa UI
                 </button>
               )}
             </div>
-            <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
+            <p className="text-[13px] font-normal text-[#3A3F4E] mt-8">{errorInfo.code}</p>
           </div>
         )}
 
         {!loading && vehiculo && (
           <>
-            {paseActivo ? (
-              <button
-                type="button"
-                onClick={handleCambiarPase}
-                className="mt-3 inline-flex items-center min-h-11 text-[14px] font-normal text-[#C3C5C6] underline-offset-2 hover:text-white hover:underline cursor-pointer"
-              >
-                Cambiar pase
-              </button>
-            ) : (
+            {!paseActivo && (
               <div className="mt-6">
-                <PasoLinea paso={1} />
+                <PasoLinea paso={1} tono="crema" />
               </div>
             )}
 
             {errorInfo && (
               <div role="alert" className="mt-6">
-                <p className="text-[16px] font-medium text-white leading-relaxed">{errorInfo.message}</p>
+                <p className="text-[16px] font-medium leading-relaxed">{errorInfo.message}</p>
                 {(errorInfo.code === 'PASE_INVALIDO' ||
                   errorInfo.code === 'PASE_VENCIDO' ||
                   errorInfo.code === 'TOPE_ALCANZADO') && (
                   <Link
                     to={`/pase/activar?volver=${encodeURIComponent(`/v/${vehiculoId}`)}`}
-                    className="inline-flex items-center min-h-11 mt-2 text-[16px] font-medium text-white underline"
+                    className="inline-flex items-center min-h-11 mt-2 text-[16px] font-medium underline"
                   >
                     Activar o ampliar pase
                   </Link>
@@ -217,26 +228,26 @@ export const VehiculoCobroPage: React.FC = () => {
                       setUiPreviewMode(true);
                       cargarVehiculo();
                     }}
-                    className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[16px] font-medium text-white cursor-pointer"
+                    className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(30,34,48,0.3)] text-[16px] font-medium cursor-pointer"
                   >
                     Activar Vista Previa UI
                   </button>
                 )}
-                <p className="text-[13px] font-normal text-[#C3C5C6] mt-3">{errorInfo.code}</p>
+                <p className="text-[13px] font-normal text-[#3A3F4E] mt-3">{errorInfo.code}</p>
               </div>
             )}
 
             {/* Atajos de la demo: no los ve el pasajero real */}
             {(isDev || isUiPreviewMode()) && (
               <div className="mt-8 flex items-center justify-between gap-3">
-                <span className="text-[13px] font-normal text-[#C3C5C6]">Rutas piloto</span>
+                <span className="text-[13px] font-normal text-[#3A3F4E] whitespace-nowrap">Rutas piloto</span>
                 <div className="flex items-center gap-1">
                   {['bus-01', 'bus-02', 'taxi-01'].map((id) => (
                     <Link
                       key={id}
                       to={`/v/${id}`}
-                      className={`inline-flex items-center justify-center min-h-11 px-3 text-[13px] font-normal ${
-                        id === vehiculoId ? 'text-white' : 'text-[#C3C5C6]'
+                      className={`inline-flex items-center justify-center min-h-11 px-2 text-[13px] font-normal whitespace-nowrap ${
+                        id === vehiculoId ? 'font-semibold text-[#1E2230]' : 'text-[#3A3F4E]'
                       }`}
                     >
                       {id}
@@ -252,6 +263,27 @@ export const VehiculoCobroPage: React.FC = () => {
       {!loading && vehiculo && (
         <div className="subase-fixed-bar">
           <div className="subase-fixed-bar-inner">
+            {/* Con qué paga, pegado al botón, como el medio de pago encima de «Pide aquí» en DiDi */}
+            {paseActivo && (
+              <div className="flex items-center justify-between gap-3 -mt-1 mb-1.5">
+                <p className="min-w-0 truncate text-[14px] text-[#C3C5C6]">
+                  {billetera ? (
+                    <>
+                      Su pase: <span className="font-medium text-white">{billetera}</span>
+                    </>
+                  ) : (
+                    'Paga con su pase'
+                  )}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCambiarPase}
+                  className="shrink-0 inline-flex items-center min-h-11 px-1 text-[14px] text-[#C3C5C6] underline underline-offset-2 hover:text-white cursor-pointer"
+                >
+                  Cambiar
+                </button>
+              </div>
+            )}
             {paseActivo ? (
               <button
                 type="button"

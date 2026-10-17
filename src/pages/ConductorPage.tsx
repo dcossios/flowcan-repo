@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { AppShell } from '../components/AppShell';
-import { Bajada, FichaEstado, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, TINTA, Titulo, CREMA } from '../components/Sistema';
+import { Bajada, FichaEstado, IdentidadVehiculo, PanelCrema, Pasaje, TINTA, Titulo, CREMA } from '../components/Sistema';
 import { PanelEscena } from '../components/EscenaInicio';
 import { nombreDesdeId } from '../lib/rutas';
 import {
@@ -14,7 +14,7 @@ import {
   SubaseApiError,
   VehiculoInfo,
 } from '../lib/api';
-import { formatCOP, formatHora } from '../lib/format';
+import { formatCOP, formatHora, formatHoraCorta } from '../lib/format';
 import { anunciarPago, desbloquearVoz, playPaymentChime, unlockAudio } from '../lib/sound';
 
 export const ConductorPage: React.FC = () => {
@@ -146,6 +146,10 @@ export const ConductorPage: React.FC = () => {
   const pagosConfirmados = feed.filter((item) => item.estado === 'pagado');
   const totalRecaudado = pagosConfirmados.reduce((acc, item) => acc + (Number(item.monto) || 0), 0);
   const totalPasajeros = pagosConfirmados.length;
+  const ultimoPago = pagosConfirmados.reduce<FeedItem | null>(
+    (ultimo, item) => (!ultimo || new Date(item.fecha) > new Date(ultimo.fecha) ? item : ultimo),
+    null
+  );
 
   return (
     <AppShell
@@ -203,12 +207,20 @@ export const ConductorPage: React.FC = () => {
         )}
 
       <div className="space-y-6 font-normal">
-        {/* Encabezado del vehículo */}
+        {/* Lo que el conductor mira de reojo: cuánto lleva, cuántos pasajes y cuándo entró el último. Como las
+            ganancias de DiDi Conductor, el monto con los viajes al lado. El pasaje baja, junto al QR */}
         <PanelCrema>
           <IdentidadVehiculo vehiculoId={vehiculoId} nombre={nombreVehiculo} />
-          <Titulo className="mt-4">Recaudo del turno</Titulo>
-          {vehiculo?.ruta && <Ruta ruta={vehiculo.ruta} className="mt-1.5" />}
-          {vehiculo && <Pasaje monto={vehiculo.tarifa} className="mt-4" />}
+          <h1 className="sr-only">Recaudo del turno</h1>
+          <Pasaje monto={totalRecaudado} etiqueta="Recaudo del turno" grande className="mt-5" />
+          <p className="mt-3 text-[17px] leading-snug">
+            <span className="font-semibold tabular-nums">
+              {totalPasajeros} {totalPasajeros === 1 ? 'pasaje' : 'pasajes'}
+            </span>
+            <span className="text-[#3A3F4E]">
+              {ultimoPago ? ` · el último a las ${formatHoraCorta(ultimoPago.fecha)}` : ' · aún sin pagos'}
+            </span>
+          </p>
         </PanelCrema>
 
         {/* Aviso si el servidor no responde */}
@@ -232,23 +244,6 @@ export const ConductorPage: React.FC = () => {
           </div>
         )}
 
-        {/* Pasajes del turno y Recaudo arriba, antes del QR, en dos columnas sin tarjeta anidada */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-[14px] font-normal text-[#C3C5C6]">Pasajes del turno</p>
-            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums">
-              {totalPasajeros}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-[14px] font-normal text-[#C3C5C6]">Recaudo</p>
-            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums break-words">
-              {formatCOP(totalRecaudado)}
-            </p>
-          </div>
-        </div>
-
         {/* QR con al menos 16px de margen blanco alrededor */}
         <div className="subase-card p-4 min-[400px]:p-6 text-center">
           <div className="bg-white p-4 min-[400px]:p-5 rounded-[12px] mx-auto w-full max-w-[280px] aspect-square">
@@ -264,7 +259,8 @@ export const ConductorPage: React.FC = () => {
           </div>
 
           <p className="mt-4 text-[17px] font-normal text-white">
-            Escanee para pagar · {vehiculo ? formatCOP(vehiculo.tarifa) : '$3.200'}
+            Escanee para pagar ·{' '}
+            <span className="font-semibold tabular-nums">{vehiculo ? formatCOP(vehiculo.tarifa) : '$3.200'}</span>
           </p>
         </div>
 

@@ -14,7 +14,7 @@ PALETA:     #F0E9D6 crema de la ilustración · #1E2230 tinta · color de la lí
 RIESGO:     la parte de arriba de cada pantalla es un panel crema a sangre (con la escena en el inicio) sobre la app
             negra; las fichas son bloques sólidos, sin cajas ni bordes
 
-Piezas: PanelCrema · IdentidadVehiculo · Titulo · Ruta · Pasaje · ETIQUETA. Botón principal: .subase-btn-primary y,
+Piezas: PanelCrema · IdentidadVehiculo · Titulo · Ruta · Pasaje · Alcance · FichaEstado · ETIQUETA. Botón principal: .subase-btn-primary y,
 para acciones que llevan a otra pantalla, .subase-btn-flecha (índex.css).
 */
 
@@ -58,7 +58,7 @@ export const IdentidadVehiculo: React.FC<{ vehiculoId: string; nombre: string; c
 };
 
 export const Titulo: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <h1 className={`text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] ${className}`}>
+  <h1 className={`text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-balance ${className}`}>
     {children}
   </h1>
 );
@@ -68,16 +68,25 @@ export const Ruta: React.FC<{ ruta: string; className?: string }> = ({ ruta, cla
   <p className={`text-[17px] font-medium leading-snug ${className}`}>{rutaConFlechas(ruta)}</p>
 );
 
-/** Pasaje: la palabra arriba y el monto en un cuadro tinta, hermano del cuadro con el número de ruta (prompt117). */
-export const Pasaje: React.FC<{ monto: number; etiqueta?: string; className?: string }> = ({
+/** Pasaje: la palabra arriba y el monto en un cuadro tinta, hermano del cuadro con el número de ruta (prompt117).
+ *  `grande` es para el monto que protagoniza la pantalla y se lee de lejos (el recaudo del conductor). */
+export const Pasaje: React.FC<{ monto: number; etiqueta?: string; grande?: boolean; className?: string }> = ({
   monto,
   etiqueta = 'Pasaje',
+  grande = false,
   className = '',
 }) => (
   <div className={className}>
     <p className="text-[14px] font-medium text-[#3A3F4E]">{etiqueta}</p>
-    <p className="inline-flex mt-1.5 rounded-[3px] px-3.5 py-2.5" style={{ backgroundColor: TINTA }}>
-      <span className="text-[30px] font-semibold leading-none tabular-nums tracking-[-0.01em] text-white">
+    <p
+      className={`inline-flex mt-1.5 rounded-[3px] ${grande ? 'px-4 py-3' : 'px-3.5 py-2.5'}`}
+      style={{ backgroundColor: TINTA }}
+    >
+      <span
+        className={`${
+          grande ? 'text-[44px] min-[400px]:text-[52px]' : 'text-[30px]'
+        } font-semibold leading-none tabular-nums tracking-[-0.01em] text-white`}
+      >
         {formatCOP(monto)}
       </span>
     </p>
@@ -112,22 +121,51 @@ export const FichaEstado: React.FC<{
   );
 };
 
-/** Lo que le queda del tope de hoy, sobre el crema: responde «¿me alcanza?» antes de tocar «Pagar». */
-export const Disponible: React.FC<{ disponible: number; tope: number; className?: string }> = ({
+/** Cuántos pasajes de este bus le alcanzan hoy, sobre el crema: responde «¿me alcanza?» antes de tocar «Pagar».
+ *  Se cuenta en pasajes y no en pesos, como DiDi cuenta viajes junto a la plata. Un cuadro por pasaje, como
+ *  una tarjeta perforada: lleno si todavía alcanza, en blanco si ya se gastó hoy. Una barra que se vacía, recién
+ *  renovada, no tenía fondo a la vista y se leía como una raya (prompt124). */
+export const Alcance: React.FC<{ disponible: number; tope: number; tarifa: number; className?: string }> = ({
   disponible,
   tope,
+  tarifa,
   className = '',
 }) => {
-  const pct = tope > 0 ? Math.min(100, Math.max(0, Math.round((disponible / tope) * 100))) : 0;
+  const quedan = tarifa > 0 ? Math.max(0, Math.floor(disponible / tarifa)) : 0;
+  const total = tarifa > 0 ? Math.max(quedan, Math.floor(tope / tarifa)) : 0;
+  // Con topes muy altos frente a la tarifa los cuadros dejan de contarse de un vistazo: ahí basta el número
+  const dibujar = total > 0 && total <= 12;
   return (
     <div className={className}>
       <p className="text-[16px] leading-snug text-[#3A3F4E]">
-        Le quedan <span className="font-semibold text-[#1E2230] tabular-nums">{formatCOP(disponible)}</span> de{' '}
-        {formatCOP(tope)} hoy
+        {quedan > 0 ? (
+          <>
+            Hoy le alcanza para{' '}
+            <span className="font-semibold text-[#1E2230] tabular-nums">
+              {quedan} {quedan === 1 ? 'pasaje' : 'pasajes'}
+            </span>
+          </>
+        ) : (
+          <>
+            Hoy ya no le alcanza: le quedan{' '}
+            <span className="font-semibold text-[#1E2230] tabular-nums">{formatCOP(disponible)}</span>
+          </>
+        )}
       </p>
-      <div aria-hidden="true" className="mt-2 h-[6px] w-full max-w-[280px] bg-[#DCD2BF]">
-        <div className="h-full" style={{ width: `${pct}%`, backgroundColor: TINTA }} />
-      </div>
+      {dibujar && (
+        <div aria-hidden="true" className="mt-2.5 flex flex-wrap gap-[5px]">
+          {Array.from({ length: total }, (_, i) => (
+            <span
+              key={i}
+              className="w-[18px] h-[18px] rounded-[2px]"
+              style={i < quedan ? { backgroundColor: TINTA } : { border: '1.5px solid #A79C86' }}
+            />
+          ))}
+        </div>
+      )}
+      <p className="mt-2 text-[14px] text-[#3A3F4E] tabular-nums">
+        Tope diario {formatCOP(tope)} · se renueva a medianoche
+      </p>
     </div>
   );
 };

@@ -39,6 +39,16 @@ export function formatHora(isoDate: string): string {
   }
 }
 
+// Hora sin segundos («4:04 a. m.»), para leer de reojo
+export function formatHoraCorta(isoDate: string): string {
+  try {
+    // Espacios duros: «a. m.» no se parte entre dos renglones
+    return new Date(isoDate).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' }).replace(/\s/g, '\u00A0');
+  } catch {
+    return isoDate;
+  }
+}
+
 export function formatFechaHora(isoDate: string): string {
   try {
     const d = new Date(isoDate);

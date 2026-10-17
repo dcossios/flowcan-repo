@@ -31,12 +31,13 @@ export function partirNombre(nombre: string): { tipo: string; numero: string; em
   };
 }
 
-// «Poblado – Centro – Laureles» o «Poblado · Centro · Laureles» → «Poblado → Centro → Laureles».
+// «Poblado – Centro – Laureles» o «Poblado · Centro · Laureles» → «Poblado → Centro → Laureles». La flecha va pegada
+// (espacio duro) al tramo que sigue: si la línea se parte, la flecha abre el renglón en vez de quedar colgando al final.
 export const rutaConFlechas = (ruta: string) =>
   ruta
     .split(/\s+[–—·-]\s+/)
     .filter(Boolean)
-    .join(' → ');
+    .join(' → ');
 
 // «bus-01» → «Bus 01», para cuando solo se conoce el id del vehículo.
 export const nombreDesdeId = (id: string) =>
