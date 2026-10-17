@@ -227,15 +227,23 @@ details[open] > summary::after { content: "–"; }
   background: #2c3142;
 }
 
-/* Botón de pago del cobro (prompt145). Blanco sobre #EE5A52 da 3,4 : 1, suficiente para texto grande en
-   negrita (WCAG AA ≥ 3 : 1); el coral es el rojo del Bus 01 del sistema. */
+/* Barra y botón de pago del cobro (prompt145, prompt168): el botón coral monta mitad sobre el crema y mitad sobre
+   el negro (sin filete superior), como en el diseño de Andrés. Blanco sobre #EE5A52 da 3,4 : 1 (WCAG AA texto grande). */
+.subase-fixed-bar-pago {
+  border-top: none;
+}
+.subase-fixed-bar-pago .subase-fixed-bar-inner {
+  padding-top: 0;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+}
 .subase-btn-pago {
   background: #EE5A52;
-  color: #FFFFFF;
+  color: #F0E9D6;
   min-height: 64px;
-  border-radius: 32px;
+  margin-top: -32px;
+  border-radius: 9999px;
   font-weight: 600;
-  font-size: 19px;
+  font-size: 21px;
   justify-content: center;
   gap: 10px;
 }

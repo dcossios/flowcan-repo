@@ -275,7 +275,7 @@ export const VehiculoCobroPage: React.FC = () => {
       </div>
 
       {!loading && vehiculo && (
-        <div className="subase-fixed-bar">
+        <div className="subase-fixed-bar subase-fixed-bar-pago">
           <div className="subase-fixed-bar-inner">
             {paseActivo ? (
               <button
@@ -304,11 +304,11 @@ export const VehiculoCobroPage: React.FC = () => {
               </Link>
             )}
             {paseActivo && (
-              <div className="flex items-center justify-between gap-3 mt-2">
-                <p className="min-w-0 truncate text-[14px] text-[#C3C5C6]">
+              <div className="flex items-center justify-between gap-3 mt-3">
+                <p className="min-w-0 truncate text-[16px] text-[#F0E9D6]">
                   {billetera ? (
                     <>
-                      Su pase: <span className="font-medium text-white">{billetera}</span>
+                      Su pase: <span className="font-semibold text-[#F0E9D6]">{billetera}</span>
                     </>
                   ) : (
                     'Paga con su pase'
@@ -317,7 +317,7 @@ export const VehiculoCobroPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleCambiarPase}
-                  className="shrink-0 inline-flex items-center min-h-11 px-1 text-[14px] text-[#C3C5C6] underline underline-offset-2 hover:text-white cursor-pointer"
+                  className="shrink-0 inline-flex items-center min-h-11 px-1 text-[16px] font-medium text-[#F0E9D6] underline decoration-[1.5px] underline-offset-4 hover:text-white cursor-pointer"
                 >
                   Cambiar
                 </button>

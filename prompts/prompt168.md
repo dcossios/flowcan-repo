@@ -1,0 +1,1 @@
+le habia pedido este camboio claude y no lo veo '/Users/saychain/Downloads/Redesign_screens_for_illustrations_2K_20261017050411.jpg' "para el pago vamos hacerlo asi como este diseño, cambia el verde por negro (conserva nuestras , fuentes)"
