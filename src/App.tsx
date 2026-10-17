@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
-import { PanelEscena, RayaRuta } from './components/EscenaInicio';
+import { PanelEscena } from './components/EscenaInicio';
+import { ETIQUETA, IdentidadVehiculo, Pasaje, Ruta, Titulo } from './components/Sistema';
 import { VehiculoCobroPage } from './pages/VehiculoCobroPage';
 import { ActivarPasePage } from './pages/ActivarPasePage';
 import { PaseListoPage } from './pages/PaseListoPage';
@@ -32,28 +32,25 @@ const InicioPage: React.FC = () => {
         <div className="flex-1 flex flex-col">
           {/* Texto compacto: la escena se encuadra justo debajo y deja a la vista el cruce de las líneas */}
           <PanelEscena letrero="Súbase">
-            <h1 className="text-[28px] min-[360px]:text-[32px] font-light leading-tight">Escanee el QR del bus para pagar.</h1>
-            <RayaRuta />
-            <p className="text-[15px] font-normal text-[#4A4F5C] mt-3 leading-snug">
-              Apunte la cámara de su celular al código del vehículo.
-            </p>
+            <p className={`${ETIQUETA} text-[#3A3F4E]`}>Pague el bus con su celular</p>
+            <Titulo className="mt-2.5">Escanee el QR del bus</Titulo>
+            <p className="text-[16px] leading-normal text-[#3A3F4E] mt-2">Apunte la cámara al código pegado en el vehículo.</p>
           </PanelEscena>
         </div>
       </AppShell>
     );
   }
 
+
   return (
     <AppShell vehiculoIdActual={ultimo.id} barraFija>
       <div className="flex-1 flex flex-col">
-        {/* Texto compacto: la escena se encuadra justo debajo; la ruta también va en el letrero de la buseta */}
+        {/* La ruta también va en el letrero de la buseta de la escena */}
         <PanelEscena vehiculoId={ultimo.id} letrero={ultimo.ruta}>
-          <h1 className="text-[28px] min-[360px]:text-[32px] font-light leading-tight">Pagar otra vez</h1>
-          <RayaRuta vehiculoId={ultimo.id} />
-          <p className="text-[15px] font-normal text-[#4A4F5C] mt-3 tabular-nums">
-            {ultimo.nombre} · {formatCOP(ultimo.tarifa)}
-          </p>
-          <p className="text-[18px] font-normal mt-0.5 leading-snug">{ultimo.ruta}</p>
+          <IdentidadVehiculo vehiculoId={ultimo.id} nombre={ultimo.nombre} />
+          <Titulo className="mt-4">Pagar otra vez</Titulo>
+          <Ruta ruta={ultimo.ruta} className="mt-1.5" />
+          <Pasaje monto={ultimo.tarifa} className="mt-4" />
         </PanelEscena>
 
         {getPaseToken() && (
@@ -66,18 +63,14 @@ const InicioPage: React.FC = () => {
         )}
       </div>
 
-      {/* Barra fija, como en la página de cobro: el botón no tapa la línea ni la buseta de la escena.
-          Va en un portal porque <main> y el pie comparten z-10 y el pie se pintaría encima de la barra. */}
-      {createPortal(
-        <div className="subase-fixed-bar">
-          <div className="subase-fixed-bar-inner">
-            <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary">
-              Ir a pagar
-            </Link>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* Barra fija, como en la página de cobro: el botón no tapa la línea ni la buseta de la escena */}
+      <div className="subase-fixed-bar">
+        <div className="subase-fixed-bar-inner">
+          <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary subase-btn-flecha">
+            Ir a pagar
+          </Link>
+        </div>
+      </div>
     </AppShell>
   );
 };

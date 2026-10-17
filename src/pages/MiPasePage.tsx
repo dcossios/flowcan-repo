@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, CircleCheck, Clock, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
+import { Bajada, PanelCrema, Pasaje, Titulo } from '../components/Sistema';
 import {
   clearPaseToken,
   ErrorCode,
@@ -104,8 +105,15 @@ export const MiPasePage: React.FC = () => {
   return (
     <AppShell vehiculoIdActual={ultimo?.id}>
       <div className="flex-1 flex flex-col">
-        <h1 className="text-[32px] font-light text-white leading-tight">Mi pase</h1>
-        <div className="subase-sand-rule mt-2.5" />
+        <PanelCrema>
+          <Titulo>Mi pase</Titulo>
+          {!loading && !errorInfo && !sinPase && pase && (
+            <>
+              <Pasaje monto={pase.disponibleHoy} etiqueta="Disponible hoy" className="mt-4" />
+              <Bajada className="mt-2">de {formatCOP(pase.topeDiario)} diarios · se renueva cada medianoche</Bajada>
+            </>
+          )}
+        </PanelCrema>
 
         {loading && (
           <div className="flex-1 flex flex-col items-center justify-center py-16">
@@ -134,11 +142,11 @@ export const MiPasePage: React.FC = () => {
               toque.
             </p>
             {ultimo ? (
-              <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary mt-8">
+              <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary subase-btn-flecha mt-8">
                 Ir a pagar en {ultimo.nombre.split(/\s+[—–-]\s+/)[0]}
               </Link>
             ) : (
-              <Link to="/pase/activar" className="subase-btn-primary mt-8">
+              <Link to="/pase/activar" className="subase-btn-primary subase-btn-flecha mt-8">
                 Activar mi pase
               </Link>
             )}
@@ -149,13 +157,7 @@ export const MiPasePage: React.FC = () => {
           <>
             {/* Resumen del pase */}
             <section aria-label="Resumen del pase" className="mt-6">
-              <p className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</p>
-              <p className="text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-2">
-                {formatCOP(pase.disponibleHoy)}
-              </p>
-              <p className="text-[15px] font-normal text-[#C3C5C6] mt-2">
-                de {formatCOP(pase.topeDiario)} diarios · se renueva cada medianoche
-              </p>
+              <p className="text-[15px] font-normal text-[#C3C5C6]">Usado hoy</p>
               <div aria-hidden="true" className="mt-3 h-[6px] w-full bg-[rgba(195,197,198,0.15)] overflow-hidden">
                 {pct > 0 && <div className="h-full bg-[#D2B99A] rounded-r-[4px]" style={{ width: `${pct}%` }} />}
               </div>
@@ -220,7 +222,7 @@ export const MiPasePage: React.FC = () => {
             </section>
 
             {ultimo && (
-              <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary mt-8">
+              <Link to={`/v/${encodeURIComponent(ultimo.id)}`} className="subase-btn-primary subase-btn-flecha mt-8">
                 Pagar otro viaje
               </Link>
             )}

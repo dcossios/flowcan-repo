@@ -85,7 +85,7 @@ const PinEmpresa: React.FC<{ onListo: () => void; error: boolean }> = ({ onListo
   return (
     <div className="flex-1 flex flex-col max-w-sm w-full">
       <LockKeyhole className="w-8 h-8 text-[#D2B99A]" strokeWidth={1.5} />
-      <h1 className="text-[32px] font-light text-white leading-tight mt-4">Panel de la empresa</h1>
+      <h1 className="text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white mt-4">Panel de la empresa</h1>
       <div className="subase-sand-rule mt-2.5" />
       <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
         Escriba el PIN de la empresa para ver el recaudo y gestionar los vehículos.
@@ -224,7 +224,7 @@ export const FlotaPage: React.FC = () => {
                 aria-current={tab === t ? 'page' : undefined}
                 onClick={() => setSearchParams(t === 'resumen' ? {} : { tab: t })}
                 className={`min-h-11 px-5 rounded-[9px] text-[15px] font-normal cursor-pointer ${
-                  tab === t ? 'bg-[#113462] text-white' : 'text-[#C3C5C6] hover:text-white'
+                  tab === t ? 'bg-white text-[#1E2230]' : 'text-[#C3C5C6] hover:text-white'
                 }`}
               >
                 {t === 'resumen' ? 'Resumen' : 'Vehículos'}
@@ -249,7 +249,7 @@ export const FlotaPage: React.FC = () => {
           <FlotaVehiculos onNoAutorizado={pedirPinDeNuevo} />
         ) : cargaFallida ? (
           <>
-            <h1 className="text-[32px] font-light text-white leading-tight">
+            <h1 className="text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white">
               No pudimos cargar la flota
             </h1>
             <div className="subase-sand-rule mt-2.5" />
@@ -288,7 +288,7 @@ export const FlotaPage: React.FC = () => {
         ) : (
           <>
             <header>
-              <h1 className="text-[32px] font-light text-white leading-tight">
+              <h1 className="text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white">
                 Recaudo de la flota
               </h1>
               <div className="subase-sand-rule mt-2.5" />
@@ -313,7 +313,7 @@ export const FlotaPage: React.FC = () => {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-6">
                     <div className="border-t border-[rgba(195,197,198,0.2)] pt-4">
                       <p className="text-[15px] font-normal text-[#C3C5C6]">Recaudo de hoy</p>
-                      <p className="text-[40px] md:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-2">
+                      <p className="text-[40px] md:text-[48px] font-semibold text-white leading-none tracking-[-0.01em] tabular-nums mt-2">
                         {formatCOP(resumen.totales.recaudo)}
                       </p>
                       <p className="text-[15px] font-normal text-[#C3C5C6] mt-2">
@@ -324,7 +324,7 @@ export const FlotaPage: React.FC = () => {
 
                     <div className="border-t border-[rgba(195,197,198,0.2)] pt-4">
                       <p className="text-[15px] font-normal text-[#C3C5C6]">Pasajes</p>
-                      <p className="text-[40px] md:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-2">
+                      <p className="text-[40px] md:text-[48px] font-semibold text-white leading-none tracking-[-0.01em] tabular-nums mt-2">
                         {resumen.totales.pasajes}
                       </p>
                       {resumen.totales.pendientes > 0 && (
@@ -338,7 +338,7 @@ export const FlotaPage: React.FC = () => {
                       <p className="text-[15px] font-normal text-[#C3C5C6]">
                         Vehículos con pagos
                       </p>
-                      <p className="text-[40px] md:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-2">
+                      <p className="text-[40px] md:text-[48px] font-semibold text-white leading-none tracking-[-0.01em] tabular-nums mt-2">
                         {resumen.totales.vehiculosConPagos} de {resumen.totales.vehiculos}
                       </p>
                       <p className="text-[15px] font-normal text-[#C3C5C6] mt-2">en ruta hoy</p>
@@ -346,7 +346,7 @@ export const FlotaPage: React.FC = () => {
 
                     <div className="border-t border-[rgba(195,197,198,0.2)] pt-4">
                       <p className="text-[15px] font-normal text-[#C3C5C6]">Comisión Súbase</p>
-                      <p className="text-[40px] md:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-2">
+                      <p className="text-[40px] md:text-[48px] font-semibold text-white leading-none tracking-[-0.01em] tabular-nums mt-2">
                         {formatCOP(Math.round(resumen.totales.recaudo * 0.015))}
                       </p>
                       <p className="text-[15px] font-normal text-[#C3C5C6] mt-2">

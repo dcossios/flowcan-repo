@@ -3,15 +3,10 @@ import { Link, useLocation, useParams } from 'react-router-dom';
 import { CircleCheck, Clock, Loader2, XCircle } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
+import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
+import { nombreDesdeId } from '../lib/rutas';
 import { ErrorCode, fetchViaje, getFriendlyErrorMessage, ReciboViaje } from '../lib/api';
 import { formatCOP, formatFechaHora } from '../lib/format';
-
-function lineaVehiculo(nombre: string, ruta: string): string {
-  const rutaFlecha = ruta.replace(/\s·\s/g, ' → ');
-  if (!nombre) return rutaFlecha;
-  if (!ruta) return nombre;
-  return `${nombre} · ${rutaFlecha}`;
-}
 
 const RelojVivo: React.FC = () => {
   const [ahora, setAhora] = useState(() => new Date());
@@ -103,7 +98,7 @@ export const ReciboPage: React.FC = () => {
   const vehiculoNombre =
     recibo && typeof recibo.vehiculo === 'object'
       ? recibo.vehiculo.nombre
-      : `Vehículo ${vehiculoId}`;
+      : nombreDesdeId(vehiculoId);
 
   const vehiculoRuta =
     recibo && typeof recibo.vehiculo === 'object' ? recibo.vehiculo.ruta : '';
@@ -122,14 +117,11 @@ export const ReciboPage: React.FC = () => {
 
         {!loading && errorInfo && (
           <div role="alert" className="flex-1 flex flex-col">
-            <h1 className="text-[32px] font-light text-white leading-tight">
-              No pudimos cargar el tiquete
-            </h1>
-            <div className="subase-sand-rule mt-2.5" />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
-              {errorInfo.message}
-            </p>
-            <Link to="/" className="subase-btn-primary mt-8">
+            <PanelCrema>
+              <Titulo>No pudimos cargar el tiquete</Titulo>
+              <Bajada className="mt-2">{errorInfo.message}</Bajada>
+            </PanelCrema>
+            <Link to="/" className="subase-btn-primary subase-btn-flecha mt-8">
               Volver al inicio
             </Link>
             <p className="text-[13px] font-normal text-[#C3C5C6] mt-8">{errorInfo.code}</p>
@@ -138,43 +130,36 @@ export const ReciboPage: React.FC = () => {
 
         {!loading && recibo && (
           <>
-            <PasoLinea paso={3} variante="compacta" />
-
-            <div className="mt-8 flex items-center gap-4" role="status" aria-live="polite">
-              {estado === 'pagado' ? (
-                <CircleCheck className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#D2B99A] shrink-0" strokeWidth={1.5} />
-              ) : estado === 'pendiente' ? (
-                <Clock className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#C3C5C6] shrink-0" strokeWidth={1.5} />
-              ) : (
-                <XCircle className="w-14 h-14 min-[400px]:w-16 min-[400px]:h-16 text-[#C3C5C6] shrink-0" strokeWidth={1.5} />
+            {/* El pasajero le muestra esta pantalla al conductor: el estado va grande en el panel crema */}
+            <PanelCrema>
+              <IdentidadVehiculo vehiculoId={vehiculoId} nombre={vehiculoNombre} />
+              <div className="mt-4 flex items-center gap-3" role="status" aria-live="polite">
+                {estado === 'pagado' ? (
+                  <CircleCheck className="w-11 h-11 shrink-0 text-[#2F865F]" strokeWidth={2} />
+                ) : estado === 'pendiente' ? (
+                  <Clock className="w-11 h-11 shrink-0 text-[#3A3F4E]" strokeWidth={2} />
+                ) : (
+                  <XCircle className="w-11 h-11 shrink-0 text-[#B8403A]" strokeWidth={2} />
+                )}
+                <h1 className="text-[40px] min-[360px]:text-[44px] font-semibold leading-none tracking-[-0.01em]">
+                  {estado === 'pagado' ? 'Pagado' : estado === 'pendiente' ? 'Confirmando…' : 'No se cobró'}
+                </h1>
+              </div>
+              {estado === 'pendiente' && (
+                <Bajada className="mt-2">Su billetera está procesando el pago. Esta pantalla se actualiza sola.</Bajada>
               )}
-              <h1
-                className={`font-light text-white leading-none min-w-0 ${
-                  estado === 'pagado' ? 'text-[44px] min-[400px]:text-[56px]' : 'text-[32px] min-[400px]:text-[44px]'
-                }`}
-              >
-                {estado === 'pagado' ? 'Pagado' : estado === 'pendiente' ? 'Confirmando…' : 'No se cobró'}
-              </h1>
+              {estado === 'fallido' && (
+                <Bajada className="mt-2">
+                  Su billetera no completó el pago y no se le descontó nada. Revise el saldo e intente de nuevo.
+                </Bajada>
+              )}
+              {vehiculoRuta && <Ruta ruta={vehiculoRuta} className="mt-3" />}
+              <Pasaje monto={recibo.monto} etiqueta={estado === 'pagado' ? 'Pagó' : 'Pasaje'} className="mt-4" />
+            </PanelCrema>
+
+            <div className="mt-6">
+              <PasoLinea paso={3} variante="compacta" />
             </div>
-            <div className="subase-sand-rule mt-3" />
-            {estado === 'pendiente' && (
-              <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
-                Su billetera está procesando el pago. Esta pantalla se actualiza sola.
-              </p>
-            )}
-            {estado === 'fallido' && (
-              <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
-                Su billetera no completó el pago y no se le descontó nada. Revise el saldo e intente de nuevo.
-              </p>
-            )}
-
-            <p className="text-[40px] min-[400px]:text-[48px] font-light text-white leading-none tracking-tight tabular-nums mt-8">
-              {formatCOP(recibo.monto)}
-            </p>
-
-            <p className="text-[15px] font-normal text-white mt-4 leading-snug">
-              {lineaVehiculo(vehiculoNombre, vehiculoRuta)}
-            </p>
 
             {estado === 'pagado' && (
               <>

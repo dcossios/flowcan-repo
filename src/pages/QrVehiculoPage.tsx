@@ -27,7 +27,7 @@ export const QrVehiculoPage: React.FC = () => {
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 min-h-11 px-4 rounded-[12px] bg-[#113462] text-white text-[15px] cursor-pointer"
+          className="inline-flex items-center gap-2 min-h-11 px-4 rounded-[12px] bg-white text-[#1E2230] text-[15px] font-medium hover:bg-[#e9e9e9] cursor-pointer"
         >
           <Printer className="w-5 h-5" strokeWidth={1.5} />
           Imprimir

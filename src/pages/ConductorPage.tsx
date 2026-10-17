@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { CircleCheck } from 'lucide-react';
 import { AppShell } from '../components/AppShell';
+import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, TINTA, Titulo, CREMA } from '../components/Sistema';
+import { PanelEscena } from '../components/EscenaInicio';
+import { nombreDesdeId } from '../lib/rutas';
 import {
   FeedItem,
   fetchVehiculo,
@@ -138,7 +142,8 @@ export const ConductorPage: React.FC = () => {
     setTurnoIniciado(true);
   };
 
-  const nombreVehiculo = vehiculo ? vehiculo.nombre : `Vehículo ${vehiculoId.toUpperCase()}`;
+  const nombreVehiculo = vehiculo ? vehiculo.nombre : nombreDesdeId(vehiculoId);
+  const numeroVehiculo = nombreVehiculo.split(/\s+[—–-]\s+/)[0];
   const pagosConfirmados = feed.filter((item) => item.estado === 'pagado');
   const totalRecaudado = pagosConfirmados.reduce((acc, item) => acc + (Number(item.monto) || 0), 0);
   const totalPasajeros = pagosConfirmados.length;
@@ -150,63 +155,62 @@ export const ConductorPage: React.FC = () => {
       rol="conductor"
     >
       {/* Capa inicial para empezar turno y habilitar audio + voz */}
-      {!turnoIniciado && (
-        <div className="fixed inset-0 z-50 bg-[#000000] flex flex-col items-center justify-center px-6 text-center font-normal overscroll-none touch-none">
-          <div className="max-w-md w-full space-y-6">
-            <div>
-              <h1 className="text-[28px] font-light text-white leading-snug">
-                Terminal de {nombreVehiculo}
-              </h1>
-              <div className="subase-sand-rule mx-auto mt-3" />
-            </div>
-
-            <p className="text-[16px] font-normal text-[#C3C5C6] leading-relaxed">
-              Toque para empezar. Cada pago va a sonar y se va a anunciar en voz alta.
-            </p>
-
-            <button
-              type="button"
-              onClick={handleEmpezarTurno}
-              className="w-full h-[64px] min-h-[64px] rounded-[12px] bg-[#113462] text-white text-[20px] font-normal px-6 cursor-pointer"
-            >
-              Empezar turno
-            </button>
+      {/* Las capas a pantalla completa van al body: dentro de <main> quedarían bajo el encabezado */}
+      {!turnoIniciado &&
+        createPortal(
+        <div className="fixed inset-0 z-50 bg-black flex flex-col font-normal">
+          {/* Como la portada de referencia: el bus y la acción sobre el crema, la escena hasta el borde y el botón
+              blanco flotando sobre la calle */}
+          <div className="w-full max-w-lg mx-auto px-5 pt-6 flex-1 flex flex-col min-h-0">
+            <PanelEscena vehiculoId={vehiculoId} letrero={vehiculo?.ruta ?? ''} llenar>
+              <IdentidadVehiculo vehiculoId={vehiculoId} nombre={nombreVehiculo} />
+              <Titulo className="mt-4">Terminal del {numeroVehiculo}</Titulo>
+              <Bajada className="mt-2.5">Toque para empezar. Cada pago va a sonar y se va a anunciar en voz alta.</Bajada>
+            </PanelEscena>
           </div>
-        </div>
-      )}
+          <div className="absolute inset-x-0 bottom-0 z-10">
+            <div className="max-w-lg mx-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))]">
+              <button type="button" onClick={handleEmpezarTurno} className="subase-btn-primary subase-btn-flecha">
+                Empezar turno
+              </button>
+            </div>
+          </div>
+        </div>,
+          document.body
+        )}
 
       {/* Capa fija a pantalla completa durante 3 segundos cuando se confirma un pago */}
-      {ultimoPagoAlerta && (
+      {ultimoPagoAlerta &&
+        createPortal(
         <div
           role="status"
           aria-live="assertive"
           onClick={() => setUltimoPagoAlerta(null)}
-          className="fixed inset-0 z-40 bg-[#000000] border-2 border-[#D2B99A] flex flex-col items-center justify-center px-6 text-center cursor-pointer font-normal overscroll-none touch-none"
+          className="fixed inset-0 z-40 flex flex-col items-center justify-center px-6 text-center cursor-pointer font-normal overscroll-none touch-none text-[#1E2230]"
+          style={{ backgroundColor: CREMA }}
         >
-          <CircleCheck className="w-24 h-24 text-[#D2B99A] mb-6 shrink-0" size={96} strokeWidth={1.5} />
-          <p className="text-[64px] leading-none font-light text-white">Pagado</p>
-          <p className="text-[44px] min-[400px]:text-[56px] leading-none font-light text-white mt-4 tabular-nums">
+          {/* Crema y tinta: se lee de lejos, de día y de noche */}
+          <CircleCheck className="w-24 h-24 text-[#2F865F] mb-6 shrink-0" size={96} strokeWidth={2} />
+          <p className="text-[64px] leading-none font-semibold tracking-[-0.01em]">Pagado</p>
+          <p
+            className="inline-flex mt-5 rounded-[3px] px-5 py-3 text-[44px] min-[400px]:text-[56px] leading-none font-semibold text-white tabular-nums"
+            style={{ backgroundColor: TINTA }}
+          >
             {formatCOP(ultimoPagoAlerta.monto)}
           </p>
-          <p className="text-[18px] font-normal text-[#C3C5C6] mt-4">
-            {formatHora(ultimoPagoAlerta.fecha)}
-          </p>
-        </div>
-      )}
+          <p className="text-[18px] font-normal text-[#3A3F4E] mt-4">{formatHora(ultimoPagoAlerta.fecha)}</p>
+        </div>,
+          document.body
+        )}
 
       <div className="space-y-6 font-normal">
         {/* Encabezado del vehículo */}
-        <div>
-          <h1 className="text-[24px] font-light text-white">
-            {nombreVehiculo}
-          </h1>
-          <div className="subase-sand-rule mt-2" />
-          {vehiculo?.ruta && (
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-2">
-              {vehiculo.ruta} · Tarifa {formatCOP(vehiculo.tarifa)}
-            </p>
-          )}
-        </div>
+        <PanelCrema>
+          <IdentidadVehiculo vehiculoId={vehiculoId} nombre={nombreVehiculo} />
+          <Titulo className="mt-4">Recaudo del turno</Titulo>
+          {vehiculo?.ruta && <Ruta ruta={vehiculo.ruta} className="mt-1.5" />}
+          {vehiculo && <Pasaje monto={vehiculo.tarifa} className="mt-4" />}
+        </PanelCrema>
 
         {/* Aviso si el servidor no responde */}
         {backendOffline && (
@@ -233,14 +237,14 @@ export const ConductorPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-[15px] font-normal text-[#C3C5C6]">Pasajes del turno</p>
-            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-light text-white mt-1 tabular-nums">
+            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums">
               {totalPasajeros}
             </p>
           </div>
 
           <div>
             <p className="text-[15px] font-normal text-[#C3C5C6]">Recaudo</p>
-            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-light text-white mt-1 tabular-nums break-words">
+            <p className="text-[36px] min-[400px]:text-[48px] leading-tight font-semibold text-white mt-1 tabular-nums break-words">
               {formatCOP(totalRecaudado)}
             </p>
           </div>

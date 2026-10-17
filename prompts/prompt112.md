@@ -1,0 +1,1 @@
+Lo que estoy notando es que lo palido del boton "Ir a pagar" no es un color que te diga inmediatamente, donde pagar, sin mirarlo, solo con la intuicion y la vista de reojo se deberia saber donde esta el boton de pago el boton de pago

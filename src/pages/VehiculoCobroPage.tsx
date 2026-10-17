@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { PasoLinea } from '../components/PasoLinea';
+import { Bajada, IdentidadVehiculo, PanelCrema, Pasaje, Ruta, Titulo } from '../components/Sistema';
 import {
   clearPaseToken,
   ErrorCode,
@@ -133,53 +134,34 @@ export const VehiculoCobroPage: React.FC = () => {
     topeDiario > 0
       ? Math.min(100, Math.max(0, Math.round((disponibleHoy / topeDiario) * 100)))
       : 0;
-  const titulo = cargaFallida
-    ? 'No pudimos cargar el vehículo'
-    : vehiculo
-      ? vehiculo.ruta
-      : '';
-
   return (
     <AppShell vehiculoIdActual={vehiculoId} barraFija={Boolean(!loading && vehiculo)}>
       <div className="flex-1 flex flex-col">
-        {!cargaFallida && (
-          <div className="mb-5">
-            <PasoLinea paso={paseActivo ? 2 : 1} variante="compacta" />
-          </div>
-        )}
-
-        {titulo ? (
-          <>
-            <h1 className="text-[32px] min-[400px]:text-[36px] font-light text-white leading-tight">
-              {titulo}
-            </h1>
-            <div className="subase-sand-rule mt-2.5" />
-            {vehiculo?.nombre && (
-              <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">{vehiculo.nombre}</p>
-            )}
-          </>
-        ) : (
-          <div className="h-10" />
-        )}
-
-        {loading && (
-          <div className="flex-1 flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin" strokeWidth={1.5} />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">Consultando el pasaje…</p>
-          </div>
-        )}
+        <PanelCrema>
+          {vehiculo ? (
+            <>
+              <IdentidadVehiculo vehiculoId={vehiculo.id} nombre={vehiculo.nombre} />
+              <Titulo className="mt-4">Pague su pasaje</Titulo>
+              <Ruta ruta={vehiculo.ruta} className="mt-1.5" />
+              <Pasaje monto={vehiculo.tarifa} className="mt-4" />
+            </>
+          ) : cargaFallida ? (
+            <>
+              <Titulo>No pudimos cargar el vehículo</Titulo>
+              {errorInfo && <Bajada className="mt-2.5">{errorInfo.message}</Bajada>}
+            </>
+          ) : (
+            <div className="flex items-center gap-3 py-4">
+              <Loader2 className="w-6 h-6 animate-spin" strokeWidth={1.5} />
+              <Bajada>Consultando el pasaje…</Bajada>
+            </div>
+          )}
+        </PanelCrema>
 
         {cargaFallida && errorInfo && (
-          <div className="mt-8 flex-1 flex flex-col">
-            <p className="text-[15px] font-normal text-[#C3C5C6] leading-relaxed">
-              {errorInfo.message}
-            </p>
-            <div className="mt-6 flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={cargarVehiculo}
-                className="subase-btn-primary"
-              >
+          <div className="mt-6 flex-1 flex flex-col">
+            <div className="flex flex-col gap-3">
+              <button type="button" onClick={cargarVehiculo} className="subase-btn-primary">
                 <RefreshCw className="w-5 h-5" strokeWidth={1.5} />
                 Reintentar
               </button>
@@ -202,13 +184,8 @@ export const VehiculoCobroPage: React.FC = () => {
 
         {!loading && vehiculo && (
           <>
-            <hr className="subase-filete mt-6 mb-6" />
-
-            <div className="flex items-baseline justify-between gap-4">
-              <span className="text-[15px] font-normal text-[#C3C5C6]">Pasaje</span>
-              <span className="text-[48px] font-light text-white leading-none tracking-tight">
-                {formatCOP(vehiculo.tarifa)}
-              </span>
+            <div className="mt-6">
+              <PasoLinea paso={paseActivo ? 2 : 1} variante="compacta" />
             </div>
 
             <hr className="subase-filete mt-6 mb-6" />
@@ -298,7 +275,7 @@ export const VehiculoCobroPage: React.FC = () => {
                 type="button"
                 disabled={paying}
                 onClick={handlePagar}
-                className="subase-btn-primary"
+                className={`subase-btn-primary ${paying ? '' : 'subase-btn-flecha'}`}
               >
                 {paying ? (
                   <>
@@ -312,7 +289,7 @@ export const VehiculoCobroPage: React.FC = () => {
             ) : (
               <Link
                 to={`/pase/activar?volver=${encodeURIComponent(`/v/${vehiculoId}`)}`}
-                className="subase-btn-primary"
+                className="subase-btn-primary subase-btn-flecha"
               >
                 Activar pase y pagar
               </Link>

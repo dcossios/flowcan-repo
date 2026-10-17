@@ -19,7 +19,7 @@ const campo =
 const btnSecundario =
   'inline-flex items-center justify-center gap-2 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.25)] text-[15px] font-normal text-white hover:border-[#D2B99A] cursor-pointer disabled:opacity-50';
 const btnPrincipal =
-  'inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-[12px] bg-[#113462] text-[15px] font-medium text-white cursor-pointer disabled:opacity-50';
+  'inline-flex items-center justify-center gap-2 min-h-11 px-5 rounded-[12px] bg-white text-[15px] font-medium text-[#1E2230] hover:bg-[#e9e9e9] cursor-pointer disabled:opacity-50';
 
 const Campo: React.FC<{ label: string; ayuda?: string; grupo?: boolean; children: React.ReactNode }> = ({
   label,
@@ -144,7 +144,7 @@ export const FlotaVehiculos: React.FC<Props> = ({ onNoAutorizado }) => {
     <div className="flex-1 flex flex-col">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-[32px] font-light text-white leading-tight">Vehículos</h1>
+          <h1 className="text-[30px] min-[360px]:text-[34px] font-semibold leading-[1.05] tracking-[-0.01em] text-white">Vehículos</h1>
           <div className="subase-sand-rule mt-2.5" />
           {lista && (
             <p className="text-[15px] font-normal text-[#C3C5C6] mt-3">

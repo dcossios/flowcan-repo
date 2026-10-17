@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { PasoLinea } from '../components/PasoLinea';
+import { Bajada, PanelCrema, Titulo } from '../components/Sistema';
 import {
   clearPendingPaseContext,
   confirmarPase,
@@ -83,34 +84,38 @@ export const PaseListoPage: React.FC = () => {
   return (
     <AppShell>
       <div className="flex-1 flex flex-col">
-        <PasoLinea paso={paso} variante="compacta" />
+        <PanelCrema>
+          {loading && (
+            <>
+              <Loader2 className="w-7 h-7 animate-spin mb-3" strokeWidth={1.5} />
+              <Titulo>Confirmando su pase…</Titulo>
+              <Bajada className="mt-2">Un momento. Estamos recibiendo la autorización de su billetera.</Bajada>
+            </>
+          )}
+          {!loading && errorInfo && (
+            <div role="alert">
+              <Titulo>No se pudo confirmar el pase</Titulo>
+              <Bajada className="mt-2">{errorInfo.message}</Bajada>
+            </div>
+          )}
+          {!loading && confirmado && (
+            <>
+              <Titulo>Pase activo</Titulo>
+              <Bajada className="mt-2">Su tope diario ya está autorizado. Lo llevamos al bus para pagar.</Bajada>
+            </>
+          )}
+        </PanelCrema>
 
-        {loading && (
-          <div className="flex-1 flex flex-col justify-center py-16">
-            <Loader2 className="w-8 h-8 text-[#D2B99A] animate-spin mb-4" strokeWidth={1.5} />
-            <h1 className="text-[32px] font-light text-white leading-tight">
-              Confirmando su pase…
-            </h1>
-            <div className="subase-sand-rule mt-2.5" />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
-              Un momento. Estamos recibiendo la autorización de su billetera.
-            </p>
-          </div>
-        )}
+        <div className="mt-6">
+          <PasoLinea paso={paso} variante="compacta" />
+        </div>
 
         {!loading && errorInfo && (
-          <div className="mt-8 flex-1 flex flex-col" role="alert">
-            <h1 className="text-[32px] font-light text-white leading-tight">
-              No se pudo confirmar el pase
-            </h1>
-            <div className="subase-sand-rule mt-2.5" />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-4 leading-relaxed">
-              {errorInfo.message}
-            </p>
-            <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-8 flex-1 flex flex-col">
+            <div className="flex flex-col gap-3">
               <Link
                 to={`/pase/activar?volver=${encodeURIComponent(destinoVolver)}`}
-                className="subase-btn-primary"
+                className="subase-btn-primary subase-btn-flecha"
               >
                 Intentar de nuevo
               </Link>
@@ -126,37 +131,26 @@ export const PaseListoPage: React.FC = () => {
         )}
 
         {!loading && confirmado && (
-          <div className="mt-8 flex-1 flex flex-col">
-            <h1 className="text-[32px] font-light text-white leading-tight">Pase activo</h1>
-            <div className="subase-sand-rule mt-2.5" />
-            <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
-              Su tope diario ya está autorizado. Lo llevamos al bus para pagar.
-            </p>
-
-            <hr className="subase-filete mt-6 mb-6" />
-
+          <div className="mt-6 flex-1 flex flex-col">
+            <hr className="subase-filete mb-6" />
             <div className="flex items-baseline justify-between gap-4">
               <span className="text-[15px] font-normal text-[#C3C5C6]">Disponible hoy</span>
-              <span className="text-[32px] font-light text-white leading-none">
+              <span className="text-[32px] font-semibold text-white leading-none tabular-nums">
                 {formatCOP(confirmado.pase.disponibleHoy)}
               </span>
             </div>
             <div className="flex items-baseline justify-between gap-4 mt-4">
               <span className="text-[15px] font-normal text-[#C3C5C6]">Tope diario</span>
-              <span className="text-[15px] font-normal text-white">
-                {formatCOP(confirmado.pase.topeDiario)}
-              </span>
+              <span className="text-[15px] font-normal text-white">{formatCOP(confirmado.pase.topeDiario)}</span>
             </div>
             {confirmado.pase.venceEn && (
               <div className="flex items-baseline justify-between gap-4 mt-4">
                 <span className="text-[15px] font-normal text-[#C3C5C6]">Vigencia</span>
-                <span className="text-[15px] font-normal text-white">
-                  {formatFechaHora(confirmado.pase.venceEn)}
-                </span>
+                <span className="text-[15px] font-normal text-white">{formatFechaHora(confirmado.pase.venceEn)}</span>
               </div>
             )}
 
-            <Link to={destinoVolver} className="subase-btn-primary mt-10">
+            <Link to={destinoVolver} className="subase-btn-primary subase-btn-flecha mt-10">
               Continuar al bus
             </Link>
           </div>

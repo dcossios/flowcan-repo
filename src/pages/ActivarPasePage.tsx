@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
 import { ComoUsamosOpenPayments, PasoLinea } from '../components/PasoLinea';
+import { Bajada, ETIQUETA, PanelCrema, Titulo } from '../components/Sistema';
 import {
   crearPase,
   ErrorCode,
@@ -92,13 +93,13 @@ export const ActivarPasePage: React.FC = () => {
   return (
     <AppShell barraFija="alta">
       <form id="activar-pase-form" onSubmit={handleSubmit} className="flex-1 flex flex-col">
-        <h1 className="text-[32px] min-[400px]:text-[36px] font-light text-white leading-tight">
-          Active su pase
-        </h1>
-        <div className="subase-sand-rule mt-2.5" />
-        <p className="text-[15px] font-normal text-[#C3C5C6] mt-3 leading-relaxed">
-          Así funciona Súbase, en tres pasos:
-        </p>
+        <PanelCrema>
+          <p className={`${ETIQUETA} text-[#3A3F4E]`}>Se hace una sola vez</p>
+          <Titulo className="mt-2.5">Active su pase</Titulo>
+          <Bajada className="mt-2">
+            Autorice un tope diario en su billetera. Después paga cada viaje con un toque.
+          </Bajada>
+        </PanelCrema>
 
         <div className="mt-6">
           <PasoLinea paso={1} variante="vertical" />
@@ -181,14 +182,14 @@ export const ActivarPasePage: React.FC = () => {
                 onClick={() => setTopeDiario(item.valor)}
                 className={`min-h-11 px-2 py-3 rounded-[12px] text-center cursor-pointer border ${
                   activo
-                    ? 'border-[#D2B99A] bg-[#113462] text-white'
+                    ? 'border-white bg-white text-[#1E2230]'
                     : 'border-[rgba(195,197,198,0.2)] bg-transparent text-white'
                 }`}
               >
-                <span className="block text-[13px] font-normal text-[#C3C5C6] mb-1 h-4">
+                <span className={`block text-[13px] font-normal mb-1 h-4 ${activo ? 'text-[#3A3F4E]' : 'text-[#C3C5C6]'}`}>
                   {item.sugerido ? 'Sugerido' : '\u00a0'}
                 </span>
-                <span className="block text-[18px] font-normal text-white">{item.etiqueta}</span>
+                <span className="block text-[18px] font-semibold tabular-nums">{item.etiqueta}</span>
               </button>
             );
           })}
@@ -220,7 +221,7 @@ export const ActivarPasePage: React.FC = () => {
             type="submit"
             form="activar-pase-form"
             disabled={submitting}
-            className="subase-btn-primary"
+            className={`subase-btn-primary ${submitting ? '' : 'subase-btn-flecha'}`}
           >
             {submitting ? (
               <>

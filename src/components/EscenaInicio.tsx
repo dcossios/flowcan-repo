@@ -1,7 +1,8 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import ayacuchoBase from '../assets/escenas/ayacucho-base.webp';
+import ayacuchoBase from '../assets/escenas/ayacucho-base.webp'; // sin el edificio vecino
 import ayacuchoIsla from '../assets/escenas/ayacucho-isla.webp';
 import ayacuchoDerecha from '../assets/escenas/ayacucho-derecha.webp';
+import { coloresDeRuta, type ColoresRuta } from '../lib/rutas';
 
 /*
  * Escena del inicio del pasajero: la esquina del Tranvía de Ayacucho (ilustración de Flow con las calles vueltas
@@ -20,7 +21,13 @@ const NOCHE = '#1E2230';
 const ACERA = '#E6DCD3'; // acera de la ilustración (muestreada)
 const TRANVIA = '#159B4C'; // Línea T del Metro de Medellín (ficha de Wikipedia)
 const AMARILLO = '#F3C85E'; // cuadrícula de la imagen original de Flow (muestreado)
-const TECHO = 341; // el techo más alto de la ilustración: el encuadre lo deja siempre bajo el texto
+// El techo más alto de la ilustración (sin el edificio vecino de la izquierda, el del Tranvía de Ayacucho): el
+// encuadre lo deja siempre bajo el texto.
+const TECHO = 395;
+// Escala de la escena frente al texto, elegida por Andrés (variante D, prompts/prompt118.md): los edificios se
+// achican anclados abajo a la derecha y el suelo sigue hacia la izquierda.
+const ESCALA = 0.78;
+const ACERA_SOMBRA = '#908A86'; // acera de la fachada izquierda, en sombra (muestreada)
 
 // Ejes del suelo medidos en la ilustración. O es el centro del cruce. U sigue la calle de la buseta (abajo a la
 // derecha, 29,07°) y V la del tranvía (abajo a la izquierda, 28,78°). El cruce va de u = ±122,5 y v = ±96,2.
@@ -70,16 +77,24 @@ const Cuadricula: React.FC = () => {
 
 // Acera de abajo, alineada con la acera derecha y con el borde del cruce (la de Flow se metía 30 px en la calle).
 const RADIO_ACERA = 26;
-function aceraAbajo(): string {
-  const cu = CRUCE_U + RADIO_ACERA;
-  const cv = CRUCE_V + RADIO_ACERA;
-  const pts: [number, number][] = [proj(CRUCE_U, 900)];
-  for (let i = 0; i <= 8; i++) {
-    const t = Math.PI + (Math.PI / 2) * (i / 8);
-    pts.push(proj(cu + RADIO_ACERA * Math.cos(t), cv + RADIO_ACERA * Math.sin(t)));
-  }
-  pts.push(proj(900, CRUCE_V), proj(900, 900));
-  return puntos(pts);
+// Manzana en una esquina del cruce: andén de ANDEN de ancho a lo largo de las dos calles y, adentro, el campo crema
+// (como la manzana de la ilustración). su y sv dan el cuadrante: +1 hacia el espectador en cada eje.
+const ANDEN = 34;
+function manzana(su: 1 | -1, sv: 1 | -1, radio: number): { acera: string; crema: string } {
+  const L = 4000;
+  const esquina = (d: number, r: number): [number, number][] => {
+    const u0 = su * (CRUCE_U + d);
+    const v0 = sv * (CRUCE_V + d);
+    const pts: [number, number][] = [proj(u0, sv * L)];
+    for (let i = 0; i <= 8; i++) {
+      const t = (Math.PI / 2) * (i / 8);
+      // Arco de la esquina redondeada, del borde de la calle de la buseta al de la del tranvía
+      pts.push(proj(u0 + su * r * (1 - Math.sin(t)), v0 + sv * r * (1 - Math.cos(t))));
+    }
+    pts.push(proj(su * L, v0), proj(su * L, sv * L));
+    return pts;
+  };
+  return { acera: puntos(esquina(0, radio)), crema: puntos(esquina(ANDEN, Math.max(4, radio - ANDEN / 2))) };
 }
 
 function mezclar(a: string, b: string, k: number): string {
@@ -175,20 +190,6 @@ function bloque(p: Pose, b: Bloque): string {
   return s;
 }
 
-interface ColoresRuta {
-  color: string;
-  oscuro: string;
-}
-
-// Colores del universo: Bus 01 rojo, Bus 02 verde (validado para daltonismo frente al azul del Metro).
-const RUTAS: Record<string, ColoresRuta> = {
-  'bus-02': { color: '#3FB27F', oscuro: '#2F865F' },
-};
-const RUTA_BASE: ColoresRuta = { color: '#EE5A52', oscuro: '#B8403A' };
-
-function coloresDeRuta(vehiculoId?: string): ColoresRuta {
-  return (vehiculoId && RUTAS[vehiculoId]) || RUTA_BASE;
-}
 
 // Buseta en bloque a la escala de la fachada (la puerta de la esquina mide unos 65 px): letrero de la ruta en el costado.
 const BL = 220;
@@ -275,7 +276,54 @@ function vehiculos(tBus: number, tTranvia: number, ruta: ColoresRuta, letrero: s
   return cuadro;
 }
 
-const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; viewBoxY: number }> = ({ ruta, letrero, viewBoxY }) => {
+/*
+ * Suelo a la izquierda de la imagen, visible porque la escena va achicada (ESCALA): acera de la fachada,
+ * calle de la buseta en azul noche e isla, siguiendo los bordes medidos en x = 0. Arriba de la acera queda el crema.
+ */
+function sueloIzquierdo(x0: number) {
+  const F = (x: number) => 858 + 0.52 * x; // base de la fachada
+  const E = (x: number) => 917.7 + 0.5693 * x; // borde de la acera con la calle
+  const I = (x: number) => 1083 + 0.556 * x; // borde superior de la isla
+  const J = (x: number) => 1353.3 - 0.553 * x; // borde de la isla con la calle del tranvía
+  const tramo = (a: (x: number) => number, b: (x: number) => number) =>
+    puntos([[x0, a(x0)], [0.5, a(0.5)], [0.5, b(0.5)], [x0, b(x0)]]);
+  return (
+    <>
+      <polygon points={tramo(F, E)} fill={ACERA_SOMBRA} />
+      <polygon points={tramo(E, () => ALTO)} fill={NOCHE} />
+      <polygon points={tramo(I, J)} fill={ACERA} />
+    </>
+  );
+}
+
+interface Encuadre {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+}
+
+/*
+ * Suelo debajo de la imagen, visible cuando el panel llena la pantalla (conductor): las calles en azul noche siguen
+ * hacia abajo y las manzanas de la isla y de la derecha continúan (andén y campo crema). Las líneas ya son infinitas.
+ */
+function sueloAbajo() {
+  const L = 4000;
+  return (
+    <g clipPath="url(#subase-bajo-imagen)">
+      <clipPath id="subase-bajo-imagen">
+        <rect x={-L} y={ALTO - 2} width={2 * L} height={L} />
+      </clipPath>
+      <rect x={-L} y={ALTO - 2} width={2 * L} height={L} fill={NOCHE} />
+      <polygon points={manzana(-1, 1, RADIO_ACERA).acera} fill={ACERA} />
+      <polygon points={manzana(-1, 1, RADIO_ACERA).crema} fill={CREMA} />
+      <polygon points={manzana(1, -1, RADIO_ACERA).acera} fill={ACERA} />
+      <polygon points={manzana(1, -1, RADIO_ACERA).crema} fill={CREMA} />
+    </g>
+  );
+}
+
+const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; encuadre: Encuadre }> = ({ ruta, letrero, encuadre }) => {
   const busAtras = useRef<SVGGElement>(null);
   const tranvia = useRef<SVGGElement>(null);
   const busAdelante = useRef<SVGGElement>(null);
@@ -302,16 +350,19 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; viewBoxY: number }>
     return () => cancelAnimationFrame(id);
   }, [ruta, letrero]);
 
-  const alto = ALTO - viewBoxY;
+  const alto = encuadre.alto;
 
   return (
     <svg
       className="absolute inset-0 w-full h-full"
-      viewBox={`0 ${viewBoxY.toFixed(1)} ${ANCHO} ${alto.toFixed(1)}`}
-      preserveAspectRatio="xMidYMin slice"
+      viewBox={`${encuadre.x.toFixed(1)} ${encuadre.y.toFixed(1)} ${encuadre.ancho.toFixed(1)} ${alto.toFixed(1)}`}
+      preserveAspectRatio="xMaxYMax slice"
       aria-hidden="true"
     >
-      <rect x={0} y={0} width={ANCHO} height={ALTO} fill={NOCHE} />
+      {encuadre.x < 0 && sueloIzquierdo(encuadre.x - 20)}
+      {encuadre.y + encuadre.alto > ALTO && sueloAbajo()}
+      {/* Solo bajo las calles: si llegara al borde de la imagen, su canto asomaría como una línea al achicar la escena */}
+      <rect x={0} y={840} width={ANCHO} height={ALTO - 840} fill={NOCHE} />
       <polygon points={rectSuelo(-ANCHO_LINEA_TRANVIA / 2, ANCHO_LINEA_TRANVIA / 2, -1200, 1200)} fill={TRANVIA} />
       <polygon points={rectSuelo(-1200, 1200, -ANCHO_LINEA_BUS / 2, ANCHO_LINEA_BUS / 2)} fill={ruta.color} />
       <Cuadricula />
@@ -321,7 +372,9 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; viewBoxY: number }>
       <g ref={tranvia} />
       <image href={ayacuchoDerecha} x={628} y={1140} width={140} height={236} />
       <g ref={busAdelante} />
-      <polygon points={aceraAbajo()} fill={ACERA} />
+      {/* Manzana de abajo, alineada con la acera derecha y con el borde del cruce (la de Flow se metía 30 px en la calle) */}
+      <polygon points={manzana(1, 1, RADIO_ACERA).acera} fill={ACERA} />
+      <polygon points={manzana(1, 1, RADIO_ACERA).crema} fill={CREMA} />
       {/* Cable que cruza la calle hasta el semáforo de la esquina (la calle de la imagen se volvió transparente) */}
       <line x1={0} y1={1250.4} x2={420} y2={1038.8} stroke="#2A2F29" strokeWidth={1.6} />
     </svg>
@@ -333,45 +386,48 @@ const Escena: React.FC<{ ruta: ColoresRuta; letrero: string; viewBoxY: number }>
  * El encuadre se ajusta al alto real del texto para que el techo nunca lo toque, y el panel crece lo necesario para
  * mostrar la escena completa, cuadrícula incluida.
  */
-export const PanelEscena: React.FC<{ vehiculoId?: string; letrero?: string; children: React.ReactNode }> = ({
-  vehiculoId,
-  letrero = '',
-  children,
-}) => {
+export const PanelEscena: React.FC<{
+  vehiculoId?: string;
+  letrero?: string;
+  /** Llena el alto disponible (flex-1): la escena sigue hacia abajo hasta el borde, como en la portada. */
+  llenar?: boolean;
+  children: React.ReactNode;
+}> = ({ vehiculoId, letrero = '', llenar = false, children }) => {
   const ruta = coloresDeRuta(vehiculoId);
   const panel = useRef<HTMLElement>(null);
   const texto = useRef<HTMLDivElement>(null);
-  const [viewBoxY, setViewBoxY] = useState(-80);
+  const anchoVista = ANCHO / ESCALA;
+  const [vista, setVista] = useState({ y: -80, alto: ALTO + 80 });
 
   useLayoutEffect(() => {
     const medir = () => {
       if (!panel.current || !texto.current) return;
-      const k = panel.current.clientWidth / ANCHO; // px de pantalla por unidad de la imagen
+      const k = panel.current.clientWidth / anchoVista; // px de pantalla por unidad de la imagen
       const bajoTexto = texto.current.offsetTop + texto.current.offsetHeight + 14;
-      setViewBoxY(Math.min(0, TECHO - bajoTexto / k));
+      const y = Math.min(0, TECHO - bajoTexto / k);
+      const alto = llenar ? Math.max(ALTO - y, panel.current.clientHeight / k) : ALTO - y;
+      setVista((v) => (Math.abs(v.y - y) < 0.5 && Math.abs(v.alto - alto) < 0.5 ? v : { y, alto }));
     };
     medir();
     const ro = new ResizeObserver(medir);
     if (panel.current) ro.observe(panel.current);
     if (texto.current) ro.observe(texto.current);
     return () => ro.disconnect();
-  }, []);
+  }, [anchoVista, llenar]);
 
   return (
     <section
       ref={panel}
-      className="relative -mx-5 -mt-6 overflow-hidden text-[#1E2230]"
-      style={{ backgroundColor: CREMA, aspectRatio: `${ANCHO} / ${(ALTO - viewBoxY).toFixed(1)}` }}
+      className={`relative -mx-5 -mt-6 overflow-hidden text-[#1E2230] ${llenar ? 'flex-1' : ''}`}
+      style={{
+        backgroundColor: CREMA,
+        aspectRatio: llenar ? undefined : `${anchoVista.toFixed(1)} / ${vista.alto.toFixed(1)}`,
+      }}
     >
-      <Escena ruta={ruta} letrero={letrero} viewBoxY={viewBoxY} />
+      <Escena ruta={ruta} letrero={letrero} encuadre={{ x: ANCHO - anchoVista, y: vista.y, ancho: anchoVista, alto: vista.alto }} />
       <div ref={texto} className="relative z-10 px-5 pt-6">
         {children}
       </div>
     </section>
   );
 };
-
-/** Raya corta bajo el título, en el color de la línea de la escena. */
-export const RayaRuta: React.FC<{ vehiculoId?: string }> = ({ vehiculoId }) => (
-  <div className="w-[45px] h-[3px] mt-2.5" style={{ backgroundColor: coloresDeRuta(vehiculoId).color }} />
-);

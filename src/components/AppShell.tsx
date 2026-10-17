@@ -108,7 +108,8 @@ export const AppShell: React.FC<AppShellProps> = ({
         )}
       </header>
 
-      <main className={`relative z-10 flex-1 w-full ${contenedorAncho} mx-auto px-5 pt-6 pb-8 flex flex-col`}>
+      {/* z-20, por encima del pie (z-10): la barra fija de pagar vive dentro de <main> y el pie no se le debe pintar encima */}
+      <main className={`relative z-20 flex-1 w-full ${contenedorAncho} mx-auto px-5 pt-6 pb-8 flex flex-col`}>
         {children}
       </main>
 
