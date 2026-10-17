@@ -1,0 +1,3 @@
+esPantalla se ve algo fea
+
+[Imagen adjunta: captura de la app de escritorio con el panel del navegador en una vista ancha de /pase/activar: panel crema «Paso 1 de 2 · una sola vez · Active su pase» como un recuadro de 512 px con negro y los brillos azul y naranja de la estela a los lados; debajo, en negro, el campo «Su billetera» ($ilp.interledger-test.dev/ pasajero) con borde gris redondeado, «Probar con: pasajero · turista (USD)», «Tope diario» con tres recuadros ($10.000, $20.000 sugerido en blanco, $30.000), «Cómo usamos Open Payments +», «Volver al bus» y el botón blanco «Aprobar en mi billetera →».]

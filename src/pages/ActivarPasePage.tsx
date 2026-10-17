@@ -92,7 +92,7 @@ export const ActivarPasePage: React.FC = () => {
   };
 
   return (
-    <AppShell barraFija>
+    <AppShell barraFija fondo="crema">
       <form id="activar-pase-form" onSubmit={handleSubmit} className="flex-1 flex flex-col">
         {/* Lo que va a pasar, en una línea: primero el formulario, la explicación larga queda al final y plegada */}
         <PanelCrema>
@@ -105,7 +105,7 @@ export const ActivarPasePage: React.FC = () => {
 
         {errorInfo && (
           <div role="alert" className="mt-6">
-            <p className="text-[16px] font-medium text-white leading-relaxed">{errorInfo.message}</p>
+            <p className="text-[16px] font-medium leading-relaxed">{errorInfo.message}</p>
             {isDev && errorInfo.code === 'BACKEND_OFFLINE' && (
               <button
                 type="button"
@@ -113,22 +113,22 @@ export const ActivarPasePage: React.FC = () => {
                   setUiPreviewMode(true);
                   setErrorInfo(null);
                 }}
-                className="mt-3 min-h-11 px-4 rounded-[12px] border border-[rgba(195,197,198,0.2)] text-[16px] font-medium text-white cursor-pointer"
+                className="mt-3 min-h-11 px-4 rounded-[3px] border border-[rgba(30,34,48,0.3)] text-[16px] font-medium cursor-pointer"
               >
                 Activar Vista Previa UI
               </button>
             )}
-            <p className="text-[13px] font-normal text-[#C3C5C6] mt-2">{errorInfo.code}</p>
+            <p className="text-[13px] font-normal text-[#3A3F4E] mt-2">{errorInfo.code}</p>
           </div>
         )}
 
-        <label htmlFor="wallet-address-input" className="block mt-7 text-[17px] font-semibold text-white">
+        <label htmlFor="wallet-address-input" className="block mt-2 text-[17px] font-semibold">
           Su billetera
         </label>
         {/* El prefijo de la Test Wallet va en su propia línea: así el nombre tiene todo el ancho, también a 320 px */}
-        <div className="mt-2.5 rounded-[12px] border border-[rgba(195,197,198,0.35)] bg-black px-3.5 py-2.5 focus-within:border-white">
+        <div className="mt-2.5 rounded-[3px] border-[1.5px] border-[rgba(30,34,48,0.3)] bg-white px-3.5 py-2.5 focus-within:border-[#1E2230]">
           {!completa && (
-            <span className="block font-mono text-[13px] text-[#C3C5C6] select-none">{PREFIJO_VISIBLE}</span>
+            <span className="block font-mono text-[13px] text-[#3A3F4E] select-none">{PREFIJO_VISIBLE}</span>
           )}
           <input
             id="wallet-address-input"
@@ -145,28 +145,28 @@ export const ActivarPasePage: React.FC = () => {
             value={billetera}
             onChange={(e) => setBilletera(e.target.value)}
             placeholder={completa ? '' : 'su-nombre'}
-            className="block w-full min-h-8 bg-transparent font-mono text-[17px] text-white placeholder:text-[#C3C5C6]/50 focus:outline-none"
+            className="block w-full min-h-8 bg-transparent font-mono text-[17px] text-[#1E2230] placeholder:text-[#3A3F4E]/50 focus:outline-none"
           />
         </div>
-        <p id="wallet-address-help" className="text-[14px] font-normal text-[#C3C5C6] mt-2 leading-snug">
+        <p id="wallet-address-help" className="text-[14px] font-normal text-[#3A3F4E] mt-2 leading-snug">
           Si su billetera es de otro proveedor, pegue la dirección completa.
         </p>
-        <div className="mt-1 flex items-center flex-wrap gap-x-1 text-[14px] text-[#C3C5C6]">
+        <div className="mt-1 flex items-center flex-wrap gap-x-1 text-[14px] text-[#3A3F4E]">
           <span>Probar con:</span>
           {BILLETERAS_DEMO.map((w) => (
             <button
               key={w.nombre}
               type="button"
               onClick={() => setBilletera(w.nombre)}
-              className="inline-flex items-center min-h-11 px-2 text-[14px] font-normal text-[#C3C5C6] underline underline-offset-2 hover:text-white cursor-pointer"
+              className="inline-flex items-center min-h-11 px-2 text-[14px] font-medium text-[#1E2230] underline underline-offset-2 cursor-pointer"
             >
               {w.label}
             </button>
           ))}
         </div>
 
-        <p className="mt-6 text-[17px] font-semibold text-white">Tope diario</p>
-        <p className="text-[14px] text-[#C3C5C6] mt-1">Lo máximo que se puede cobrar en un día. Se renueva a medianoche.</p>
+        <p className="mt-6 text-[17px] font-semibold">Tope diario</p>
+        <p className="text-[14px] text-[#3A3F4E] mt-1">Lo máximo que se puede cobrar en un día. Se renueva a medianoche.</p>
         <div className="grid grid-cols-3 gap-2 mt-3" role="radiogroup" aria-label="Tope diario">
           {TOPES_DISPONIBLES.map((item) => {
             const activo = topeDiario === item.valor;
@@ -177,13 +177,14 @@ export const ActivarPasePage: React.FC = () => {
                 role="radio"
                 aria-checked={activo}
                 onClick={() => setTopeDiario(item.valor)}
-                className={`min-h-11 px-2 py-3 rounded-[12px] text-center cursor-pointer border ${
+                // Elegido = cuadro tinta, como el monto del pasaje
+                className={`min-h-11 px-2 py-3 rounded-[3px] text-center cursor-pointer border-[1.5px] ${
                   activo
-                    ? 'border-white bg-white text-[#1E2230]'
-                    : 'border-[rgba(195,197,198,0.2)] bg-transparent text-white'
+                    ? 'border-[#1E2230] bg-[#1E2230] text-white'
+                    : 'border-[rgba(30,34,48,0.3)] bg-transparent text-[#1E2230]'
                 }`}
               >
-                <span className={`block text-[13px] font-normal mb-1 h-4 ${activo ? 'text-[#3A3F4E]' : 'text-[#C3C5C6]'}`}>
+                <span className={`block text-[13px] font-normal mb-1 h-4 ${activo ? 'text-white/75' : 'text-[#3A3F4E]'}`}>
                   {item.sugerido ? 'Sugerido' : ' '}
                 </span>
                 <span className="block text-[18px] font-semibold tabular-nums">{item.etiqueta}</span>
@@ -193,12 +194,12 @@ export const ActivarPasePage: React.FC = () => {
         </div>
 
         <div className="mt-10">
-          <ComoUsamosOpenPayments />
+          <ComoUsamosOpenPayments tono="crema" />
         </div>
 
         <Link
           to={volver}
-          className="inline-flex items-center min-h-11 mt-2 text-[14px] font-normal text-[#C3C5C6] hover:text-white"
+          className="inline-flex items-center min-h-11 mt-2 text-[14px] font-normal text-[#3A3F4E] underline-offset-2 hover:text-[#1E2230] hover:underline"
         >
           Volver al bus
         </Link>

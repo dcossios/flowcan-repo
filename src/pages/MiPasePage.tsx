@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, CircleCheck, Clock, Loader2, RefreshCw, XCircle } from 'lucide-react';
 import { AppShell, mensajeErrorPasajero } from '../components/AppShell';
-import { Bajada, PanelCrema, Pasaje, Titulo } from '../components/Sistema';
+import { Alcance, Bajada, PanelCrema, Pasaje, Titulo } from '../components/Sistema';
 import {
   clearPaseToken,
   ErrorCode,
@@ -96,10 +96,6 @@ export const MiPasePage: React.FC = () => {
     navigate('/', { replace: true });
   };
 
-  const pct =
-    pase && pase.topeDiario > 0
-      ? Math.min(100, Math.max(0, Math.round((pase.disponibleHoy / pase.topeDiario) * 100)))
-      : 0;
   const cashbackTotal = viajes.filter((v) => v.estado === 'pagado').reduce((s, v) => s + v.cashback, 0);
 
   return (
@@ -110,7 +106,19 @@ export const MiPasePage: React.FC = () => {
           {!loading && !errorInfo && !sinPase && pase && (
             <>
               <Pasaje monto={pase.disponibleHoy} etiqueta="Disponible hoy" className="mt-4" />
-              <Bajada className="mt-2">de {formatCOP(pase.topeDiario)} diarios · se renueva cada medianoche</Bajada>
+              {/* Lo mismo que en el cobro: pasajes que alcanzan, un cuadro por pasaje (prompt129). La barra «Usado
+                  hoy» se llenaba con lo disponible y, sin gastar nada, salía llena */}
+              {ultimo && ultimo.tarifa > 0 ? (
+                <Alcance
+                  disponible={pase.disponibleHoy}
+                  tope={pase.topeDiario}
+                  tarifa={ultimo.tarifa}
+                  conTarifa
+                  className="mt-5"
+                />
+              ) : (
+                <Bajada className="mt-2">de {formatCOP(pase.topeDiario)} diarios · se renueva cada medianoche</Bajada>
+              )}
             </>
           )}
         </PanelCrema>
@@ -156,21 +164,17 @@ export const MiPasePage: React.FC = () => {
         {!loading && !errorInfo && !sinPase && pase && (
           <>
             {/* Resumen del pase */}
-            <section aria-label="Resumen del pase" className="mt-6">
-              <p className="text-[14px] font-normal text-[#C3C5C6]">Usado hoy</p>
-              <div aria-hidden="true" className="mt-3 h-[6px] w-full bg-[rgba(195,197,198,0.15)] overflow-hidden">
-                {pct > 0 && <div className="h-full bg-[#D2B99A] rounded-r-[4px]" style={{ width: `${pct}%` }} />}
-              </div>
-
-              <dl className="mt-6 border-t border-[rgba(195,197,198,0.2)]">
+            <section aria-label="Resumen del pase" className="mt-1">
+              <dl>
                 <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
                   <dt className="text-[14px] font-normal text-[#C3C5C6]">Vence</dt>
                   <dd className="text-[16px] font-medium text-white text-right">{fechaCorta(pase.venceEn)}</dd>
                 </div>
                 {pase.walletAddress && (
-                  <div className="flex items-baseline justify-between gap-4 py-3 border-b border-[rgba(195,197,198,0.2)]">
-                    <dt className="text-[14px] font-normal text-[#C3C5C6] shrink-0">Billetera</dt>
-                    <dd className="text-[16px] font-medium text-white text-right min-w-0 break-all">
+                  // La dirección va en su propio renglón: al lado de la etiqueta se partía a mitad del nombre
+                  <div className="py-3 border-b border-[rgba(195,197,198,0.2)]">
+                    <dt className="text-[14px] font-normal text-[#C3C5C6]">Billetera</dt>
+                    <dd className="mt-1 text-[16px] font-medium text-white break-all">
                       {walletCorta(pase.walletAddress)}
                     </dd>
                   </div>

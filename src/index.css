@@ -192,6 +192,8 @@ summary { list-style: none; }
 summary::-webkit-details-marker { display: none; }
 summary::after { content: "+"; margin-left: 12px; color: #D2B99A; font-size: 22px; font-weight: 300; line-height: 1; }
 details[open] > summary::after { content: "–"; }
+/* Sobre el crema el + va en tinta: la arena casi no se ve sobre el crema */
+.subase-plegable-crema summary::after { color: #1E2230; }
 
 /* Impresión del QR de un vehículo (/qr/:vehiculoId) */
 @media print {

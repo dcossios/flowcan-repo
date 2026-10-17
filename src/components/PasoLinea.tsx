@@ -56,13 +56,24 @@ export const PasoLinea: React.FC<{ paso: 1 | 2; tono?: 'negro' | 'crema' }> = ({
 const TEXTO_OPEN_PAYMENTS =
   'Su pase es un grant de Open Payments para pagos salientes (outgoing-payment) con tope diario (debitAmount + interval). En cada viaje creamos un incoming payment en la billetera del bus, una quote y un outgoing payment bajo su pase, sin pedirle nada más. Súbase nunca guarda su plata.';
 
-export const ComoUsamosOpenPayments: React.FC = () => {
+export const ComoUsamosOpenPayments: React.FC<{ tono?: 'negro' | 'crema' }> = ({ tono = 'negro' }) => {
+  const crema = tono === 'crema';
   return (
-    <details className="border-t border-[rgba(195,197,198,0.2)] py-1">
-      <summary className="min-h-11 flex items-center text-[16px] font-medium text-white cursor-pointer justify-between">
+    <details
+      className={`border-t py-1 ${
+        crema ? 'subase-plegable-crema border-[rgba(30,34,48,0.15)]' : 'border-[rgba(195,197,198,0.2)]'
+      }`}
+    >
+      <summary
+        className={`min-h-11 flex items-center text-[16px] font-medium cursor-pointer justify-between ${
+          crema ? 'text-[#1E2230]' : 'text-white'
+        }`}
+      >
         Cómo usamos Open Payments
       </summary>
-      <p className="mt-2 mb-3 text-[14px] font-normal text-[#C3C5C6] leading-relaxed">
+      <p
+        className={`mt-2 mb-3 text-[14px] font-normal leading-relaxed ${crema ? 'text-[#3A3F4E]' : 'text-[#C3C5C6]'}`}
+      >
         {TEXTO_OPEN_PAYMENTS}
       </p>
     </details>

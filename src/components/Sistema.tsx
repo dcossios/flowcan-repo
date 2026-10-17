@@ -22,9 +22,13 @@ export const TINTA = '#1E2230';
 export const CREMA = '#F0E9D6';
 export const ETIQUETA = 'text-[12px] font-medium uppercase tracking-[0.12em]';
 
-/** Panel crema a todo el ancho, arriba de la pantalla, con el texto en tinta. */
+/** Panel crema a todo el ancho, arriba de la pantalla, con el texto en tinta. En pantallas anchas el crema sigue
+ *  hasta los bordes (una franja, no una tarjeta flotando sobre el negro); el texto se queda en la columna. */
 export const PanelCrema: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <section className={`-mx-5 -mt-6 px-5 pt-6 pb-7 text-[#1E2230] ${className}`} style={{ backgroundColor: CREMA }}>
+  <section
+    className={`-mx-5 -mt-6 px-5 pt-6 pb-7 text-[#1E2230] ${className}`}
+    style={{ backgroundColor: CREMA, boxShadow: `0 0 0 100vmax ${CREMA}`, clipPath: 'inset(0 -100vmax)' }}
+  >
     {children}
   </section>
 );
@@ -125,12 +129,14 @@ export const FichaEstado: React.FC<{
  *  Se cuenta en pasajes y no en pesos, como DiDi cuenta viajes junto a la plata. Un cuadro por pasaje, como
  *  una tarjeta perforada: lleno si todavía alcanza, en blanco si ya se gastó hoy. Una barra que se vacía, recién
  *  renovada, no tenía fondo a la vista y se leía como una raya (prompt124). */
-export const Alcance: React.FC<{ disponible: number; tope: number; tarifa: number; className?: string }> = ({
-  disponible,
-  tope,
-  tarifa,
-  className = '',
-}) => {
+export const Alcance: React.FC<{
+  disponible: number;
+  tope: number;
+  tarifa: number;
+  /** Fuera del cobro (Mi pase) no hay un bus a la vista: se dice de qué pasaje se habla. */
+  conTarifa?: boolean;
+  className?: string;
+}> = ({ disponible, tope, tarifa, conTarifa = false, className = '' }) => {
   const quedan = tarifa > 0 ? Math.max(0, Math.floor(disponible / tarifa)) : 0;
   const total = tarifa > 0 ? Math.max(quedan, Math.floor(tope / tarifa)) : 0;
   // Con topes muy altos frente a la tarifa los cuadros dejan de contarse de un vistazo: ahí basta el número
@@ -144,6 +150,7 @@ export const Alcance: React.FC<{ disponible: number; tope: number; tarifa: numbe
             <span className="font-semibold text-[#1E2230] tabular-nums">
               {quedan} {quedan === 1 ? 'pasaje' : 'pasajes'}
             </span>
+            {conTarifa && <span className="tabular-nums"> de {formatCOP(tarifa)}</span>}
           </>
         ) : (
           <>
